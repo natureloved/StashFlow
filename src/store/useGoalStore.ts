@@ -1,0 +1,97 @@
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+
+export interface Vault {
+  address: string;
+  network: string;
+  chainId: number;
+  slug: string;
+  name: string;
+  protocol: {
+    name: string;
+    logoUri?: string;
+    url: string;
+  };
+  underlyingTokens: Array<{
+    address: string;
+    symbol: string;
+    decimals: number;
+    weight?: number;
+  }>;
+  analytics: {
+    apy: {
+      base: number;
+      reward: number | null;
+      total: number;
+    };
+    apy1d: number | null;
+    apy7d: number | null;
+    apy30d: number | null;
+    tvl: {
+      usd: string;
+      native?: string;
+    };
+  };
+  isTransactional: boolean;
+  isRedeemable: boolean;
+}
+
+export interface Contribution {
+  id: string;
+  date: string;
+  amountUsd: number;
+  txHash: string;
+  fromChain: number;
+  fromToken: string;
+}
+
+export interface Goal {
+  id: string;
+  name: string;
+  targetAmountUsd: number;
+  targetDate?: string;
+  riskTier: 'safe' | 'balanced' | 'degen';
+  vault: Vault;
+  contributions: Contribution[];
+  createdAt: string;
+}
+
+interface GoalState {
+  goals: Goal[];
+  addGoal: (goal: Goal) => void;
+  updateGoal: (goalId: string, updates: Partial<Goal>) => void;
+  deleteGoal: (goalId: string) => void;
+  addContribution: (goalId: string, contribution: Contribution) => void;
+}
+
+export const useGoalStore = create<GoalState>()(
+  persist(
+    (set) => ({
+      goals: [],
+      addGoal: (goal) =>
+        set((state) => ({ goals: [...state.goals, goal] })),
+      updateGoal: (goalId, updates) =>
+        set((state) => ({
+          goals: state.goals.map((g) =>
+            g.id === goalId ? { ...g, ...updates } : g
+          ),
+        })),
+      deleteGoal: (goalId) =>
+        set((state) => ({
+          goals: state.goals.filter((g) => g.id !== goalId),
+        })),
+      addContribution: (goalId, contribution) =>
+        set((state) => ({
+          goals: state.goals.map((g) =>
+            g.id === goalId
+              ? { ...g, contributions: [...g.contributions, contribution] }
+              : g
+          ),
+        })),
+    }),
+    {
+      name: 'stashflow-goals',
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);
