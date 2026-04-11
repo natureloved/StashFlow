@@ -20,6 +20,30 @@ import { Loader2, ArrowDown, CheckCircle2, AlertCircle, Info, RefreshCw, Clock, 
 import confetti from 'canvas-confetti';
 import { getTokenPrice } from '@/lib/prices';
 import { EducationPopover } from '@/components/EducationPopover';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+
+const ERC20_ABI = [
+  {
+    name: 'allowance',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'approve',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+] as const;
 
 const COMMON_TOKENS: Record<number, any[]> = {
   1: [
@@ -71,7 +95,25 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
 
   const { sendTransactionAsync } = useSendTransaction();
   const { switchChainAsync } = useSwitchChain();
+  const { writeContractAsync: approveAsync } = useWriteContract();
   const addContribution = useGoalStore((state) => state.addContribution);
+
+  const fromAmountRaw = isUsdMode ? (Number(amount) / tokenPrice) : Number(amount);
+  const fromAmountSmallest = selectedToken ? parseUnits(fromAmountRaw.toFixed(selectedToken.decimals), selectedToken.decimals) : BigInt(0);
+
+  // Allowance Check
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: selectedToken?.address === 'native' ? undefined : selectedToken?.address as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: 'allowance',
+    args: [address as `0x${string}`, quote?.transactionRequest?.to as `0x${string}`],
+    query: {
+      enabled: !!address && !!selectedToken && selectedToken.address !== 'native' && !!quote?.transactionRequest?.to,
+    }
+  });
+
+  const needsApproval = selectedToken?.address !== 'native' && quote && allowance !== undefined && allowance < fromAmountSmallest;
+  const [isApproving, setIsApproving] = useState(false);
 
   // Default selection
   useEffect(() => {
@@ -123,7 +165,8 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
     setError(null);
     try {
       const fromAmountRaw = isUsdMode ? (Number(amount) / tokenPrice) : Number(amount);
-      const fromAmountSmallest = parseUnits(fromAmountRaw.toFixed(selectedToken.decimals), selectedToken.decimals).toString();
+      const amountStr = fromAmountRaw.toFixed(selectedToken.decimals);
+      const fromAmountSmallestStr = parseUnits(amountStr, selectedToken.decimals).toString();
 
       const response = await getQuote({
         fromChain: chainId,
@@ -132,7 +175,7 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
         toToken: goal.vault.address,
         fromAddress: address,
         toAddress: address,
-        fromAmount: fromAmountSmallest,
+        fromAmount: fromAmountSmallestStr,
       });
       
       setQuote(response);
@@ -415,13 +458,38 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                     <span className="text-sm font-body text-gray-300 group-hover:text-white">I understand the fees above and want to proceed</span>
                   </label>
 
-                  <Button 
-                    disabled={isDepositing || !isAgreed}
-                    onClick={handleDeposit}
-                    className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
-                  >
-                    {isDepositing ? <Loader2 className="animate-spin" /> : 'Confirm & Deposit'}
-                  </Button>
+                  {needsApproval ? (
+                    <Button 
+                      disabled={isApproving}
+                      onClick={async () => {
+                        setIsApproving(true);
+                        try {
+                          await approveAsync({
+                            address: selectedToken.address as `0x${string}`,
+                            abi: ERC20_ABI,
+                            functionName: 'approve',
+                            args: [quote.transactionRequest.to as `0x${string}`, fromAmountSmallest],
+                          });
+                          await refetchAllowance();
+                        } catch (err: any) {
+                          setError(err.message || 'Approval failed');
+                        } finally {
+                          setIsApproving(false);
+                        }
+                      }}
+                      className="w-full h-14 bg-white text-black hover:bg-white/90 font-bold text-lg rounded-xl glow-cyan"
+                    >
+                      {isApproving ? <Loader2 className="animate-spin" /> : `Approve ${selectedToken.symbol}`}
+                    </Button>
+                  ) : (
+                    <Button 
+                      disabled={isDepositing || !isAgreed}
+                      onClick={handleDeposit}
+                      className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
+                    >
+                      {isDepositing ? <Loader2 className="animate-spin" /> : 'Confirm & Deposit'}
+                    </Button>
+                  )}
                   
                   <div className="flex flex-col items-center gap-2">
                     <button 

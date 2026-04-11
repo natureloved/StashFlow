@@ -20,6 +20,7 @@ import {
   Download,
   AlertCircle
 } from 'lucide-react';
+import { WithdrawModal } from '@/components/WithdrawModal';
 import Link from 'next/link';
 
 export default function GoalDetailPage() {
@@ -33,6 +34,8 @@ export default function GoalDetailPage() {
   );
   
   const { data: portfolio } = usePortfolio(address);
+
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   if (!goal) {
     return (
@@ -222,7 +225,10 @@ export default function GoalDetailPage() {
               </div>
             </Card>
 
-            <Button className="w-full h-14 bg-surface border border-border text-gray-400 hover:text-white hover:border-accent/50 group transition-all">
+            <Button 
+              onClick={() => setIsWithdrawModalOpen(true)}
+              className="w-full h-14 bg-surface border border-border text-gray-400 hover:text-white hover:border-accent/50 group transition-all"
+            >
               Withdraw Funds <AlertCircle className="ml-2 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </Button>
             <p className="text-[10px] text-center text-gray-600">
@@ -232,6 +238,12 @@ export default function GoalDetailPage() {
 
         </div>
       </main>
+      <WithdrawModal 
+        goal={goal} 
+        open={isWithdrawModalOpen} 
+        onOpenChange={setIsWithdrawModalOpen}
+        currentBalanceUsd={currentSaved}
+      />
     </div>
   );
 }
