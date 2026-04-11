@@ -16,7 +16,7 @@ export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
   if (riskTier === 'safe') {
     const filtered = vaults.filter(v => 
       v.isTransactional === true &&
-      v.tags.includes('stablecoin') &&
+      v.tags?.includes('stablecoin') &&
       v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 100_000_000 &&
       v.analytics?.apy?.total != null
     ).sort((a,b) => Number(b.analytics.tvl.usd) - Number(a.analytics.tvl.usd));

@@ -47,6 +47,7 @@ export interface Vault {
   };
   isTransactional: boolean;
   isRedeemable: boolean;
+  tags?: string[];
 }
 
 export async function getVaults(params: GetVaultsParams = {}) {

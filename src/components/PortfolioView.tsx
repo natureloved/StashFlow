@@ -7,7 +7,8 @@ import { getUserPositions } from '@/lib/lifi';
 import { Card } from '@/components/ui/card';
 import { Loader2, Wallet, ExternalLink, TrendingUp, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export function PortfolioView() {
   const { address, isConnected } = useAccount();
@@ -151,11 +152,17 @@ export function PortfolioView() {
                   <div className="text-[10px] text-gray-500 font-body uppercase tracking-widest">
                     Asset: {pos.token?.symbol || 'Unknown'}
                   </div>
-                  <Button variant="ghost" size="sm" className="text-accent hover:text-accent/80 hover:bg-accent/10 px-0 h-auto font-bold" asChild>
-                    <a href={`https://explorer.li.fi/address/${address}`} target="_blank" rel="noopener noreferrer">
-                      View details <ExternalLink className="w-3 h-3 ml-2" />
-                    </a>
-                  </Button>
+                  <a 
+                    href={`https://explorer.li.fi/address/${address}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={cn(
+                      buttonVariants({ variant: "ghost", size: "sm" }),
+                      "text-accent hover:text-accent/80 hover:bg-accent/10 px-0 h-auto font-bold flex items-center gap-2"
+                    )}
+                  >
+                    View details <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               </Card>
             </motion.div>
