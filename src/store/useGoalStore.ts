@@ -1,40 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-export interface Vault {
-  address: string;
-  network: string;
-  chainId: number;
-  slug: string;
-  name: string;
-  protocol: {
-    name: string;
-    logoUri?: string;
-    url: string;
-  };
-  underlyingTokens: Array<{
-    address: string;
-    symbol: string;
-    decimals: number;
-    weight?: number;
-  }>;
-  analytics: {
-    apy: {
-      base: number;
-      reward: number | null;
-      total: number;
-    };
-    apy1d: number | null;
-    apy7d: number | null;
-    apy30d: number | null;
-    tvl: {
-      usd: string;
-      native?: string;
-    };
-  };
-  isTransactional: boolean;
-  isRedeemable: boolean;
-}
+import { Vault } from '@/lib/lifi';
 
 export interface Contribution {
   id: string;

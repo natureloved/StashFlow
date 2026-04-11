@@ -1,61 +1,96 @@
-const LIFI_EARN_BASE_URL = 'https://earn.li.fi/v1/earn';
-const LIFI_COMPOSER_BASE_URL = 'https://li.quest/v1';
+const LIFI_PROXY_URL = '/api/lifi';
 
 const getHeaders = () => {
-  const apiKey = process.env.NEXT_PUBLIC_LIFI_API_KEY;
   return {
-    'x-lifi-api-key': apiKey || '',
     'accept': 'application/json',
   };
 };
 
 export interface GetVaultsParams {
-  chainId?: number;
-  asset?: string;
-  protocol?: string;
-  minTvlUsd?: number;
   sortBy?: 'apy' | 'tvl';
   limit?: number;
-  cursor?: string;
-  tags?: string;
+}
+
+export interface Vault {
+  address: string;
+  network: string;
+  chainId: number;
+  slug: string;
+  name: string;
+  protocol: {
+    name: string;
+    logoUri?: string;
+    url: string;
+  };
+  underlyingTokens: Array<{
+    address: string;
+    symbol: string;
+    decimals: number;
+    weight?: number;
+  }>;
+  analytics: {
+    apy: {
+      base: number;
+      reward: number | null;
+      total: number;
+    };
+    apy1d: number | null;
+    apy1dUsd?: number | null;
+    apy7d: number | null;
+    apy7dUsd?: number | null;
+    apy30d: number | null;
+    apy30dUsd?: number | null;
+    tvl: {
+      usd: string;
+      native?: string;
+    };
+  };
+  isTransactional: boolean;
+  isRedeemable: boolean;
 }
 
 export async function getVaults(params: GetVaultsParams = {}) {
   const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined) query.append(key, value.toString());
-  });
+  
+  if (params.sortBy) query.append('sortBy', params.sortBy);
+  query.append('limit', (params.limit || 100).toString());
 
-  const response = await fetch(`${LIFI_EARN_BASE_URL}/vaults?${query.toString()}`, {
+  const response = await fetch(`${LIFI_PROXY_URL}/earn/vaults?${query.toString()}`, {
     headers: getHeaders(),
   });
 
   if (!response.ok) {
-    throw new Error(`Earn API Error: ${response.statusText}`);
+    const errorBody = await response.json().catch(() => ({}));
+    console.error('LIFI API Error Body:', errorBody);
+    throw new Error(`Earn API Error: ${response.statusText}${errorBody.message ? ` - ${errorBody.message}` : ''}`);
   }
 
   return response.json();
 }
 
 export async function getVaultDetails(chainId: number, address: string) {
-  const response = await fetch(`${LIFI_EARN_BASE_URL}/vaults/${chainId}/${address}`, {
+  const response = await fetch(`${LIFI_PROXY_URL}/earn/vaults/${chainId}/${address}`, {
     headers: getHeaders(),
   });
 
   if (!response.ok) {
-    throw new Error(`Earn API Error: ${response.statusText}`);
+    const errorBody = await response.json().catch(() => ({}));
+    console.error('LIFI API Error Body:', errorBody);
+    throw new Error(`Earn API Error: ${response.statusText}${errorBody.message ? ` - ${errorBody.message}` : ''}`);
   }
 
   return response.json();
 }
 
 export async function getUserPositions(userAddress: string) {
-  const response = await fetch(`${LIFI_EARN_BASE_URL}/portfolio/${userAddress}/positions`, {
+  const response = await fetch(`${LIFI_PROXY_URL}/earn/portfolio/${userAddress}/positions`, {
     headers: getHeaders(),
   });
 
   if (!response.ok) {
-    throw new Error(`Earn API Error: ${response.statusText}`);
+    const errorBody = await response.json().catch(() => ({}));
+    console.error('LIFI API Error Body:', errorBody);
+    throw new Error(`Earn API Error: ${response.statusText}${errorBody.message ? ` - ${errorBody.message}` : ''}`);
   }
 
   return response.json();
@@ -77,10 +112,8 @@ export async function getQuote(params: GetQuoteParams) {
     if (value !== undefined) query.append(key, value.toString());
   });
 
-  const response = await fetch(`${LIFI_COMPOSER_BASE_URL}/quote?${query.toString()}`, {
-    headers: {
-      ...getHeaders(),
-    },
+  const response = await fetch(`/api/quote?${query.toString()}`, {
+    headers: getHeaders(),
   });
 
   if (!response.ok) {

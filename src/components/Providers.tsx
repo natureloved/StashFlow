@@ -6,7 +6,7 @@ import {
   getDefaultConfig,
   darkTheme,
 } from '@rainbow-me/rainbowkit';
-import { WagmiProvider } from 'wagmi';
+import { WagmiProvider, http } from 'wagmi';
 import {
   mainnet,
   polygon,
@@ -24,6 +24,13 @@ const config = getDefaultConfig({
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '',
   chains: [mainnet, polygon, optimism, arbitrum, base],
   ssr: true,
+  transports: {
+    [mainnet.id]: http('https://cloudflare-eth.com'),
+    [polygon.id]: http('https://polygon-rpc.com'),
+    [optimism.id]: http('https://mainnet.optimism.io'),
+    [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
+    [base.id]: http('https://mainnet.base.org'),
+  },
 });
 
 const queryClient = new QueryClient();

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { Syne, DM_Sans, Geist } from "next/font/google";
+import { Syne, DM_Sans, Geist, Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import "@rainbow-me/rainbowkit/styles.css";
 import { cn } from "@/lib/utils";
+import { Footer } from "@/components/Footer";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -19,6 +20,12 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "700"],
 });
 
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Stashflow | Save with purpose",
   description: "Goal-based DeFi savings app for the future of finance.",
@@ -32,13 +39,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", syne.variable, dmSans.variable, "font-sans", geist.variable)}
+      className={cn("h-full", "antialiased", syne.variable, dmSans.variable, outfit.variable, "font-sans", geist.variable)}
     >
       <body className="min-h-full flex flex-col bg-[#0A0A0F] text-white">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
 }
-
 

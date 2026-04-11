@@ -1,0 +1,237 @@
+'use client';
+
+import * as React from 'react';
+import { useParams } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { useGoalStore } from '@/store/useGoalStore';
+import { useVaultDetails, usePortfolio } from '@/hooks/useLifi';
+import { useAccount } from 'wagmi';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { 
+  ArrowLeft, 
+  ExternalLink, 
+  History, 
+  Calculator, 
+  ShieldCheck, 
+  TrendingUp,
+  Download,
+  AlertCircle
+} from 'lucide-react';
+import Link from 'next/link';
+
+export default function GoalDetailPage() {
+  const { id } = useParams();
+  const { address } = useAccount();
+  const goal = useGoalStore((state) => state.goals.find((g) => g.id === id));
+  
+  const { data: vaultDetails, isLoading: isLoadingVault } = useVaultDetails(
+    goal?.vault.chainId, 
+    goal?.vault.address
+  );
+  
+  const { data: portfolio } = usePortfolio(address);
+
+  if (!goal) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+        <h1 className="font-display text-2xl font-bold">Goal not found</h1>
+        <Link href="/dashboard" className="mt-4 text-accent hover:underline flex items-center gap-2">
+          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+        </Link>
+      </div>
+    );
+  }
+
+  const currentSaved = goal.contributions.reduce((acc, curr) => acc + curr.amountUsd, 0);
+  const progress = Math.min((currentSaved / goal.targetAmountUsd) * 100, 100);
+  
+  // Find live position balance if available
+  const livePosition = portfolio?.positions?.find(
+    (p: any) => p.chainId === goal.vault.chainId && p.asset.address.toLowerCase() === goal.vault.address.toLowerCase()
+  );
+
+  const apy = vaultDetails?.analytics?.apy?.total || goal.vault.analytics.apy.total;
+  const monthlyYield = (currentSaved * apy) / 12;
+
+  // Simple projection: days = (remaining) / (daily yield)
+  // Assuming no more deposits for simplicity in this calculation
+  const remaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
+  const dailyYield = (currentSaved * apy) / 365;
+  const daysToComplete = dailyYield > 0 ? Math.ceil(remaining / dailyYield) : Infinity;
+
+  return (
+    <div className="min-h-screen bg-[#0A0A0F] text-white">
+      <nav className="border-b border-border bg-surface/50 backdrop-blur-md h-20 flex items-center">
+        <div className="container mx-auto px-6">
+          <Link href="/dashboard" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-body text-sm font-bold uppercase tracking-wider">Back to Dashboard</span>
+          </Link>
+        </div>
+      </nav>
+
+      <main className="container mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          
+          {/* Left Column: Overview & Progress */}
+          <div className="lg:col-span-2 space-y-12">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <h1 className="font-display text-5xl md:text-6xl font-extrabold">{goal.name}</h1>
+                <Badge className="bg-accent/10 text-accent border-accent/20 px-4 py-1.5 font-bold text-lg">
+                  {(apy * 100).toFixed(2)}% APY
+                </Badge>
+              </div>
+              <p className="text-xl text-gray-400 font-body">
+                Targeting ${goal.targetAmountUsd.toLocaleString()} 
+                {goal.targetDate && ` by ${new Date(goal.targetDate).toLocaleDateString()}`}
+              </p>
+            </div>
+
+            <div className="glass-card p-10 space-y-8 relative overflow-hidden">
+               <div className="absolute top-0 left-0 w-2 h-full bg-accent" />
+               <div className="flex justify-between items-end">
+                <div className="space-y-1">
+                  <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">Current Balance</div>
+                  <div className="text-5xl font-display font-bold">${currentSaved.toLocaleString()}</div>
+                  {livePosition && (
+                    <div className="text-sm text-accent flex items-center gap-1">
+                      <TrendingUp className="w-4 h-4" /> Live: ${Number(livePosition.balanceUsd).toLocaleString()}
+                    </div>
+                  )}
+                </div>
+                <div className="text-right">
+                  <div className="text-5xl font-display font-bold text-gray-800">{Math.round(progress)}%</div>
+                </div>
+               </div>
+
+               <div className="space-y-4">
+                 <div className="h-4 w-full bg-surface rounded-full overflow-hidden border border-border">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="h-full bg-accent shadow-[0_0_20px_rgba(0,229,255,0.4)]"
+                    />
+                 </div>
+                 <div className="flex justify-between text-sm text-gray-500 font-bold">
+                    <span>$0</span>
+                    <span>Goal: ${goal.targetAmountUsd.toLocaleString()}</span>
+                 </div>
+               </div>
+            </div>
+
+            {/* History Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <History className="w-6 h-6 text-accent" />
+                <h2 className="font-display text-3xl font-bold">Contribution History</h2>
+              </div>
+              
+              <div className="space-y-4">
+                {goal.contributions.length > 0 ? (
+                  goal.contributions.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between p-4 bg-surface/30 rounded-xl border border-border hover:bg-surface/50 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-[#0A0A0F] border border-border flex items-center justify-center">
+                          <Download className="w-5 h-5 text-accent" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm">Deposit from {c.fromToken}</p>
+                          <p className="text-xs text-gray-500">{new Date(c.date).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-accent">+${c.amountUsd.toLocaleString()}</p>
+                        <a 
+                          href={`https://basescan.org/tx/${c.txHash}`} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-[10px] text-gray-600 hover:text-white flex items-center gap-1 justify-end"
+                        >
+                          View TX <ExternalLink className="w-2 h-2" />
+                        </a>
+                      </div>
+                    </div>
+                  )).reverse()
+                ) : (
+                  <div className="text-center py-10 text-gray-500 italic">No contributions yet.</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Vault Details & Projections */}
+          <div className="space-y-8">
+            <Card className="glass-card p-6 border-accent/20">
+              <h3 className="font-display text-xl font-bold mb-6 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-accent" /> Vault Analytics
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="flex justify-between pb-4 border-b border-border">
+                  <span className="text-gray-400 text-sm">Protocol</span>
+                  <span className="font-bold flex items-center gap-1">
+                    {goal.vault.protocol.name} <ExternalLink className="w-3 h-3 text-gray-500" />
+                  </span>
+                </div>
+                <div className="flex justify-between pb-4 border-b border-border">
+                  <span className="text-gray-400 text-sm">Network</span>
+                  <span className="font-bold capitalize">{goal.vault.network}</span>
+                </div>
+                <div className="flex justify-between pb-4 border-b border-border">
+                  <span className="text-gray-400 text-sm">TVL</span>
+                  <span className="font-bold">${Number(vaultDetails?.analytics?.tvl?.usd || goal.vault.analytics.tvl.usd).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400 text-sm">Risk Tier</span>
+                  <Badge variant="outline" className="border-accent text-accent uppercase font-bold text-[10px]">{goal.riskTier}</Badge>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="glass-card p-6 border-secondary/20">
+              <h3 className="font-display text-xl font-bold mb-6 flex items-center gap-2">
+                <Calculator className="w-5 h-5 text-secondary" /> Projections
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="p-4 bg-secondary/5 rounded-xl border border-secondary/20">
+                  <p className="text-[10px] text-secondary font-bold uppercase mb-1">Monthly Yield</p>
+                  <p className="text-2xl font-display font-bold text-secondary">
+                    +${monthlyYield.toFixed(2)}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Time to Goal</span>
+                    <span className="font-bold">
+                      {daysToComplete === Infinity ? 'N/A' : `${daysToComplete} Days`}
+                    </span>
+                  </div>
+                  <Progress value={daysToComplete === Infinity ? 0 : 45} className="h-1" />
+                  <p className="text-[10px] text-gray-500 italic">
+                    Based on current yield and zero additional contributions.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Button className="w-full h-14 bg-surface border border-border text-gray-400 hover:text-white hover:border-accent/50 group transition-all">
+              Withdraw Funds <AlertCircle className="ml-2 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </Button>
+            <p className="text-[10px] text-center text-gray-600">
+              Vault: {goal.vault.address}
+            </p>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  );
+}
