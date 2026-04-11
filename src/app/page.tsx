@@ -42,7 +42,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#0A0A0F] text-white selection:bg-accent/30">
       {/* Premium Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0A0A0F]/50 backdrop-blur-xl">
-        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
               <span className="text-black font-display font-extrabold text-lg">S</span>
@@ -63,7 +63,7 @@ export default function Home() {
         <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-accent/10 rounded-full blur-[120px] -z-10 animate-pulse" />
         <div className="absolute bottom-0 left-[-10%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] -z-10" />
 
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div 
               initial="hidden"
@@ -188,7 +188,7 @@ export default function Home() {
 
       {/* Process Flow - "Making DeFi Easy" Section */}
       <section id="how-it-works" className="py-20 bg-white/5">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
             <h2 className="text-4xl md:text-5xl font-display font-black uppercase italic italic tracking-tight">The Simplest Path to Yield</h2>
             <p className="text-gray-400 font-body text-lg">We've coordinated the most complex parts of decentralised finance into a three-step journey that anyone can follow.</p>
@@ -239,7 +239,7 @@ export default function Home() {
 
       {/* Trust & Security Section */}
       <section id="security" className="py-16 md:py-32">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="glass-card p-6 md:p-12 overflow-hidden relative">
             <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none hidden md:block">
                 <Shield className="w-64 h-64" />
