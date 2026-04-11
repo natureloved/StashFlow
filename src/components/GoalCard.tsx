@@ -102,8 +102,8 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
         </div>
       </Link>
 
-      <div className="p-4 md:p-6 pt-2 flex items-center justify-between border-t border-border mt-auto">
-        <div className="space-y-1">
+      <div className="p-4 md:p-6 pt-2 flex items-center justify-between border-t border-border mt-auto font-body">
+        <div className="space-y-1 pl-1.5">
           <div className="text-[10px] text-gray-500 uppercase font-bold flex items-center gap-1">
             Vault Info 
             <button 

@@ -61,7 +61,8 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px] bg-[#111118] border-[#1E1E2E] text-white p-0 overflow-visible">
+      <DialogContent className="max-w-[calc(100%-2.5rem)] sm:max-w-[420px] bg-[#111118] border-[#1E1E2E] text-white p-0 overflow-hidden">
+        <div className="max-h-[85vh] overflow-y-auto w-full thin-scrollbar">
         <div className="p-6 pb-0">
           <Badge className={`${score.color}/10 ${score.text} border-${score.text.split('-')[1]}-500/20 px-3 py-1 mb-6 flex items-center gap-2 w-fit font-bold`}>
             <ScoreIcon className="w-4 h-4" /> Safety Score: {score.label}
@@ -78,7 +79,7 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
         <div className="px-6 space-y-4">
           {/* Fact Cards */}
           <div className="space-y-3">
-            <div className="glass-card p-4 border-border flex items-center gap-4 bg-white/5">
+            <div className="glass-card p-3 border-border flex items-center gap-4 bg-white/5">
               <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
                 <Landmark className="w-5 h-5" />
               </div>
@@ -94,7 +95,7 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
               </div>
             </div>
 
-            <div className="glass-card p-4 border-border flex items-center gap-4 bg-white/5">
+            <div className="glass-card p-3 border-border flex items-center gap-4 bg-white/5">
               <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
                 <Calculator className="w-5 h-5" />
               </div>
@@ -104,7 +105,7 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
               </div>
             </div>
 
-            <div className="glass-card p-4 border-border flex items-center gap-4 bg-white/5">
+            <div className="glass-card p-3 border-border flex items-center gap-4 bg-white/5">
               <div className="w-10 h-10 rounded-xl bg-[#00E5FF]/10 flex items-center justify-center text-[#00E5FF]">
                 <Shield className="w-5 h-5" />
               </div>
@@ -124,12 +125,7 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
           </div>
         </div>
 
-        <div className="p-6 pt-2 space-y-4">
-          <div className="text-[10px] text-gray-600 font-body border-t border-border/50 pt-4 leading-relaxed italic">
-            "DeFi protocols carry smart contract risk. Only deposit 
-            what you can afford to lose. This is not financial advice."
-          </div>
-          
+        <div className="p-6 pt-2">
           <div className="flex flex-col gap-2">
             <a 
               href={vault.protocol.url} 
@@ -143,6 +139,7 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
               Close
             </Button>
           </div>
+        </div>
         </div>
       </DialogContent>
     </Dialog>

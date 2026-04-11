@@ -213,7 +213,8 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
   return (
     <Dialog open={open} onOpenChange={(val) => { onOpenChange(val); if(!val) reset(); }}>
       <DialogContent className="max-w-[calc(100%-2.5rem)] sm:max-w-[480px] bg-surface border-border text-white p-0 overflow-hidden">
-        <div className="p-4 md:p-6">
+        <div className="max-h-[85vh] overflow-y-auto w-full thin-scrollbar pb-6">
+          <div className="p-4 md:p-6 pb-0">
           <DialogHeader className="mb-6">
             <DialogTitle className="font-display text-2xl">Add Funds</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -457,6 +458,7 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
         </div>
       </DialogContent>
     </Dialog>
