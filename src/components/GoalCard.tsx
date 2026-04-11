@@ -10,6 +10,8 @@ import { Goal } from '@/store/useGoalStore';
 import { TrendingUp, Plus, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { MilestoneBadge } from '@/components/MilestoneBadge';
+import { EducationPopover } from '@/components/EducationPopover';
+import { VaultSafetyModal } from '@/components/VaultSafetyModal';
 import { getYieldEquivalent } from '@/lib/yield-utils';
 import { calculateGoalCompletionDate, formatCompletionDate } from '@/lib/projection-utils';
 
