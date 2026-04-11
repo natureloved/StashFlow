@@ -169,7 +169,7 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
         date: new Date().toISOString(),
         amountUsd: depositAmountUsd,
         txHash: tx,
-        fromChain: chainId,
+        fromChain: chainId as number,
         fromToken: selectedToken.symbol,
       });
 
