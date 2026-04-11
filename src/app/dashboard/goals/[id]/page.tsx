@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useGoalStore } from '@/store/useGoalStore';
@@ -36,7 +35,7 @@ export default function GoalDetailPage() {
   
   const { data: portfolio } = usePortfolio(address);
 
-  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false);
 
   if (!goal) {
     return (
