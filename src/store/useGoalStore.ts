@@ -14,6 +14,7 @@ export interface Contribution {
 
 export interface Goal {
   id: string;
+  ownerAddress: string;
   name: string;
   targetAmountUsd: number;
   targetDate?: string;
@@ -25,6 +26,7 @@ export interface Goal {
 
 interface GoalState {
   goals: Goal[];
+  _hasHydrated: boolean;
   addGoal: (goal: Goal) => void;
   updateGoal: (goalId: string, updates: Partial<Goal>) => void;
   deleteGoal: (goalId: string) => void;
@@ -35,6 +37,7 @@ export const useGoalStore = create<GoalState>()(
   persist(
     (set) => ({
       goals: [],
+      _hasHydrated: false,
       addGoal: (goal) =>
         set((state) => ({ goals: [...state.goals, goal] })),
       updateGoal: (goalId, updates) =>
@@ -59,6 +62,9 @@ export const useGoalStore = create<GoalState>()(
     {
       name: 'stashflow-goals',
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) state._hasHydrated = true;
+      },
     }
   )
 );

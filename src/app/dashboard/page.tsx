@@ -47,6 +47,13 @@ export default function DashboardPage() {
   const [milestoneGoal, setMilestoneGoal] = useState<Goal | null>(null);
 
   const goals = useGoalStore((state) => state.goals);
+  const _hasHydrated = useGoalStore((state) => state._hasHydrated);
+
+  // Filter goals by current address
+  const userGoals = React.useMemo(() => 
+    goals.filter(g => g.ownerAddress?.toLowerCase() === address?.toLowerCase()),
+    [goals, address]
+  );
 
   React.useEffect(() => {
     setMounted(true);
@@ -61,11 +68,26 @@ export default function DashboardPage() {
   }, [mounted, isConnected]);
 
   const handleScanPortfolio = async () => {
+    if (!address) return;
     setIsScanning(true);
-    // Simulate deep scan across chains
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsScanning(false);
-    setCurrentView('portfolio');
+    try {
+      const data = await getUserPositions(address);
+      const positions = data.positions || [];
+      const totalValue = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
+      
+      setPortfolioStats({ 
+        totalValue, 
+        idleAssets: totalValue 
+      });
+      
+      // If we found assets, wait a bit for effect then show portfolio
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setCurrentView('portfolio');
+    } catch (err) {
+      console.error('Scan failed:', err);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   React.useEffect(() => {
@@ -129,18 +151,26 @@ export default function DashboardPage() {
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted || !_hasHydrated) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0F] flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-accent animate-spin mb-4" />
+        <p className="font-display font-bold text-xl animate-pulse">Initializing StashFlow...</p>
+      </div>
+    );
+  }
 
-  const totalDeposited = goals.reduce((acc, goal) => 
+  const userGoalsCount = userGoals.length;
+  const totalDeposited = userGoals.reduce((acc, goal) => 
     acc + goal.contributions.reduce((cAcc, c) => cAcc + c.amountUsd, 0), 0
   );
 
-  const avgApy = goals.length > 0 
-    ? goals.reduce((acc, goal) => acc + goal.vault.analytics.apy.total, 0) / goals.length 
+  const avgApy = userGoalsCount > 0 
+    ? userGoals.reduce((acc, goal) => acc + goal.vault.analytics.apy.total, 0) / userGoalsCount 
     : 0;
 
-  const totalMonthlyYield = goals.length > 0
-    ? goals.reduce((acc, goal) => {
+  const totalMonthlyYield = userGoalsCount > 0
+    ? userGoals.reduce((acc, goal) => {
         const deposited = goal.contributions.reduce((cAcc, c) => cAcc + c.amountUsd, 0);
         return acc + (deposited * goal.vault.analytics.apy.total) / 12;
       }, 0)
@@ -265,7 +295,7 @@ export default function DashboardPage() {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {goals.map((goal) => (
+                {userGoals.map((goal) => (
                   <GoalCard 
                     key={goal.id} 
                     goal={goal} 
@@ -273,7 +303,7 @@ export default function DashboardPage() {
                   />
                 ))}
 
-                {goals.length === 0 && (
+                {userGoals.length === 0 && (
                   <div className="col-span-full py-32 flex flex-col items-center justify-center text-center glass-card border-dashed">
                     <div className="w-20 h-20 bg-surface rounded-full flex items-center justify-center mb-6 border border-white/5">
                       <TargetIcon className="w-10 h-10 text-accent" />
@@ -317,8 +347,10 @@ export default function DashboardPage() {
             <div className="relative z-10 max-w-2xl">
               <h3 className="font-display text-2xl font-bold mb-2 text-accent">Optimization Opportunity 🚀</h3>
               <p className="text-gray-300 mb-6 font-body">
-                {portfolioStats?.idleAssets ? (
+                {portfolioStats?.idleAssets && portfolioStats.idleAssets > 0 ? (
                   <>We found approximately <span className="text-white font-bold">${portfolioStats.idleAssets.toFixed(2)}</span> in idle assets in your wallet. Moving them to your goals could increase your monthly yield by <span className="text-accent font-bold">15%</span>.</>
+                ) : isScanning ? (
+                  <>Deep scanning your wallet across 5+ chains for unallocated capital...</>
                 ) : (
                   <>Scan your portfolio to find idle assets and optimize your yield strategies across 5+ chains.</>
                 )}

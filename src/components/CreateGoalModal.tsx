@@ -22,6 +22,7 @@ import { Vault } from '@/lib/lifi';
 import { useGoalStore } from '@/store/useGoalStore';
 import { Loader2, ShieldCheck, Scale, Flame, ChevronRight, Target, AlertCircle, HelpCircle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { useAccount } from 'wagmi';
 import { VaultSafetyModal } from '@/components/VaultSafetyModal';
 
 interface CreateGoalModalProps {
@@ -37,6 +38,7 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
   const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
   const [isLoadingVault, setIsLoadingVault] = useState(false);
   const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
+  const { address } = useAccount();
 
   const addGoal = useGoalStore((state) => state.addGoal);
 
@@ -59,6 +61,7 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
 
     addGoal({
       id: uuidv4(),
+      ownerAddress: address || '0x0000000000000000000000000000000000000000',
       name,
       targetAmountUsd: Number(amount),
       riskTier,

@@ -10,10 +10,8 @@ import { Goal } from '@/store/useGoalStore';
 import { TrendingUp, Plus, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { MilestoneBadge } from '@/components/MilestoneBadge';
-import { EducationPopover } from '@/components/EducationPopover';
-import { VaultSafetyModal } from '@/components/VaultSafetyModal';
-
 import { getYieldEquivalent } from '@/lib/yield-utils';
+import { calculateGoalCompletionDate, formatCompletionDate } from '@/lib/projection-utils';
 
 interface GoalCardProps {
   goal: Goal;
@@ -28,6 +26,11 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
   const apy = goal.vault.analytics.apy.total;
   const yearlyYield = currentSaved * apy;
   const monthlyYield = yearlyYield / 12;
+
+  // Projection logic
+  const weeklySave = 50; // Default coach assumption
+  const completionDate = calculateGoalCompletionDate(currentSaved, goal.targetAmountUsd, apy, weeklySave);
+  const completionStr = formatCompletionDate(completionDate);
 
   return (
     <Card className="glass-card flex flex-col gap-4 md:gap-6 relative overflow-visible group border-border hover:border-accent/50 transition-colors h-full">
@@ -73,13 +76,27 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
           </div>
         </div>
 
-        <div className="bg-[#0A0A0F]/50 p-4 rounded-xl border border-border space-y-2">
-          <div className="flex items-center gap-2 text-xs text-gray-400 uppercase tracking-wider font-bold">
-            <TrendingUp className="w-3 h-3 text-accent" /> Yield Insight
+        <div className="bg-[#0A0A0F]/50 p-4 rounded-xl border border-white/5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-tighter font-bold">
+              <TrendingUp className="w-3 h-3 text-accent" /> Yield Insight
+            </div>
+            <div className="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded-full font-bold">
+              PASSIVE
+            </div>
           </div>
-          <div className="text-sm font-body text-gray-300">
-            Your <span className="text-white font-bold">{goal.name}</span> yield is currently covering <span className="text-secondary font-bold">{getYieldEquivalent(monthlyYield)}</span>
+          <div className="text-sm font-body text-gray-300 leading-snug">
+            Your yield is currently covering <span className="text-secondary font-bold">{getYieldEquivalent(monthlyYield)}</span>
           </div>
+        </div>
+
+        <div className="bg-accent/5 p-4 rounded-xl border border-accent/10">
+          <div className="text-[10px] text-accent/70 uppercase font-black tracking-widest mb-1 flex items-center gap-1">
+            <Plus className="w-2.5 h-2.5" /> Coach Insight
+          </div>
+          <p className="text-sm font-body text-gray-300">
+            Add <span className="text-white font-bold">${weeklySave}/wk</span> to reach your goal by <span className="text-accent font-bold">{completionStr}</span>.
+          </p>
         </div>
       </Link>
 
