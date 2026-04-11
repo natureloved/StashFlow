@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { PortfolioView } from '@/components/PortfolioView';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getUserPositions } from '@/lib/lifi';
+import { getUserPositions, getWalletBalances } from '@/lib/lifi';
 import { 
   Plus, 
   LayoutDashboard, 
