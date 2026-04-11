@@ -21,7 +21,7 @@ import {
 
 const config = getDefaultConfig({
   appName: 'Stashflow',
-  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '',
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '00000000000000000000000000000000',
   chains: [mainnet, polygon, optimism, arbitrum, base],
   ssr: true,
   transports: {
