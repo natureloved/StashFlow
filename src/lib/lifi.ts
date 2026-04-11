@@ -124,3 +124,22 @@ export async function getQuote(params: GetQuoteParams) {
 
   return response.json();
 }
+
+export async function getWalletBalances(userAddress: string) {
+  // Common chains to scan
+  const chains = [1, 8453, 42161, 10, 137]; // ETH, Base, Arb, Opt, Poly
+  const query = new URLSearchParams();
+  query.append('address', userAddress);
+  query.append('chains', chains.join(','));
+
+  const response = await fetch(`/api/lifi/balances?${query.toString()}`, {
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new Error(`Balances API Error: ${response.statusText}`);
+  }
+
+  return response.json();
+}

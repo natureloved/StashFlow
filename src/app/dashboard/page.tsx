@@ -71,16 +71,31 @@ export default function DashboardPage() {
     if (!address) return;
     setIsScanning(true);
     try {
-      const data = await getUserPositions(address);
-      const positions = data.positions || [];
-      const totalValue = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
+      const [{ positions = [] }, balancesData] = await Promise.all([
+        getUserPositions(address),
+        getWalletBalances(address)
+      ]);
+
+      const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
       
-      setPortfolioStats({ 
-        totalValue, 
-        idleAssets: totalValue 
+      let totalIdleUsd = 0;
+      Object.entries(balancesData).forEach(([_, tokens]: [string, any]) => {
+        tokens.forEach((token: any) => {
+          const usdValue = Number(token.amount) * (token.priceUSD || 0);
+          if (usdValue > 1.00) {
+            const isInPosition = positions.some(
+              (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase()
+            );
+            if (!isInPosition) totalIdleUsd += usdValue;
+          }
+        });
       });
       
-      // If we found assets, wait a bit for effect then show portfolio
+      setPortfolioStats({ 
+        totalValue: totalActiveUsd + totalIdleUsd, 
+        idleAssets: totalIdleUsd 
+      });
+      
       await new Promise(resolve => setTimeout(resolve, 1500));
       setCurrentView('portfolio');
     } catch (err) {
@@ -94,13 +109,30 @@ export default function DashboardPage() {
     async function fetchInsights() {
       if (!address || !isConnected) return;
       try {
-        const data = await getUserPositions(address);
-        const positions = data.positions || [];
-        const totalValue = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
-        // Simulation: assume 15% is 'idle' or unassigned to goals if total > 0
+        const [{ positions = [] }, balancesData] = await Promise.all([
+          getUserPositions(address),
+          getWalletBalances(address)
+        ]);
+
+        const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
+        
+        let totalIdleUsd = 0;
+        Object.entries(balancesData).forEach(([_, tokens]: [string, any]) => {
+          tokens.forEach((token: any) => {
+            const usdValue = Number(token.amount) * (token.priceUSD || 0);
+            // Dust filter
+            if (usdValue > 1.00) {
+              const isInPosition = positions.some(
+                (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase()
+              );
+              if (!isInPosition) totalIdleUsd += usdValue;
+            }
+          });
+        });
+
         setPortfolioStats({ 
-          totalValue, 
-          idleAssets: totalValue > 0 ? totalValue * 0.15 : 0 
+          totalValue: totalActiveUsd + totalIdleUsd, 
+          idleAssets: totalIdleUsd 
         });
       } catch (err) {
         console.error('Insight fetch failed:', err);

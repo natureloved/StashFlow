@@ -11,16 +11,18 @@ export async function GET(
   const searchParams = new URL(request.url).searchParams;
   
   // Construct the target sub-path
-  let subPath = '';
+  let subPath = path.join('/');
   let targetBaseUrl = LIFI_EARN_API_URL;
 
-  if (path.length > 0) {
-    // path is ['earn', 'vaults'] -> join is 'earn/vaults'
-    // resulting url: https://earn.li.fi/v1/earn/vaults
-    subPath = path.join('/');
-    searchParams.set('integrator', 'stashflow');
+  // core routes like /v1/balances should go to li.quest
+  if (path[0] === 'balances' || path[0] === 'tokens' || path[0] === 'chains') {
+    targetBaseUrl = 'https://li.quest/v1';
+  } else if (!path[0]?.startsWith('earn')) {
+    // If not explicitly an earn route, default to li.quest
+    targetBaseUrl = 'https://li.quest/v1';
   }
 
+  searchParams.set('integrator', 'stashflow');
   const queryString = searchParams.toString();
   const url = `${targetBaseUrl}/${subPath}${queryString ? `?${queryString}` : ''}`;
 
