@@ -47,10 +47,10 @@ export function EducationPopover({ id, term, children }: EducationPopoverProps) 
         {isOpen && (
           <motion.div
             exit={{ opacity: 0, y: 8 }}
-            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 z-[100] w-[calc(100vw-48px)] sm:w-[280px] bg-[#111118] border border-[#1E1E2E] rounded-xl shadow-2xl p-3.5 sm:p-4 md:p-5"
+            className="absolute left-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-3 z-[100] w-[calc(100vw-48px)] sm:w-[280px] bg-[#111118] border border-[#1E1E2E] rounded-xl shadow-2xl p-3.5 sm:p-4 md:p-5"
           >
-            {/* Arrow - Adjusted to bottom */}
-            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#111118] border-r border-b border-[#1E1E2E] rotate-45" />
+            {/* Arrow - Adjusted to bottom and responsive positioning */}
+            <div className="absolute -bottom-1.5 left-4 sm:left-1/2 sm:-translate-x-1/2 w-3 h-3 bg-[#111118] border-r border-b border-[#1E1E2E] rotate-45" />
             
             <div className="relative z-10">
               <div className="text-sm text-gray-300 font-body leading-relaxed mb-4">
