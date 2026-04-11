@@ -54,9 +54,11 @@ export default function DashboardPage() {
 
   React.useEffect(() => {
     if (mounted && !isConnected) {
-      router.push('/');
+      // Use window.location as a more aggressive redirect for disconnects
+      // to ensure state is fully cleared and user is sent home immediately
+      window.location.href = '/';
     }
-  }, [mounted, isConnected, router]);
+  }, [mounted, isConnected]);
 
   const handleScanPortfolio = async () => {
     setIsScanning(true);

@@ -238,17 +238,17 @@ export default function Home() {
       </section>
 
       {/* Trust & Security Section */}
-      <section id="security" className="py-20 md:py-32">
+      <section id="security" className="py-16 md:py-32">
         <div className="container mx-auto px-6">
           <div className="glass-card p-6 md:p-12 overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+            <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none hidden md:block">
                 <Shield className="w-64 h-64" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
-              <div className="space-y-6">
-                <h2 className="text-4xl font-display font-black uppercase">Institutional Grade Security</h2>
-                <p className="text-gray-400 font-body leading-relaxed max-w-lg">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center relative z-10">
+              <div className="space-y-4 md:space-y-6">
+                <h2 className="text-2xl md:text-4xl font-display font-black uppercase">Institutional Grade Security</h2>
+                <p className="text-sm md:text-base text-gray-400 font-body leading-relaxed max-w-lg">
                   Stashflow is non-custodial. Your funds never enter our possession. 
                   We utilize the audited infrastructure of LI.FI Earn to route your 
                   deposits into the world's most battle-tested DeFi protocols like Aave, Morpho, and Spark.

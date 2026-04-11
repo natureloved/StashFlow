@@ -30,8 +30,8 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
   const monthlyYield = yearlyYield / 12;
 
   return (
-    <Card className="glass-card flex flex-col gap-6 relative overflow-visible group border-border hover:border-accent/50 transition-colors h-full">
-      <Link href={`/dashboard/goals/${goal.id}`} className="p-6 pb-0 flex flex-col gap-6 flex-grow">
+    <Card className="glass-card flex flex-col gap-4 md:gap-6 relative overflow-visible group border-border hover:border-accent/50 transition-colors h-full">
+      <Link href={`/dashboard/goals/${goal.id}`} className="p-4 md:p-6 pb-0 flex flex-col gap-4 md:gap-6 flex-grow">
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-3xl transition-all group-hover:bg-accent/10" />
 
         <div className="flex justify-between items-start">
@@ -83,7 +83,7 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
         </div>
       </Link>
 
-      <div className="p-6 pt-2 flex items-center justify-between border-t border-border mt-auto">
+      <div className="p-4 md:p-6 pt-2 flex items-center justify-between border-t border-border mt-auto">
         <div className="space-y-1">
           <div className="text-[10px] text-gray-500 uppercase font-bold flex items-center gap-1">
             Vault Info 
