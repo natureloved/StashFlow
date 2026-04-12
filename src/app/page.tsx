@@ -319,7 +319,7 @@ export default function Home() {
               Ready to stash?
             </h2>
             <p className="text-xl text-gray-400 max-w-xl mx-auto font-body">
-              Swap your traditional 0.1% savings account for high-yield DeFi goals.
+              Stop settling for 0.1%. Transform your savings into purpose-driven goals powered by institutional-grade DeFi yield.
             </p>
             
             <div className="flex flex-col items-center gap-6">
