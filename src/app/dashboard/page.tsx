@@ -22,7 +22,9 @@ import {
   ArrowRight, 
   Target as TargetIcon,
   Sparkles,
-  Loader2
+  Loader2,
+  Coins,
+  Zap
 } from 'lucide-react';
 
 import { ShareCardModal } from '@/components/ShareCardModal';
