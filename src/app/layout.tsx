@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Stashflow | Save with purpose',
     description: 'Goal-based DeFi savings powered by LI.FI Earn',
-    images: ['/og-image.png'],
+    images: ['https://stashflow-two.vercel.app/og-image.png'],
   },
 };
 

@@ -177,21 +177,21 @@ export default function GoalDetailPage() {
               
               <div className="space-y-6">
                 <div className="flex justify-between pb-4 border-b border-border">
-                  <span className="text-gray-400 text-sm">Protocol</span>
-                  <span className="font-bold flex items-center gap-1">
-                    {goal.vault.protocol.name} <ExternalLink className="w-3 h-3 text-gray-500" />
+                  <span className="text-gray-400 text-sm font-body">Protocol</span>
+                  <span className="font-bold text-white flex items-center gap-1">
+                    {goal.vault.protocol.name} <ExternalLink className="w-3 h-3 text-gray-400" />
                   </span>
                 </div>
                 <div className="flex justify-between pb-4 border-b border-border">
-                  <span className="text-gray-400 text-sm">Network</span>
-                  <span className="font-bold capitalize">{goal.vault.network}</span>
+                  <span className="text-gray-400 text-sm font-body">Network</span>
+                  <span className="font-bold text-white capitalize">{goal.vault.network}</span>
                 </div>
                 <div className="flex justify-between pb-4 border-b border-border">
-                  <span className="text-gray-400 text-sm">TVL</span>
-                  <span className="font-bold">${Number(vaultDetails?.analytics?.tvl?.usd || goal.vault.analytics.tvl.usd).toLocaleString()}</span>
+                  <span className="text-gray-400 text-sm font-body">TVL</span>
+                  <span className="font-bold text-white">${Number(vaultDetails?.analytics?.tvl?.usd || goal.vault.analytics.tvl.usd).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Risk Tier</span>
+                  <span className="text-gray-400 text-sm font-body">Risk Tier</span>
                   <Badge variant="outline" className="border-accent text-accent uppercase font-bold text-[10px]">{goal.riskTier}</Badge>
                 </div>
               </div>
@@ -203,21 +203,21 @@ export default function GoalDetailPage() {
               </h3>
               
               <div className="space-y-6">
-                <div className="p-4 bg-secondary/5 rounded-xl border border-secondary/20">
+                <div className="p-4 bg-secondary/10 rounded-xl border border-secondary/30">
                   <p className="text-[10px] text-secondary font-bold uppercase mb-1">Monthly Yield</p>
-                  <p className="text-2xl font-display font-bold text-secondary">
+                  <p className="text-3xl font-display font-bold text-secondary">
                     +${monthlyYield.toFixed(2)}
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Time to Goal</span>
-                    <span className="font-bold">
-                      {daysToComplete === Infinity ? 'N/A' : `${daysToComplete} Days`}
+                    <span className="text-gray-400 font-body">Time to Goal</span>
+                    <span className="font-bold text-white">
+                      {daysToComplete === Infinity ? 'N/A' : `${daysToComplete.toLocaleString()} Days`}
                     </span>
                   </div>
-                  <Progress value={daysToComplete === Infinity ? 0 : 45} className="h-1" />
+                  <Progress value={daysToComplete === Infinity ? 0 : Math.min(45, progress)} className="h-1" />
                   <p className="text-[10px] text-gray-500 italic">
                     Based on current yield and zero additional contributions.
                   </p>

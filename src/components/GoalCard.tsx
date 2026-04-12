@@ -55,7 +55,8 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
                     deleteGoal(goal.id);
                   }
                 }}
-                className="opacity-0 group-hover:opacity-100 p-1 text-gray-600 hover:text-red-500 transition-all"
+                className="p-1 text-gray-600 hover:text-red-500 transition-colors"
+                title="Remove goal tracking"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

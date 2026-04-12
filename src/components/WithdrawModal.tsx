@@ -187,15 +187,15 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="0.00"
-                        className="w-full bg-[#0A0A0F]/50 border-border focus:border-accent text-white font-numeric text-3xl p-6 rounded-2xl outline-none transition-all pr-32"
+                        className="w-full bg-[#0A0A0F]/50 border border-border focus:border-accent text-white font-numeric text-3xl p-5 rounded-2xl outline-none transition-all pr-36"
                       />
                       <button
                         onClick={() => setAmount(currentBalanceUsd.toString())}
-                        className="absolute right-12 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-[10px] font-bold hover:bg-accent/20 transition-colors"
+                        className="absolute right-[4.5rem] top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-accent/10 text-accent text-[10px] font-bold hover:bg-accent/20 transition-colors"
                       >
                         MAX
                       </button>
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xs pointer-events-none">
+                      <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xs pointer-events-none">
                         USDC
                       </div>
                     </div>
@@ -226,7 +226,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
                 <Button 
                   disabled={!amount || Number(amount) <= 0 || Number(amount) > currentBalanceUsd || isFetchingQuote}
                   onClick={fetchWithdrawQuote} 
-                  className="w-full h-14 bg-white text-black hover:bg-white/90 font-bold text-lg rounded-xl"
+                  className="w-full h-11 bg-white text-black hover:bg-white/90 font-bold text-sm rounded-xl"
                 >
                   {isFetchingQuote ? <Loader2 className="animate-spin" /> : 'Review Withdrawal'}
                 </Button>

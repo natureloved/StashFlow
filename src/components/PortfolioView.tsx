@@ -129,7 +129,7 @@ export function PortfolioView() {
     );
   }
 
-  const activeValue = positions.reduce((acc, p) => acc + (Number(p.amountUsd) || 0), 0);
+  const activeValue = positions.reduce((acc, p) => acc + (Number(p.balanceUsd) || Number(p.amountUsd) || 0), 0);
   const idleValue = idleAssets.reduce((acc, a) => acc + a.balanceUsd, 0);
   const totalNetWorth = activeValue + idleValue;
 
