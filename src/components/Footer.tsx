@@ -24,9 +24,15 @@ export function Footer() {
           </div>
 
           <div className="flex items-center gap-8 text-xs text-gray-400 font-body">
-            <a href="#" className="hover:text-accent transition-colors">Documentation</a>
-            <a href="#" className="hover:text-accent transition-colors">Risk Policy</a>
-            <a href="#" className="hover:text-accent transition-colors">Privacy</a>
+            <a 
+              href="https://docs.li.fi/earn/overview" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-accent transition-colors"
+            >
+              Documentation
+            </a>
+            <Link href="/risk" className="hover:text-accent transition-colors">Risk Policy</Link>
           </div>
         </div>
         

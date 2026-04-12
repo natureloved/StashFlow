@@ -20,6 +20,28 @@ import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 export default function Home() {
   const { isConnected } = useAccount();
+  const [metrics, setMetrics] = React.useState({ vaults: 0, chains: 0, protocols: 0 });
+
+  React.useEffect(() => {
+    async function fetchMetrics() {
+      try {
+        const [vaultsRes, chainsRes, protocolsRes] = await Promise.all([
+          fetch('https://earn.li.fi/v1/earn/vaults').then(res => res.json()),
+          fetch('https://earn.li.fi/v1/earn/chains').then(res => res.json()),
+          fetch('https://earn.li.fi/v1/earn/protocols').then(res => res.json())
+        ]);
+        
+        setMetrics({
+          vaults: vaultsRes.total || 0,
+          chains: Array.isArray(chainsRes) ? chainsRes.length : 0,
+          protocols: Array.isArray(protocolsRes) ? protocolsRes.length : 0
+        });
+      } catch (err) {
+        console.error('Failed to fetch landing metrics:', err);
+      }
+    }
+    fetchMetrics();
+  }, []);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -258,20 +280,20 @@ export default function Home() {
                     <Shield className="w-3.5 h-3.5 text-green-500" /> Audited Contracts
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
-                    <Globe className="w-3.5 h-3.5 text-accent" /> <span className="font-numeric">60+</span> Chains
+                    <Globe className="w-3.5 h-3.5 text-accent" /> <span className="font-numeric">{metrics.chains || 60}+</span> Chains
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
-                    <Zap className="w-3.5 h-3.5 text-secondary" /> <span className="font-numeric">20+</span> Vault Protocols
+                    <Zap className="w-3.5 h-3.5 text-secondary" /> <span className="font-numeric">{metrics.protocols || 20}+</span> Vault Protocols
                   </div>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {[
-                  { label: "Total Asset Flow", value: "$4.2B+" },
-                  { label: "Connected Vaults", value: "240+" },
+                  { label: "Connected Vaults", value: metrics.vaults ? `${metrics.vaults}+` : "600+" },
+                  { label: "Active Chains", value: metrics.chains ? `${metrics.chains}+` : "16+" },
                   { label: "Uptime", value: "99.9%" },
-                  { label: "Active Chains", value: "20+" }
+                  { label: "Architecture", value: "Non-Custodial" }
                 ].map((stat, i) => (
                   <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/5 text-center">
                     <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">{stat.label}</p>
@@ -297,7 +319,7 @@ export default function Home() {
               Ready to stash?
             </h2>
             <p className="text-xl text-gray-400 max-w-xl mx-auto font-body">
-              Join thousands of users who have swapped their traditional 0.1% savings accounts for high-yield DeFi goals.
+              Swap your traditional 0.1% savings account for high-yield DeFi goals.
             </p>
             
             <div className="flex flex-col items-center gap-6">
@@ -320,9 +342,9 @@ export default function Home() {
                   </div>
                 </div>
               ) : (
-                <Link href="/dashboard" className="group scale-125 pt-4">
-                  <div className="bg-white px-10 py-4 rounded-xl flex items-center gap-2 text-black font-bold hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all">
-                    Go to Your Dashboard <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <Link href="/dashboard" className="group pt-4">
+                  <div className="bg-white px-8 py-3.5 rounded-xl flex items-center gap-2 text-black text-sm font-bold hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all">
+                    Go to Your Dashboard <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </Link>
               )}

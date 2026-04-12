@@ -27,8 +27,26 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Stashflow | Save with purpose",
-  description: "Goal-based DeFi savings app for the future of finance.",
+  title: 'Stashflow | Save with purpose',
+  description: 'DeFi made simple. Set goals, and earn yield while you wait.',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    title: 'Stashflow | Save with purpose',
+    description: 'Goal-based DeFi savings powered by LI.FI Earn',
+    url: 'https://stashflow-two.vercel.app',
+    sideName: 'Stashflow',
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Stashflow | Save with purpose',
+    description: 'Goal-based DeFi savings powered by LI.FI Earn',
+    images: ['/og-image.png'],
+  },
 };
 
 export default function RootLayout({
