@@ -6,9 +6,9 @@ export const getYieldEquivalent = (mYield: number) => {
   // Randomizing within categories for variety
   const pick = (options: string[]) => options[Math.floor(Math.random() * options.length)];
 
-  if (mYield < 0.1) return pick(["a lucky penny on the street 🪙", "the start of something big 📈", "your first on-chain earnings ⚡"]);
-  if (mYield < 0.5) return pick(["your first crypto snack 🍬", "a set of digital stickers 🎨", "a small transaction fee ⛽"]);
-  if (mYield < 2) return pick(["your morning coffee ☕", "a tasty chocolate bar 🍫", "a song on iTunes 🎵"]);
+  if (mYield < 0.1) return pick(["the start of something big 📈", "your first on-chain earnings ⚡", "a digital penny 🪙"]);
+  if (mYield < 0.5) return pick(["a network fee offset ⛽", "your morning coffee ☕", "a tasty treat 🍬"]);
+  if (mYield < 2) return pick(["a premium coffee ☕", "a bottle of spring water 💧", "a small savings boost 📈"]);
   if (mYield < 5) return pick(["a delicious bagel 🥯", "a premium mobile app 📱", "a bus ticket 🚌"]);
   if (mYield < 15) return pick(["your Spotify subscription 🎵", "a cinema ticket 🎬", "a hearty lunch 🍱"]);
   if (mYield < 30) return pick(["your Netflix plan 🎬", "a new book 📚", "a yoga class 🧘"]);

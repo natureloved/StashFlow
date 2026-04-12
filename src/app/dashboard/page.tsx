@@ -32,7 +32,7 @@ import confetti from 'canvas-confetti';
 import { getYieldEquivalent } from '@/lib/yield-utils';
 
 export default function DashboardPage() {
-  const { address, status } = useAccount();
+  const { address, status, isConnected } = useAccount();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -390,17 +390,35 @@ export default function DashboardPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="mb-12 p-4 bg-secondary/5 border border-secondary/20 rounded-2xl flex items-center justify-between gap-4"
+                  className="mb-12 relative group"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
-                      <Sparkles className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="text-[11px] font-body text-gray-300 leading-snug">
-                        Yield is paying for <span className="text-accent font-bold underline decoration-accent/30">{getYieldEquivalent(totalMonthlyYield || 0)}</span>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-secondary/20 via-accent/10 to-secondary/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition duration-1000" />
+                  <div className="relative p-6 bg-[#0A0A0F] border border-white/5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
+                    <div className="flex items-center gap-5">
+                      <div className="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-[0_0_20px_rgba(255,184,0,0.1)]">
+                        <Sparkles className="w-7 h-7" />
                       </div>
-                      <p className="text-[10px] text-gray-500 mt-1 uppercase font-black tracking-widest">Passive Income • Optimized ⚡</p>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-secondary font-black uppercase tracking-[0.2em]">Live Yield Insight</span>
+                          <div className="w-1 h-1 rounded-full bg-secondary animate-pulse" />
+                        </div>
+                        <h3 className="text-lg md:text-xl font-display font-bold text-white leading-tight">
+                          Monthly yield: <span className="text-secondary font-numeric">~${(totalMonthlyYield || 0).toFixed(2)}</span>
+                        </h3>
+                        <p className="text-sm text-gray-400 font-body">
+                          That's equivalent to <span className="text-white font-bold underline decoration-secondary/30 decoration-2 underline-offset-4">{getYieldEquivalent(totalMonthlyYield || 0)}</span> each month
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center md:items-end gap-2">
+                      <div className="px-4 py-1.5 rounded-full bg-secondary/5 border border-secondary/20 text-[10px] font-black text-secondary tracking-widest uppercase">
+                        Passive Income • Optimized ⚡
+                      </div>
+                      <p className="text-[10px] text-gray-600 font-body max-w-[180px] text-center md:text-right italic">
+                        Visualizing your yield as real-world value.
+                      </p>
                     </div>
                   </div>
                 </motion.div>
