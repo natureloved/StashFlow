@@ -2,12 +2,12 @@
 
 import * as React from 'react';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Goal } from '@/store/useGoalStore';
-import { TrendingUp, Plus, HelpCircle, Trash2 } from 'lucide-react';
+import { TrendingUp, Plus, HelpCircle, Trash2, AlertTriangle, X } from 'lucide-react';
 import Link from 'next/link';
 import { useGoalStore } from '@/store/useGoalStore';
 import { MilestoneBadge } from '@/components/MilestoneBadge';
@@ -21,9 +21,84 @@ interface GoalCardProps {
   onAddFunds: () => void;
 }
 
+function DeleteConfirmModal({ goalName, onConfirm, onCancel }: { goalName: string; onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        onClick={onCancel}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-sm bg-[#0F0F18] border border-red-500/20 rounded-2xl shadow-[0_0_60px_rgba(239,68,68,0.15)] overflow-hidden"
+        >
+          {/* Header */}
+          <div className="p-6 border-b border-red-500/10 flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-red-500/15 rounded-xl flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-white text-lg">Remove Goal</h3>
+                <p className="text-xs text-gray-500 font-body">"{goalName}"</p>
+              </div>
+            </div>
+            <button onClick={onCancel} className="text-gray-600 hover:text-white transition-colors p-1">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Warning */}
+          <div className="p-6 space-y-4">
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-amber-400">Withdraw your funds first!</p>
+                <p className="text-xs text-gray-400 font-body leading-relaxed">
+                  This only removes the goal from your dashboard. Your funds
+                  <span className="text-white font-bold"> will remain locked in the vault</span> until
+                  you manually withdraw them — even after this goal is deleted.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-400 font-body">
+              To safely exit, go into this goal, <span className="text-white font-bold">withdraw all funds</span>, then delete it.
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="px-6 pb-6 space-y-2">
+            <Button
+              onClick={onConfirm}
+              className="w-full bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 hover:text-red-300 font-bold rounded-xl transition-all"
+            >
+              I understand — delete anyway
+            </Button>
+            <Button
+              onClick={onCancel}
+              className="w-full bg-accent text-black hover:bg-accent/90 font-bold rounded-xl"
+            >
+              Go back & withdraw funds first
+            </Button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
   const deleteGoal = useGoalStore(state => state.deleteGoal);
   const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const currentSaved = goal.contributions.reduce((acc, curr) => acc + curr.amountUsd, 0);
   const progress = Math.min((currentSaved / goal.targetAmountUsd) * 100, 100);
   
@@ -32,141 +107,151 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
   const monthlyYield = yearlyYield / 12;
 
   // Dynamic Projection Logic
-  // Recommendation: Reach goal in 1 year (52 weeks) if no date set
   const remaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
   const weeklySave = remaining > 0 ? Math.ceil(remaining / 52) : 0;
   const completionDate = calculateGoalCompletionDate(currentSaved, goal.targetAmountUsd, apy, weeklySave || 50);
   const completionStr = formatCompletionDate(completionDate);
 
   return (
-    <Card className="glass-card flex flex-col gap-4 md:gap-6 relative overflow-visible group border-border hover:border-accent/50 transition-colors h-full">
-      <Link href={`/dashboard/goals/${goal.id}`} className="px-3 py-4 md:p-6 pb-0 flex flex-col gap-4 md:gap-6 flex-grow">
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-3xl transition-all group-hover:bg-accent/10" />
+    <>
+      {isDeleteModalOpen && (
+        <DeleteConfirmModal
+          goalName={goal.name}
+          onConfirm={() => {
+            deleteGoal(goal.id);
+            setIsDeleteModalOpen(false);
+          }}
+          onCancel={() => setIsDeleteModalOpen(false)}
+        />
+      )}
 
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <MilestoneBadge progress={progress} />
-              <button
+      <Card className="glass-card flex flex-col gap-4 md:gap-6 relative overflow-visible group border-border hover:border-accent/50 transition-colors h-full">
+        <Link href={`/dashboard/goals/${goal.id}`} className="px-3 py-4 md:p-6 pb-0 flex flex-col gap-4 md:gap-6 flex-grow">
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-3xl transition-all group-hover:bg-accent/10" />
+
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <MilestoneBadge progress={progress} />
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDeleteModalOpen(true);
+                  }}
+                  className="p-1 text-gray-600 hover:text-red-500 transition-colors"
+                  title="Remove goal tracking"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <h3 className="font-kalam text-3xl font-bold tracking-tight text-white mb-1 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                {goal.name || 'Untitled Goal'}
+              </h3>
+              <div className="text-sm text-gray-400 font-body">
+                Target <span className="font-numeric font-bold">${goal.targetAmountUsd.toLocaleString()}</span>
+              </div>
+            </div>
+            <Badge className="bg-accent/10 text-accent border-accent/20 px-3 py-1">
+              <EducationPopover 
+                id="apy" 
+                term={<span className="font-numeric font-bold">{Math.round(apy * 1000) / 10}% APY</span>}
+              >
+                APY means you earn {Math.round(apy * 1000) / 10}% of your deposit 
+                per year, paid continuously. $1,000 today becomes 
+                ~${(1000 * (1 + apy)).toLocaleString()} in a year — automatically, no action needed.
+              </EducationPopover>
+            </Badge>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm font-body">
+              <span className="text-gray-400">
+                <span className="text-white font-numeric font-bold">${currentSaved.toLocaleString()}</span> saved
+              </span>
+              <span className="text-accent font-numeric font-bold">{Math.round(progress)}%</span>
+            </div>
+            <div className="relative h-3 w-full bg-surface rounded-full overflow-hidden border border-border">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="absolute top-0 left-0 h-full bg-secondary rounded-full shadow-[0_0_15px_rgba(255,184,0,0.5)]"
+              />
+            </div>
+          </div>
+
+          <div className="bg-[#0A0A0F]/50 p-4 rounded-xl border border-white/5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[10px] text-accent uppercase font-black tracking-widest">
+                <TrendingUp className="w-3 h-3" /> Vault Analytics
+              </div>
+              <div className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-bold">
+                PASSIVE
+              </div>
+            </div>
+            <div className="text-sm font-body text-gray-300 leading-snug">
+              Current yield is covering <span className="text-accent font-bold">{getYieldEquivalent(monthlyYield)}</span>
+            </div>
+          </div>
+
+          <div className="bg-secondary/5 p-4 rounded-xl border border-secondary/10">
+            <div className="text-[10px] text-secondary uppercase font-black tracking-widest mb-1 flex items-center gap-1">
+              <Plus className="w-2.5 h-2.5" /> Projections
+            </div>
+            <p className="text-sm font-body text-gray-300">
+              Recommend <span className="text-white font-bold">${weeklySave}/wk</span> to reach your goal by <span className="text-secondary font-bold">{completionStr}</span>.
+            </p>
+          </div>
+        </Link>
+
+        <div className="px-4 md:px-6 py-3 flex items-center justify-between border-t border-border mt-auto font-body">
+          <div className="min-w-0 flex-1 mr-3">
+            <div className="text-[10px] text-gray-400 uppercase font-bold flex items-center gap-1 mb-0.5">
+              Vault Info 
+              <button 
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (confirm('Delete this goal tracking? (On-chain funds will remain in the vault)')) {
-                    deleteGoal(goal.id);
-                  }
+                  setIsSafetyModalOpen(true);
                 }}
-                className="p-1 text-gray-600 hover:text-red-500 transition-colors"
-                title="Remove goal tracking"
+                className="text-gray-400 hover:text-accent transition-colors"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <HelpCircle className="w-3 h-3" />
               </button>
             </div>
-            <h3 className="font-kalam text-3xl font-bold tracking-tight text-white mb-1 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-              {goal.name || 'Untitled Goal'}
-            </h3>
-            <div className="text-sm text-gray-400 font-body">
-              Target <span className="font-numeric font-bold">${goal.targetAmountUsd.toLocaleString()}</span>
+            <div className="flex items-center gap-1.5 text-xs text-gray-300 flex-wrap">
+              <EducationPopover 
+                id="protocol" 
+                term={goal.vault.protocol.name}
+              >
+                {goal.vault.protocol.name} is the protocol managing your 
+                yield. It's a smart contract running on the blockchain 
+                — no company controls your funds.
+              </EducationPopover>
+              <span className="text-gray-600">•</span>
+              <span className="capitalize text-gray-300">{goal.vault.network}</span>
             </div>
           </div>
-          <Badge className="bg-accent/10 text-accent border-accent/20 px-3 py-1">
-            <EducationPopover 
-              id="apy" 
-              term={<span className="font-numeric font-bold">{Math.round(apy * 1000) / 10}% APY</span>}
-            >
-              APY means you earn {Math.round(apy * 1000) / 10}% of your deposit 
-              per year, paid continuously. $1,000 today becomes 
-              ~${(1000 * (1 + apy)).toLocaleString()} in a year — automatically, no action needed.
-            </EducationPopover>
-          </Badge>
+          <Button 
+            size="sm" 
+            className="bg-accent text-black hover:bg-accent/90 font-bold px-4 flex-shrink-0"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onAddFunds?.();
+            }}
+          >
+            <Plus className="w-4 h-4 mr-1" /> Add Funds
+          </Button>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex justify-between text-sm font-body">
-            <span className="text-gray-400">
-              <span className="text-white font-numeric font-bold">${currentSaved.toLocaleString()}</span> saved
-            </span>
-            <span className="text-accent font-numeric font-bold">{Math.round(progress)}%</span>
-          </div>
-          <div className="relative h-3 w-full bg-surface rounded-full overflow-hidden border border-border">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className="absolute top-0 left-0 h-full bg-secondary rounded-full shadow-[0_0_15px_rgba(255,184,0,0.5)]"
-            />
-          </div>
-        </div>
-
-        <div className="bg-[#0A0A0F]/50 p-4 rounded-xl border border-white/5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[10px] text-accent uppercase font-black tracking-widest">
-              <TrendingUp className="w-3 h-3" /> Vault Analytics
-            </div>
-            <div className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-bold">
-              PASSIVE
-            </div>
-          </div>
-          <div className="text-sm font-body text-gray-300 leading-snug">
-            Current yield is covering <span className="text-accent font-bold">{getYieldEquivalent(monthlyYield)}</span>
-          </div>
-        </div>
-
-        <div className="bg-secondary/5 p-4 rounded-xl border border-secondary/10">
-          <div className="text-[10px] text-secondary uppercase font-black tracking-widest mb-1 flex items-center gap-1">
-            <Plus className="w-2.5 h-2.5" /> Projections
-          </div>
-          <p className="text-sm font-body text-gray-300">
-            Recommend <span className="text-white font-bold">${weeklySave}/wk</span> to reach your goal by <span className="text-secondary font-bold">{completionStr}</span>.
-          </p>
-        </div>
-      </Link>
-
-      <div className="p-4 md:p-6 pt-2 flex items-center justify-between border-t border-border mt-auto font-body">
-        <div className="space-y-1 pl-1.5">
-          <div className="text-[10px] text-gray-500 uppercase font-bold flex items-center gap-1">
-            Vault Info 
-            <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsSafetyModalOpen(true);
-              }}
-              className="text-gray-400 hover:text-accent transition-colors"
-            >
-              <HelpCircle className="w-3 h-3" />
-            </button>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <EducationPopover 
-              id="protocol" 
-              term={goal.vault.protocol.name}
-            >
-              {goal.vault.protocol.name} is the protocol managing your 
-              yield. It's a smart contract running on the blockchain 
-              — no company controls your funds.
-            </EducationPopover>
-            <span className="text-gray-500">•</span>
-            <span className="capitalize">{goal.vault.network}</span>
-          </div>
-        </div>
-        <Button 
-          size="sm" 
-          className="bg-accent text-black hover:bg-accent/90 font-bold px-4"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onAddFunds?.();
-          }}
-        >
-          <Plus className="w-4 h-4 mr-1" /> Add Funds
-        </Button>
-      </div>
-
-      <VaultSafetyModal 
-        vault={goal.vault as any} 
-        open={isSafetyModalOpen} 
-        onOpenChange={setIsSafetyModalOpen} 
-      />
-    </Card>
+        <VaultSafetyModal 
+          vault={goal.vault as any} 
+          open={isSafetyModalOpen} 
+          onOpenChange={setIsSafetyModalOpen} 
+        />
+      </Card>
+    </>
   );
 }

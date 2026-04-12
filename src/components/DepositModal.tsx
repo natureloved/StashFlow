@@ -197,6 +197,38 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
     }
   };
 
+  const [pendingTxHash, setPendingTxHash] = React.useState<`0x${string}` | undefined>(undefined);
+  
+  // Wait for on-chain confirmation
+  const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError } = useWaitForTransactionReceipt({
+    hash: pendingTxHash,
+  });
+
+  // Record contribution only after tx is confirmed
+  React.useEffect(() => {
+    if (isConfirmed && pendingTxHash && goal) {
+      const depositAmountUsd = isUsdMode ? Number(amount) : Number(amount) * tokenPrice;
+      const prevTotal = goal.contributions.reduce((acc, c) => acc + c.amountUsd, 0);
+      addContribution(goal.id, {
+        id: Math.random().toString(36).substr(2, 9),
+        date: new Date().toISOString(),
+        amountUsd: depositAmountUsd,
+        txHash: pendingTxHash,
+        fromChain: chainId as number,
+        fromToken: selectedToken.symbol,
+      });
+      setPendingTxHash(undefined);
+      setStep(3);
+      triggerConfetti();
+      onDepositSuccess?.(prevTotal, prevTotal + depositAmountUsd);
+    }
+    if (isTxError && pendingTxHash) {
+      setError('Transaction failed on-chain. Your funds were not moved.');
+      setPendingTxHash(undefined);
+      setIsDepositing(false);
+    }
+  }, [isConfirmed, isTxError, pendingTxHash]);
+
   const handleDeposit = async () => {
     if (!quote || !goal || !isAgreed) return;
 
@@ -213,24 +245,11 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
         value: BigInt(quote.transactionRequest.value || 0),
       });
 
-      const depositAmountUsd = isUsdMode ? Number(amount) : Number(amount) * tokenPrice;
-      const prevTotal = goal.contributions.reduce((acc, c) => acc + c.amountUsd, 0);
-
-      addContribution(goal.id, {
-        id: Math.random().toString(36).substr(2, 9),
-        date: new Date().toISOString(),
-        amountUsd: depositAmountUsd,
-        txHash: tx,
-        fromChain: chainId as number,
-        fromToken: selectedToken.symbol,
-      });
-
-      setStep(3);
-      triggerConfetti();
-      onDepositSuccess?.(prevTotal, prevTotal + depositAmountUsd);
+      // Do NOT record yet — wait for useWaitForTransactionReceipt to confirm
+      setPendingTxHash(tx);
+      // isDepositing stays true while confirming
     } catch (err: any) {
       setError(err.message || 'Transaction failed');
-    } finally {
       setIsDepositing(false);
     }
   };
@@ -492,11 +511,15 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                     </Button>
                   ) : (
                     <Button 
-                      disabled={isDepositing || !isAgreed}
+                      disabled={isDepositing || isConfirming || !isAgreed}
                       onClick={handleDeposit}
                       className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
                     >
-                      {isDepositing ? <Loader2 className="animate-spin" /> : 'Confirm & Deposit'}
+                      {isDepositing && !pendingTxHash ? (
+                        <><Loader2 className="animate-spin mr-2" /> Submitting...</>
+                      ) : isConfirming ? (
+                        <><Loader2 className="animate-spin mr-2" /> Confirming on-chain...</>
+                      ) : 'Confirm & Deposit'}
                     </Button>
                   )}
                   

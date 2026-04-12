@@ -234,7 +234,7 @@ export function PortfolioView() {
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-accent fill-accent/10" />
-                <h3 className="text-xl font-display font-bold tracking-tight">Active Savings (StashFlow)</h3>
+                <h3 className="text-xl font-display font-bold tracking-tight">Active Savings</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {positions.map((pos, idx) => (
@@ -274,7 +274,9 @@ export function PortfolioView() {
                         <div className="space-y-1 text-right">
                           <div className="text-[10px] text-gray-500 uppercase font-bold">APY</div>
                           <div className="text-xl font-display font-bold text-secondary">
-                            {pos.apy ? (Number(pos.apy) * 100).toFixed(2) : '---'}%
+                            {pos.apy ? `${(Number(pos.apy) * 100).toFixed(2)}%` : (
+                              <span className="text-sm text-gray-500 font-body font-normal">Via Vault</span>
+                            )}
                           </div>
                         </div>
                       </div>

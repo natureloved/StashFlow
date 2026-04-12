@@ -72,7 +72,7 @@ export function EducationPopover({ id, term, children }: EducationPopoverProps) 
                 </Button>
               ) : (
                 <div className="text-[10px] text-gray-600 uppercase font-bold text-center">
-                  Topic seen ✓
+                  Ok ✓
                 </div>
               )}
             </div>
