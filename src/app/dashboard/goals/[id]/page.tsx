@@ -187,8 +187,11 @@ export default function GoalDetailPage() {
                   <span className="font-bold text-white capitalize">{goal.vault.network}</span>
                 </div>
                 <div className="flex justify-between pb-4 border-b border-border">
-                  <span className="text-gray-400 text-sm font-body">TVL</span>
-                  <span className="font-bold text-white">${Number(vaultDetails?.analytics?.tvl?.usd || goal.vault.analytics.tvl.usd).toLocaleString()}</span>
+                  <span className="text-gray-400 text-sm font-body">Vault TVL</span>
+                  <div className="text-right">
+                    <span className="font-bold text-white">${Number(vaultDetails?.analytics?.tvl?.usd || goal.vault.analytics.tvl.usd).toLocaleString()}</span>
+                    <p className="text-[10px] text-gray-600 mt-0.5">This vault only</p>
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400 text-sm font-body">Risk Tier</span>
