@@ -14,7 +14,7 @@ import html2canvas from 'html2canvas';
 
 interface ShareCardModalProps {
   goal: Goal;
-  milestone: 25 | 50 | 100;
+  milestone: 1 | 25 | 50 | 75 | 100;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -28,18 +28,23 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
   const apy = (goal.vault.analytics.apy.total * 100).toFixed(1);
 
   const milestoneData = {
+    1: { badge: '🌱', title: 'First Step Taken' },
     25: { badge: '🚀', title: 'Journey Started' },
-    50: { badge: '🔥', title: 'Halfway There' },
+    50: { badge: '🔥', title: 'Halfway Mark' },
+    75: { badge: '💎', title: 'Almost There' },
     100: { badge: '🏆', title: 'Goal Unlocked!' }
-  }[milestone];
+  }[milestone] as { badge: string; title: string };
 
   const copyTweetText = () => {
     let text = "";
-    if (milestone === 25) {
-      text = `Just hit my first milestone 🚀 Saving for ${goal.name} with @stashflow — already $${Math.round(currentAmountUsd).toLocaleString()} in, earning ${apy}% APY on-chain. DeFi savings that actually make sense. Built on @lifiprotocol #DeFi #Stashflow`;
+    if (milestone === 1) {
+      text = `Just took my first step towards my ${goal.name} goal! 🌱 Saving on-chain with @stashflow, earning ${apy}% APY. The journey of a thousand miles starts with one click. Powered by @lifiprotocol #DeFi #Stashflow`;
+    } else if (milestone === 25) {
+      text = `25% of the way to my ${goal.name} goal! 🚀 $${Math.round(currentAmountUsd).toLocaleString()} saved and earning ${apy}% APY automatically with @stashflow. DeFi yield hitting different. @lifiprotocol #DeFi`;
     } else if (milestone === 50) {
-      const yieldPaysFor = "my internet bill"; // Example
-      text = `Halfway to my ${goal.name} goal 🔥 $${Math.round(currentAmountUsd).toLocaleString()} saved, earning ${apy}% APY automatically on-chain. My yield is literally paying for ${yieldPaysFor}. @stashflow built on @lifiprotocol #DeFi`;
+      text = `Halfway mark hit for ${goal.name}! 🔥 $${Math.round(currentAmountUsd).toLocaleString()} secured on-chain. My @stashflow yield is already building up. Powered by @lifiprotocol #PassiveIncome #DeFi`;
+    } else if (milestone === 75) {
+      text = `75% DONE! 💎 Almost reached my ${goal.name} goal with @stashflow. Earning ${apy}% APY while I sleep. On-chain savings at its finest. @lifiprotocol #DeFi #Stashflow`;
     } else {
       text = `GOAL UNLOCKED 🏆 I just hit my ${goal.name} target! $${Math.round(currentAmountUsd).toLocaleString()} saved on-chain with @stashflow, powered by @lifiprotocol. This is what DeFi UX should feel like. #DeFi #Stashflow`;
     }

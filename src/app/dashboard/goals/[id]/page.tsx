@@ -84,7 +84,7 @@ export default function GoalDetailPage() {
           <div className="lg:col-span-2 space-y-12">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <h1 className="font-display text-5xl md:text-6xl font-extrabold">{goal.name}</h1>
+                <h1 className="font-display text-4xl md:text-5xl font-extrabold">{goal.name}</h1>
                 <Badge className="bg-accent/10 text-accent border-accent/20 px-4 py-1.5 font-bold text-lg">
                   {(apy * 100).toFixed(2)}% APY
                 </Badge>
@@ -200,28 +200,30 @@ export default function GoalDetailPage() {
               </div>
             </Card>
 
-            <Card className="glass-card p-6 border-secondary/20">
+            <Card className="glass-card p-6 border-secondary/20 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-secondary/10 transition-all" />
               <h3 className="font-display text-xl font-bold mb-6 flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-secondary" /> Projections
               </h3>
               
               <div className="space-y-6">
-                <div className="p-4 bg-secondary/10 rounded-xl border border-secondary/30">
-                  <p className="text-[10px] text-secondary font-bold uppercase mb-1">Monthly Yield</p>
-                  <p className="text-3xl font-display font-bold text-secondary">
+                <div className="p-4 bg-secondary/10 rounded-xl border border-secondary/30 relative">
+                  <p className="text-[10px] text-secondary font-bold uppercase mb-1 tracking-widest">Passive Income Boost 🚀</p>
+                  <p className="text-3xl font-display font-bold text-secondary animate-pulse">
                     +${monthlyYield.toFixed(2)}
                   </p>
+                  <p className="text-[10px] text-gray-500 mt-1 italic">Per Month (Estimated)</p>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400 font-body">Time to Goal</span>
-                    <span className="font-bold text-white">
-                      {daysToComplete === Infinity ? 'N/A' : `${daysToComplete.toLocaleString()} Days`}
+                <div className="space-y-3 bg-surface/30 p-4 rounded-xl border border-border">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400 font-body">Days to Celebration 🥂</span>
+                    <span className="font-bold text-white text-lg">
+                      {daysToComplete === Infinity ? 'N/A' : `${daysToComplete.toLocaleString()}`}
                     </span>
                   </div>
-                  <Progress value={daysToComplete === Infinity ? 0 : Math.min(45, progress)} className="h-1" />
-                  <p className="text-[10px] text-gray-500 italic">
+                  <Progress value={daysToComplete === Infinity ? 0 : Math.min(45, progress)} className="h-1.5 bg-surface" />
+                  <p className="text-[10px] text-gray-500 leading-relaxed italic">
                     Based on current yield and zero additional contributions.
                   </p>
                 </div>

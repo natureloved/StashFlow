@@ -45,7 +45,7 @@ export default function DashboardPage() {
   // Milestone states
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [activeMilestone, setActiveMilestone] = useState<25 | 50 | 100>(50);
+  const [activeMilestone, setActiveMilestone] = useState<1 | 25 | 50 | 75 | 100>(50);
   const [milestoneGoal, setMilestoneGoal] = useState<Goal | null>(null);
 
   const goals = useGoalStore((state) => state.goals);
@@ -182,8 +182,8 @@ export default function DashboardPage() {
     const prevProgress = (prevAmount / goal.targetAmountUsd) * 100;
     const newProgress = (newAmount / goal.targetAmountUsd) * 100;
     
-    const milestones: (25 | 50 | 100)[] = [25, 50, 100];
-    const crossed = milestones.find(m => prevProgress < m && newProgress >= m);
+    const milestones: (1 | 25 | 50 | 75 | 100)[] = [1, 25, 50, 75, 100];
+    const crossed = [...milestones].reverse().find(m => prevProgress < m && newProgress >= m);
     
     if (crossed) {
       confetti({ 
@@ -505,15 +505,26 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Dev Trigger */}
-      {process.env.NODE_ENV === 'development' && (
-        <button 
-          onClick={triggerDevMilestone}
-          className="fixed bottom-4 right-4 bg-surface border border-border p-2 rounded-full text-gray-500 hover:text-accent transition-all z-50 flex items-center gap-2 text-xs font-bold"
-        >
-          <Sparkles className="w-4 h-4" /> 🎭 Trigger Share Card (Dev)
-        </button>
-      )}
+      <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
+        <div className="bg-surface/90 backdrop-blur border border-border p-2 rounded-xl text-[10px] font-bold text-gray-400 text-center uppercase shadow-2xl">Visual Audit</div>
+        <div className="flex gap-2">
+          {[1, 25, 50, 75, 100].map((m: any) => (
+            <button 
+              key={m}
+              onClick={() => {
+                if (userGoals.length > 0) {
+                  setMilestoneGoal(userGoals[0]);
+                  setActiveMilestone(m);
+                  setIsShareModalOpen(true);
+                }
+              }}
+              className="bg-surface border border-border w-10 h-10 rounded-full text-gray-500 hover:text-accent transition-all flex items-center justify-center text-xs font-bold shadow-2xl hover:scale-110 active:scale-95"
+            >
+              {m}%
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
