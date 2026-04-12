@@ -32,7 +32,7 @@ import confetti from 'canvas-confetti';
 import { getYieldEquivalent } from '@/lib/yield-utils';
 
 export default function DashboardPage() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, isConnecting, isReconnecting } = useAccount();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -62,12 +62,14 @@ export default function DashboardPage() {
   }, []);
 
   React.useEffect(() => {
-    if (mounted && !isConnected) {
+    // Only redirect if we are MOUNTED AND NOT connected AND NOT currently trying to connect or reconnect
+    // This prevents "Flash of Redirect" when refreshing the page as wagmi re-reads the session
+    if (mounted && !isConnected && !isConnecting && !isReconnecting) {
       // Use window.location as a more aggressive redirect for disconnects
       // to ensure state is fully cleared and user is sent home immediately
       window.location.href = '/';
     }
-  }, [mounted, isConnected]);
+  }, [mounted, isConnected, isConnecting, isReconnecting]);
 
   const handleScanPortfolio = async () => {
     if (!address) return;
