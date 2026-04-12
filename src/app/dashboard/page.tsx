@@ -397,14 +397,11 @@ export default function DashboardPage() {
                       <Sparkles className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-body text-gray-300">
-                        Total Portfolio Yield: Your combined stash is generating <span className="text-secondary font-bold">{getYieldEquivalent(totalMonthlyYield || 0)}</span> in value.
-                        <p className="text-[10px] text-gray-500 mt-1 uppercase font-black tracking-widest">Passive Income • Optimized ⚡</p>
-                      </p>
+                      <div className="text-[11px] font-body text-gray-300 leading-snug">
+                        Yield is paying for <span className="text-accent font-bold underline decoration-accent/30">{getYieldEquivalent(totalMonthlyYield || 0)}</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 mt-1 uppercase font-black tracking-widest">Passive Income • Optimized ⚡</p>
                     </div>
-                  </div>
-                  <div className="hidden md:block text-[10px] text-gray-500 uppercase font-bold tracking-widest whitespace-nowrap">
-                    Passive Income • Optimized ⚡
                   </div>
                 </motion.div>
               )}

@@ -191,7 +191,7 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
               </div>
             </div>
             <div className="text-sm font-body text-gray-300 leading-snug">
-              Current yield is covering <span className="text-accent font-bold">{getYieldEquivalent(monthlyYield)}</span>
+              Your {goal.name} stash is covering <span className="text-accent font-bold underline decoration-accent/30">{getYieldEquivalent(monthlyYield)}</span>
             </div>
           </div>
 
