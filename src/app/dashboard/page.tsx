@@ -32,7 +32,7 @@ import confetti from 'canvas-confetti';
 import { getYieldEquivalent } from '@/lib/yield-utils';
 
 export default function DashboardPage() {
-  const { address, status, isConnected } = useAccount();
+  const { address, status } = useAccount();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -124,7 +124,7 @@ export default function DashboardPage() {
 
   React.useEffect(() => {
     async function fetchInsights() {
-      if (!address || !isConnected) return;
+      if (!address || status !== 'connected') return;
       try {
         const [{ positions = [] }, balancesData] = await Promise.all([
           getUserPositions(address).catch(() => ({ positions: [] })),
@@ -169,8 +169,8 @@ export default function DashboardPage() {
         setPortfolioStats(p => p || { totalValue: 0, idleAssets: 0 });
       }
     }
-    if (mounted && isConnected && address) fetchInsights();
-  }, [address, isConnected, mounted]);
+    if (mounted && status === 'connected' && address) fetchInsights();
+  }, [address, status, mounted]);
 
   const handleDepositSuccess = (prevAmount: number, newAmount: number) => {
     if (!selectedGoal) return;
@@ -341,7 +341,7 @@ export default function DashboardPage() {
               )}
 
               {/* Optimization Opportunity Banner */}
-              {isConnected && (
+              {status === 'connected' && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -465,7 +465,7 @@ export default function DashboardPage() {
           )}
         </AnimatePresence>
 
-        {isConnected && (
+        {status === 'connected' && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
