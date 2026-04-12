@@ -275,28 +275,27 @@ export default function Home() {
                   We utilize the audited infrastructure of LI.FI Earn to route your 
                   deposits into the world's most battle-tested DeFi protocols like Aave, Morpho, and Spark.
                 </p>
-                <div className="flex flex-wrap gap-3 pt-4">
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
                     <Shield className="w-3.5 h-3.5 text-green-500" /> Audited Contracts
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
-                    <Globe className="w-3.5 h-3.5 text-accent" /> <span className="font-numeric">16+</span> Chains
+                    <Globe className="w-3.5 h-3.5 text-accent" /> <span className="font-numeric">60+</span> Chains
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
-                    <Zap className="w-3.5 h-3.5 text-secondary" /> <span className="font-numeric">11+</span> Vault Protocols
+                    <Zap className="w-3.5 h-3.5 text-secondary" /> <span className="font-numeric">20+</span> Protocols
                   </div>
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {[
-                  { label: "Connected Vaults", value: "628+" },
-                  { label: "Active Chains", value: "16" },
-                  { label: "Uptime", value: "99.9%" },
+                  { label: "Supported networks", value: "60+ Chains" },
+                  { label: "Including Aave, Morpho, Pendle and more", value: "20+ Protocols" },
                   { label: "Architecture", value: "Non-Custodial" }
                 ].map((stat, i) => (
-                  <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/5 text-center">
-                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">{stat.label}</p>
+                  <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/5 text-center flex flex-col justify-center min-h-[120px]">
+                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-[0.2em] mb-2">{stat.label}</p>
                     <p className="text-2xl font-numeric font-black text-white">{stat.value}</p>
                   </div>
                 ))}
