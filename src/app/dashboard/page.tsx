@@ -79,27 +79,38 @@ export default function DashboardPage() {
       const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
       
       let totalIdleUsd = 0;
-      Object.entries(balancesData).forEach(([_, tokens]: [string, any]) => {
-        tokens.forEach((token: any) => {
-          const usdValue = Number(token.amount) * (token.priceUSD || 0);
-          if (usdValue > 1.00) {
-            const isInPosition = positions.some(
-              (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase()
-            );
-            if (!isInPosition) totalIdleUsd += usdValue;
+      // Defensive check: Ensure balancesData is a record we can iterate
+      if (balancesData && typeof balancesData === 'object' && !Array.isArray(balancesData)) {
+        Object.entries(balancesData).forEach(([_, tokens]: [string, any]) => {
+          if (Array.isArray(tokens)) {
+            tokens.forEach((token: any) => {
+              const amount = Number(token.amount);
+              const price = Number(token.priceUSD || 0);
+              const usdValue = amount * price;
+
+              // NaN safety and Dust filter
+              if (!Number.isNaN(usdValue) && usdValue > 1.00) {
+                const isInPosition = positions.some(
+                  (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase()
+                );
+                if (!isInPosition) totalIdleUsd += usdValue;
+              }
+            });
           }
         });
-      });
+      }
       
       setPortfolioStats({ 
-        totalValue: totalActiveUsd + totalIdleUsd, 
-        idleAssets: totalIdleUsd 
+        totalValue: (Number.isNaN(totalActiveUsd) ? 0 : totalActiveUsd) + (Number.isNaN(totalIdleUsd) ? 0 : totalIdleUsd), 
+        idleAssets: Number.isNaN(totalIdleUsd) ? 0 : totalIdleUsd 
       });
       
       await new Promise(resolve => setTimeout(resolve, 1500));
       setCurrentView('portfolio');
     } catch (err) {
       console.error('Scan failed:', err);
+      // Ensure we don't leave the UI in an inconsistent state on failure
+      setPortfolioStats(prev => prev || { totalValue: 0, idleAssets: 0 });
     } finally {
       setIsScanning(false);
     }
@@ -117,22 +128,30 @@ export default function DashboardPage() {
         const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
         
         let totalIdleUsd = 0;
-        Object.entries(balancesData).forEach(([_, tokens]: [string, any]) => {
-          tokens.forEach((token: any) => {
-            const usdValue = Number(token.amount) * (token.priceUSD || 0);
-            // Dust filter
-            if (usdValue > 1.00) {
-              const isInPosition = positions.some(
-                (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase()
-              );
-              if (!isInPosition) totalIdleUsd += usdValue;
+        // Defensive check
+        if (balancesData && typeof balancesData === 'object' && !Array.isArray(balancesData)) {
+          Object.entries(balancesData).forEach(([_, tokens]: [string, any]) => {
+            if (Array.isArray(tokens)) {
+              tokens.forEach((token: any) => {
+                const amount = Number(token.amount);
+                const price = Number(token.priceUSD || 0);
+                const usdValue = amount * price;
+
+                // Dust filter & NaN guard
+                if (!Number.isNaN(usdValue) && usdValue > 1.00) {
+                  const isInPosition = positions.some(
+                    (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase()
+                  );
+                  if (!isInPosition) totalIdleUsd += usdValue;
+                }
+              });
             }
           });
-        });
+        }
 
         setPortfolioStats({ 
-          totalValue: totalActiveUsd + totalIdleUsd, 
-          idleAssets: totalIdleUsd 
+          totalValue: (Number.isNaN(totalActiveUsd) ? 0 : totalActiveUsd) + (Number.isNaN(totalIdleUsd) ? 0 : totalIdleUsd), 
+          idleAssets: Number.isNaN(totalIdleUsd) ? 0 : totalIdleUsd 
         });
       } catch (err) {
         console.error('Insight fetch failed:', err);

@@ -36,27 +36,35 @@ export function PortfolioView() {
 
         // 2. Process wallet balances (idle assets)
         const allIdle: any[] = [];
-        Object.entries(balancesData).forEach(([chainId, tokens]: [string, any]) => {
-          tokens.forEach((token: any) => {
-            const usdValue = Number(token.amount) * (token.priceUSD || 0);
-            // Hide "dust" (< $1.00 USD)
-            if (usdValue > 1.00) {
-              // Ensure it's not already in a position (simplified check)
-              const isInPosition = positionsData.positions?.some(
-                (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase() && p.chainId === Number(chainId)
-              );
-              
-              if (!isInPosition) {
-                allIdle.push({
-                  ...token,
-                  chainId: Number(chainId),
-                  balanceUsd: usdValue,
-                  amountFormatted: Number(token.amount).toFixed(4)
-                });
-              }
+        // Defensive check: Ensure balancesData is a record we can iterate
+        if (balancesData && typeof balancesData === 'object' && !Array.isArray(balancesData)) {
+          Object.entries(balancesData).forEach(([chainId, tokens]: [string, any]) => {
+            if (Array.isArray(tokens)) {
+              tokens.forEach((token: any) => {
+                const amount = Number(token.amount);
+                const price = Number(token.priceUSD || 0);
+                const usdValue = amount * price;
+
+                // NaN safety and Dust filter (< $1.00 USD)
+                if (!Number.isNaN(usdValue) && usdValue > 1.00) {
+                  // Ensure it's not already in a position (simplified check)
+                  const isInPosition = Array.isArray(positionsData.positions) && positionsData.positions.some(
+                    (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase() && p.chainId === Number(chainId)
+                  );
+                  
+                  if (!isInPosition) {
+                    allIdle.push({
+                      ...token,
+                      chainId: Number(chainId),
+                      balanceUsd: usdValue,
+                      amountFormatted: Number.isNaN(amount) ? '0.00' : amount.toFixed(4)
+                    });
+                  }
+                }
+              });
             }
           });
-        });
+        }
         
         // Sort by value
         setIdleAssets(allIdle.sort((a, b) => b.balanceUsd - a.balanceUsd));
