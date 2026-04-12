@@ -47,10 +47,10 @@ export function EducationPopover({ id, term, children }: EducationPopoverProps) 
         {isOpen && (
           <motion.div
             exit={{ opacity: 0, y: 8 }}
-            className="absolute left-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-3 z-[100] w-[calc(100vw-48px)] sm:w-[280px] bg-[#111118] border border-[#1E1E2E] rounded-xl shadow-2xl p-3.5 sm:p-4 md:p-5"
+            className="absolute right-0 bottom-full mb-3 z-[100] w-[calc(100vw-48px)] sm:w-[280px] bg-[#111118] border border-[#1E1E2E] rounded-xl shadow-2xl p-3.5 sm:p-4 md:p-5"
           >
-            {/* Arrow - Adjusted to bottom and responsive positioning */}
-            <div className="absolute -bottom-1.5 left-4 sm:left-1/2 sm:-translate-x-1/2 w-3 h-3 bg-[#111118] border-r border-b border-[#1E1E2E] rotate-45" />
+            {/* Arrow - positioned at bottom right */}
+            <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-[#111118] border-r border-b border-[#1E1E2E] rotate-45" />
             
             <div className="relative z-10">
               <div className="text-sm text-gray-300 font-body leading-relaxed mb-4">
@@ -71,9 +71,12 @@ export function EducationPopover({ id, term, children }: EducationPopoverProps) 
                   Got it <Check className="w-3 h-3 ml-1" />
                 </Button>
               ) : (
-                <div className="text-[10px] text-gray-600 uppercase font-bold text-center">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+                  className="w-full text-[10px] text-gray-500 hover:text-white uppercase font-bold text-center py-1 hover:bg-white/5 rounded transition-colors"
+                >
                   Ok ✓
-                </div>
+                </button>
               )}
             </div>
           </motion.div>

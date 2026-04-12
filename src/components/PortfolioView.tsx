@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import { getUserPositions, getWalletBalances } from '@/lib/lifi';
+import { useGoalStore } from '@/store/useGoalStore';
 import { Card } from '@/components/ui/card';
 import { Loader2, Wallet, ExternalLink, TrendingUp, AlertCircle, Zap, Coins } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ import { DepositModal } from '@/components/DepositModal';
 
 export function PortfolioView() {
   const { address, isConnected } = useAccount();
+  const goals = useGoalStore(state => state.goals);
   const [positions, setPositions] = React.useState<any[]>([]);
   const [idleAssets, setIdleAssets] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -237,7 +239,27 @@ export function PortfolioView() {
                 <h3 className="text-xl font-display font-bold tracking-tight">Active Savings</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {positions.map((pos, idx) => (
+                {positions.map((pos, idx) => {
+                  // Cross-reference with stored goals for enriched display
+                  const matchedGoal = goals.find(g =>
+                    g.vault.chainId === pos.chainId &&
+                    (g.vault.address.toLowerCase() === (pos.vaultAddress || '').toLowerCase() ||
+                     g.vault.underlyingTokens?.some((t: any) => t.address.toLowerCase() === pos.asset?.address?.toLowerCase()))
+                  );
+                  const displayProtocol = matchedGoal?.vault.protocol.name || pos.protocolName || pos.protocol?.name || 'Unknown Protocol';
+                  const displayApy = matchedGoal?.vault.analytics?.apy?.total ?? pos.apy;
+                  const displayName = matchedGoal?.name ? `${matchedGoal.name} (${pos.asset?.symbol || 'USDC'})` : (pos.asset?.name || pos.name || 'Managed Asset');
+                  const chainExplorerUrl = pos.chainId === 8453
+                    ? `https://basescan.org/address/${matchedGoal?.vault.address || pos.asset?.address}`
+                    : pos.chainId === 42161
+                    ? `https://arbiscan.io/address/${matchedGoal?.vault.address || pos.asset?.address}`
+                    : pos.chainId === 10
+                    ? `https://optimistic.etherscan.io/address/${matchedGoal?.vault.address || pos.asset?.address}`
+                    : pos.chainId === 137
+                    ? `https://polygonscan.com/address/${matchedGoal?.vault.address || pos.asset?.address}`
+                    : `https://etherscan.io/address/${matchedGoal?.vault.address || pos.asset?.address}`;
+
+                  return (
                   <motion.div
                     key={`${pos.vaultAddress}-${idx}`}
                     initial={{ opacity: 0, y: 10 }}
@@ -255,8 +277,8 @@ export function PortfolioView() {
                             )}
                           </div>
                           <div>
-                            <h3 className="font-display font-bold text-lg text-white">{pos.asset?.name || pos.name || 'Managed Asset'}</h3>
-                            <p className="text-sm text-gray-400 font-body">{pos.protocolName || pos.protocol?.name || 'Unknown Protocol'}</p>
+                            <h3 className="font-display font-bold text-lg text-white">{displayName}</h3>
+                            <p className="text-sm text-gray-400 font-body">{displayProtocol}</p>
                           </div>
                         </div>
                         <Badge className="bg-accent/10 text-accent border-accent/20 px-3 py-1 font-bold">
@@ -274,9 +296,10 @@ export function PortfolioView() {
                         <div className="space-y-1 text-right">
                           <div className="text-[10px] text-gray-500 uppercase font-bold">APY</div>
                           <div className="text-xl font-display font-bold text-secondary">
-                            {pos.apy ? `${(Number(pos.apy) * 100).toFixed(2)}%` : (
-                              <span className="text-sm text-gray-500 font-body font-normal">Via Vault</span>
-                            )}
+                            {displayApy
+                              ? `${(Number(displayApy) * 100).toFixed(2)}%`
+                              : <span className="text-sm text-gray-500 font-body font-normal">Via Vault</span>
+                            }
                           </div>
                         </div>
                       </div>
@@ -286,7 +309,7 @@ export function PortfolioView() {
                           Asset: {pos.asset?.symbol || pos.token?.symbol || 'Unknown'}
                         </div>
                         <a 
-                          href={`https://explorer.li.fi/address/${address}`} 
+                          href={chainExplorerUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className={cn(
@@ -294,12 +317,13 @@ export function PortfolioView() {
                             "text-accent hover:text-accent/80 hover:bg-accent/10 px-0 h-auto font-bold flex items-center gap-2"
                           )}
                         >
-                          View Details <ExternalLink className="w-3 h-3" />
+                          View Vault <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
                     </Card>
                   </motion.div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
