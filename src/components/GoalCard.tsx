@@ -6,12 +6,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DepositModal } from '@/components/DepositModal';
+import { EducationPopover } from '@/components/EducationPopover';
+import { HelpCircle as InfoCircle } from 'lucide-react';
 import { Goal } from '@/store/useGoalStore';
-import { TrendingUp, Plus, HelpCircle, Trash2, AlertTriangle, X } from 'lucide-react';
+import { TrendingUp, Plus, HelpCircle, Trash2, AlertTriangle, X, Settings2 } from 'lucide-react';
 import Link from 'next/link';
 import { useGoalStore } from '@/store/useGoalStore';
 import { MilestoneBadge } from '@/components/MilestoneBadge';
-import { EducationPopover } from '@/components/EducationPopover';
 import { VaultSafetyModal } from '@/components/VaultSafetyModal';
 import { getYieldEquivalent } from '@/lib/yield-utils';
 import { calculateGoalCompletionDate, formatCompletionDate } from '@/lib/projection-utils';
@@ -105,6 +107,30 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
   const apy = goal.vault.analytics?.apy?.total ?? 0;
   const yearlyYield = currentSaved * apy;
   const monthlyYield = yearlyYield / 12;
+  
+  // Custom Subscription State
+  const [customSubscription, setCustomSubscription] = useState<{name: string, price: number} | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`stashflow_sub_${goal.id}`);
+      return saved ? JSON.parse(saved) : null;
+    }
+    return null;
+  });
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+  const presets = [
+    { name: 'Coffee', price: 4, emoji: '☕' },
+    { name: 'Spotify Premium', price: 6, emoji: '🎵' },
+    { name: 'Netflix Plan', price: 15, emoji: '🎬' },
+    { name: 'Gym Membership', price: 25, emoji: '💪' },
+    { name: 'Phone Bill', price: 50, emoji: '📱' }
+  ];
+
+  const handleSelectPreset = (p: any) => {
+    setCustomSubscription(p);
+    localStorage.setItem(`stashflow_sub_${goal.id}`, JSON.stringify(p));
+    setIsPickerOpen(false);
+  };
 
   // Dynamic Projection Logic
   const remaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
@@ -181,17 +207,76 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
             </div>
           </div>
 
-          <div className="bg-[#0A0A0F]/50 p-4 rounded-xl border border-white/5 space-y-3">
+          <div className="bg-[#0A0A0F]/50 p-4 rounded-xl border border-white/5 space-y-3 relative group/yield">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[10px] text-accent uppercase font-black tracking-widest">
-                <TrendingUp className="w-3 h-3" /> Vault Analytics
+                <TrendingUp className="w-3 h-3" /> Yield Equivalent
               </div>
               <div className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-bold">
                 PASSIVE
               </div>
             </div>
-            <div className="text-sm font-body text-gray-300 leading-snug">
-              Your {goal.name} stash is covering <span className="text-accent font-bold underline decoration-accent/30">{getYieldEquivalent(monthlyYield)}</span>
+            <div className="space-y-2">
+              <div className="text-sm font-body text-gray-300 leading-snug">
+                Monthly yield: <span className="text-white font-bold">~${monthlyYield.toFixed(2)}</span> · 
+                That's <span className="text-accent font-bold underline decoration-accent/30 lowercase">
+                  {customSubscription 
+                    ? `a ${customSubscription.name}` 
+                    : getYieldEquivalent(monthlyYield)}
+                </span> each month 🎁
+              </div>
+              
+              <div className="relative">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsPickerOpen(!isPickerOpen);
+                  }}
+                  className="text-[10px] text-gray-500 hover:text-accent transition-colors flex items-center gap-1 font-bold"
+                >
+                  <Settings2 className="w-2.5 h-2.5" /> 
+                  {customSubscription ? "Change preference →" : "Not your subscription? Pick one →"}
+                </button>
+
+                <AnimatePresence>
+                  {isPickerOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute bottom-full left-0 mb-2 w-48 bg-[#0F0F18] border border-border rounded-xl shadow-2xl p-2 z-50 overflow-hidden"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest p-2 border-b border-border/50 mb-1">
+                        Select Preference
+                      </div>
+                      <div className="space-y-1">
+                        {presets.map((p) => (
+                          <button
+                            key={p.name}
+                            onClick={() => handleSelectPreset(p)}
+                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition-colors flex items-center justify-between group"
+                          >
+                            <span className="text-xs text-gray-300 group-hover:text-white">{p.emoji} {p.name}</span>
+                            <span className="text-[10px] text-gray-500">${p.price}</span>
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => {
+                            setCustomSubscription(null);
+                            localStorage.removeItem(`stashflow_sub_${goal.id}`);
+                            setIsPickerOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-500 text-[10px] font-bold mt-1"
+                        >
+                          Reset to Auto-detect
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
 
