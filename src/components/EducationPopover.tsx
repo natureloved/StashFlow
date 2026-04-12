@@ -46,11 +46,13 @@ export function EducationPopover({ id, term, children }: EducationPopoverProps) 
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="absolute right-0 bottom-full mb-3 z-[100] w-[calc(100vw-48px)] sm:w-[280px] bg-[#111118] border border-[#1E1E2E] rounded-xl shadow-2xl p-3.5 sm:p-4 md:p-5"
+            className="absolute left-0 bottom-full mb-3 z-[100] w-[calc(100vw-48px)] sm:w-[280px] bg-[#111118] border border-[#1E1E2E] rounded-xl shadow-2xl p-4 md:p-5"
           >
-            {/* Arrow - positioned at bottom right */}
-            <div className="absolute -bottom-1.5 right-4 w-3 h-3 bg-[#111118] border-r border-b border-[#1E1E2E] rotate-45" />
+            {/* Arrow - positioned at bottom left */}
+            <div className="absolute -bottom-1.5 left-4 w-3 h-3 bg-[#111118] border-r border-b border-[#1E1E2E] rotate-45" />
             
             <div className="relative z-10">
               <div className="text-sm text-gray-300 font-body leading-relaxed mb-4">
@@ -73,9 +75,9 @@ export function EducationPopover({ id, term, children }: EducationPopoverProps) 
               ) : (
                 <button 
                   onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
-                  className="w-full text-[10px] text-gray-500 hover:text-white uppercase font-bold text-center py-1 hover:bg-white/5 rounded transition-colors"
+                  className="w-full text-xs text-accent hover:text-accent/80 uppercase font-black tracking-widest text-center py-2.5 bg-accent/5 rounded-lg border border-accent/10 transition-all hover:bg-accent/10"
                 >
-                  Ok ✓
+                  OK ✓
                 </button>
               )}
             </div>

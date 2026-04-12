@@ -25,7 +25,7 @@ import Link from 'next/link';
 
 export default function GoalDetailPage() {
   const { id } = useParams();
-  const { address, isConnected, isConnecting, isReconnecting } = useAccount();
+  const { address, status } = useAccount();
   const [mounted, setMounted] = React.useState(false);
   const goal = useGoalStore((state) => state.goals.find((g) => g.id === id));
   
@@ -43,12 +43,12 @@ export default function GoalDetailPage() {
   }, []);
 
   React.useEffect(() => {
-    // Only redirect if we are MOUNTED AND NOT connected AND NOT currently trying to connect or reconnect
-    // This prevents "Flash of Redirect" when refreshing the page as wagmi re-reads the session
-    if (mounted && !isConnected && !isConnecting && !isReconnecting) {
+    // Robust status check: only redirect if definitely NOT connected
+    // This handles the "reconnecting" state during refresh correctly
+    if (mounted && status === 'disconnected') {
       window.location.href = '/';
     }
-  }, [mounted, isConnected, isConnecting, isReconnecting]);
+  }, [mounted, status]);
 
   if (!mounted) return null; // Wait for hydration
 
