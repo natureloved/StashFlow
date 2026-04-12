@@ -280,18 +280,18 @@ export default function Home() {
                     <Shield className="w-3.5 h-3.5 text-green-500" /> Audited Contracts
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
-                    <Globe className="w-3.5 h-3.5 text-accent" /> <span className="font-numeric">{metrics.chains || 60}+</span> Chains
+                    <Globe className="w-3.5 h-3.5 text-accent" /> <span className="font-numeric">16+</span> Chains
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
-                    <Zap className="w-3.5 h-3.5 text-secondary" /> <span className="font-numeric">{metrics.protocols || 20}+</span> Vault Protocols
+                    <Zap className="w-3.5 h-3.5 text-secondary" /> <span className="font-numeric">11+</span> Vault Protocols
                   </div>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {[
-                  { label: "Connected Vaults", value: metrics.vaults ? `${metrics.vaults}+` : "600+" },
-                  { label: "Active Chains", value: metrics.chains ? `${metrics.chains}+` : "16+" },
+                  { label: "Connected Vaults", value: "628+" },
+                  { label: "Active Chains", value: "16" },
                   { label: "Uptime", value: "99.9%" },
                   { label: "Architecture", value: "Non-Custodial" }
                 ].map((stat, i) => (
@@ -315,11 +315,11 @@ export default function Home() {
             viewport={{ once: true }}
             className="max-w-4xl mx-auto space-y-10"
           >
-            <h2 className="text-4xl md:text-7xl font-display font-black uppercase italic tracking-tighter">
+            <h2 className="text-4xl md:text-6xl font-display font-black uppercase italic tracking-tighter">
               Ready to stash?
             </h2>
-            <p className="text-xl text-gray-400 max-w-xl mx-auto font-body">
-              Stop settling for 0.1%. Transform your savings into purpose-driven goals powered by institutional-grade DeFi yield.
+            <p className="text-lg text-gray-400 max-w-xl mx-auto font-body">
+              Stop settling for 0.1%. Transform your savings into purpose-driven goals.
             </p>
             
             <div className="flex flex-col items-center gap-6">

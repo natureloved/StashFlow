@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Syne, DM_Sans, Geist, Outfit } from "next/font/google";
+import { Syne, DM_Sans, Geist, Outfit, Kalam } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import "@rainbow-me/rainbowkit/styles.css";
@@ -20,10 +20,10 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "700"],
 });
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const kalam = Kalam({
+  variable: "--font-kalam",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -57,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", syne.variable, dmSans.variable, outfit.variable, "font-sans", geist.variable)}
+      className={cn("h-full", "antialiased", syne.variable, dmSans.variable, outfit.variable, kalam.variable, "font-sans", geist.variable)}
     >
       <body className="min-h-full flex flex-col bg-[#0A0A0F] text-white">
         <Providers>

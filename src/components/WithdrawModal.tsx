@@ -181,20 +181,23 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-gray-500 uppercase">Amount to Withdraw (USD)</label>
-                    <div className="relative">
-                      <Input 
-                        type="number" 
-                        placeholder="0.00" 
+                    <div className="relative group">
+                      <input
+                        type="number"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
-                        className="text-4xl h-20 bg-[#0A0A0F] border-border text-center font-display font-bold"
+                        placeholder="0.00"
+                        className="w-full bg-[#0A0A0F]/50 border-border focus:border-accent text-white font-numeric text-3xl p-6 rounded-2xl outline-none transition-all pr-32"
                       />
-                      <button 
+                      <button
                         onClick={() => setAmount(currentBalanceUsd.toString())}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-accent hover:underline"
+                        className="absolute right-12 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-[10px] font-bold hover:bg-accent/20 transition-colors"
                       >
                         MAX
                       </button>
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xs pointer-events-none">
+                        USDC
+                      </div>
                     </div>
                   </div>
 

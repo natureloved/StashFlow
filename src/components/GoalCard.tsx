@@ -7,8 +7,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Goal } from '@/store/useGoalStore';
-import { TrendingUp, Plus, HelpCircle } from 'lucide-react';
+import { TrendingUp, Plus, HelpCircle, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { useGoalStore } from '@/store/useGoalStore';
 import { MilestoneBadge } from '@/components/MilestoneBadge';
 import { EducationPopover } from '@/components/EducationPopover';
 import { VaultSafetyModal } from '@/components/VaultSafetyModal';
@@ -21,6 +22,7 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
+  const deleteGoal = useGoalStore(state => state.deleteGoal);
   const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
   const currentSaved = goal.contributions.reduce((acc, curr) => acc + curr.amountUsd, 0);
   const progress = Math.min((currentSaved / goal.targetAmountUsd) * 100, 100);
@@ -29,9 +31,11 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
   const yearlyYield = currentSaved * apy;
   const monthlyYield = yearlyYield / 12;
 
-  // Projection logic
-  const weeklySave = 50; // Default coach assumption
-  const completionDate = calculateGoalCompletionDate(currentSaved, goal.targetAmountUsd, apy, weeklySave);
+  // Dynamic Projection Logic
+  // Recommendation: Reach goal in 1 year (52 weeks) if no date set
+  const remaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
+  const weeklySave = remaining > 0 ? Math.ceil(remaining / 52) : 0;
+  const completionDate = calculateGoalCompletionDate(currentSaved, goal.targetAmountUsd, apy, weeklySave || 50);
   const completionStr = formatCompletionDate(completionDate);
 
   return (
@@ -41,8 +45,22 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
 
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <MilestoneBadge progress={progress} />
-            <h3 className="font-display text-2xl font-bold tracking-tight text-white mb-1">
+            <div className="flex items-center gap-2">
+              <MilestoneBadge progress={progress} />
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (confirm('Delete this goal tracking? (On-chain funds will remain in the vault)')) {
+                    deleteGoal(goal.id);
+                  }
+                }}
+                className="opacity-0 group-hover:opacity-100 p-1 text-gray-600 hover:text-red-500 transition-all"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <h3 className="font-kalam text-3xl font-bold tracking-tight text-white mb-1 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
               {goal.name || 'Untitled Goal'}
             </h3>
             <div className="text-sm text-gray-400 font-body">
@@ -80,24 +98,24 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
 
         <div className="bg-[#0A0A0F]/50 p-4 rounded-xl border border-white/5 space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-tighter font-bold">
-              <TrendingUp className="w-3 h-3 text-accent" /> Yield Insight
+            <div className="flex items-center gap-2 text-[10px] text-accent uppercase font-black tracking-widest">
+              <TrendingUp className="w-3 h-3" /> Vault Analytics
             </div>
-            <div className="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded-full font-bold">
+            <div className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-bold">
               PASSIVE
             </div>
           </div>
           <div className="text-sm font-body text-gray-300 leading-snug">
-            Your yield is currently covering <span className="text-secondary font-bold">{getYieldEquivalent(monthlyYield)}</span>
+            Current yield is covering <span className="text-accent font-bold">{getYieldEquivalent(monthlyYield)}</span>
           </div>
         </div>
 
-        <div className="bg-accent/5 p-4 rounded-xl border border-accent/10">
-          <div className="text-[10px] text-accent/70 uppercase font-black tracking-widest mb-1 flex items-center gap-1">
-            <Plus className="w-2.5 h-2.5" /> Coach Insight
+        <div className="bg-secondary/5 p-4 rounded-xl border border-secondary/10">
+          <div className="text-[10px] text-secondary uppercase font-black tracking-widest mb-1 flex items-center gap-1">
+            <Plus className="w-2.5 h-2.5" /> Projections
           </div>
           <p className="text-sm font-body text-gray-300">
-            Add <span className="text-white font-bold">${weeklySave}/wk</span> to reach your goal by <span className="text-accent font-bold">{completionStr}</span>.
+            Recommend <span className="text-white font-bold">${weeklySave}/wk</span> to reach your goal by <span className="text-secondary font-bold">{completionStr}</span>.
           </p>
         </div>
       </Link>

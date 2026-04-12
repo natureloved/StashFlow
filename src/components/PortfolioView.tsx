@@ -248,15 +248,15 @@ export function PortfolioView() {
                       <div className="flex justify-between items-start mb-6">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-[#0A0A0F] rounded-xl border border-border flex items-center justify-center overflow-hidden">
-                            {pos.logoUri ? (
-                              <img src={pos.logoUri} alt="" className="w-8 h-8" />
+                            {pos.logoUri || pos.asset?.logoUri ? (
+                              <img src={pos.logoUri || pos.asset?.logoUri} alt="" className="w-8 h-8" />
                             ) : (
                               <TrendingUp className="w-6 h-6 text-accent" />
                             )}
                           </div>
                           <div>
-                            <h3 className="font-display font-bold text-lg text-white">{pos.name}</h3>
-                            <p className="text-sm text-gray-400 font-body">{pos.protocol?.name || 'Unknown Protocol'}</p>
+                            <h3 className="font-display font-bold text-lg text-white">{pos.asset?.name || pos.name || 'Managed Asset'}</h3>
+                            <p className="text-sm text-gray-400 font-body">{pos.protocolName || pos.protocol?.name || 'Unknown Protocol'}</p>
                           </div>
                         </div>
                         <Badge className="bg-accent/10 text-accent border-accent/20 px-3 py-1 font-bold">
@@ -268,20 +268,20 @@ export function PortfolioView() {
                         <div className="space-y-1">
                           <div className="text-[10px] text-gray-500 uppercase font-bold">Balance</div>
                           <div className="text-xl font-display font-bold text-white">
-                            ${Number(pos.amountUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            ${(Number(pos.balanceUsd) || Number(pos.amountUsd) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </div>
                         </div>
                         <div className="space-y-1 text-right">
                           <div className="text-[10px] text-gray-500 uppercase font-bold">APY</div>
                           <div className="text-xl font-display font-bold text-secondary">
-                            {(Number(pos.apy) * 100).toFixed(2)}%
+                            {pos.apy ? (Number(pos.apy) * 100).toFixed(2) : '---'}%
                           </div>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-4 border-t border-border">
                         <div className="text-[10px] text-gray-500 font-body uppercase tracking-widest">
-                          Asset: {pos.token?.symbol || 'Unknown'}
+                          Asset: {pos.asset?.symbol || pos.token?.symbol || 'Unknown'}
                         </div>
                         <a 
                           href={`https://explorer.li.fi/address/${address}`} 
