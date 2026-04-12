@@ -25,7 +25,7 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
   const currentSaved = goal.contributions.reduce((acc, curr) => acc + curr.amountUsd, 0);
   const progress = Math.min((currentSaved / goal.targetAmountUsd) * 100, 100);
   
-  const apy = goal.vault.analytics.apy.total;
+  const apy = goal.vault.analytics?.apy?.total ?? 0;
   const yearlyYield = currentSaved * apy;
   const monthlyYield = yearlyYield / 12;
 

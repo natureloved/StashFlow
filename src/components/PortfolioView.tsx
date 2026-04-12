@@ -36,9 +36,13 @@ export function PortfolioView() {
 
         // 2. Process wallet balances (idle assets)
         const allIdle: any[] = [];
-        // Defensive check: Ensure balancesData is a record we can iterate
-        if (balancesData && typeof balancesData === 'object' && !Array.isArray(balancesData)) {
-          Object.entries(balancesData).forEach(([chainId, tokens]: [string, any]) => {
+        const rawBalances = (balancesData && typeof balancesData === 'object' && 'balances' in balancesData) 
+          ? (balancesData as any).balances 
+          : balancesData;
+
+        // Defensive check: Ensure we have a valid balances record
+        if (rawBalances && typeof rawBalances === 'object' && !Array.isArray(rawBalances)) {
+          Object.entries(rawBalances).forEach(([chainId, tokens]: [string, any]) => {
             if (Array.isArray(tokens)) {
               tokens.forEach((token: any) => {
                 const amount = Number(token.amount);

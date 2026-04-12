@@ -76,12 +76,16 @@ export default function DashboardPage() {
         getWalletBalances(address)
       ]);
 
+      const rawBalances = (balancesData && typeof balancesData === 'object' && 'balances' in balancesData) 
+        ? (balancesData as any).balances 
+        : balancesData;
+
       const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
       
       let totalIdleUsd = 0;
-      // Defensive check: Ensure balancesData is a record we can iterate
-      if (balancesData && typeof balancesData === 'object' && !Array.isArray(balancesData)) {
-        Object.entries(balancesData).forEach(([_, tokens]: [string, any]) => {
+      // Defensive check: Ensure we have a valid balances record
+      if (rawBalances && typeof rawBalances === 'object' && !Array.isArray(rawBalances)) {
+        Object.entries(rawBalances).forEach(([_, tokens]: [string, any]) => {
           if (Array.isArray(tokens)) {
             tokens.forEach((token: any) => {
               const amount = Number(token.amount);
@@ -121,20 +125,24 @@ export default function DashboardPage() {
       if (!address || !isConnected) return;
       try {
         const [{ positions = [] }, balancesData] = await Promise.all([
-          getUserPositions(address),
-          getWalletBalances(address)
+          getUserPositions(address).catch(() => ({ positions: [] })),
+          getWalletBalances(address).catch(() => ({})),
         ]);
 
         const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
         
+        const rawBalances = (balancesData && typeof balancesData === 'object' && 'balances' in balancesData) 
+          ? (balancesData as any).balances 
+          : balancesData;
+
         let totalIdleUsd = 0;
-        // Defensive check
-        if (balancesData && typeof balancesData === 'object' && !Array.isArray(balancesData)) {
-          Object.entries(balancesData).forEach(([_, tokens]: [string, any]) => {
+        // Defensive check: Ensure we have a valid balances record
+        if (rawBalances && typeof rawBalances === 'object' && !Array.isArray(rawBalances)) {
+          Object.entries(rawBalances).forEach(([_, tokens]: [string, any]) => {
             if (Array.isArray(tokens)) {
               tokens.forEach((token: any) => {
-                const amount = Number(token.amount);
-                const price = Number(token.priceUSD || 0);
+                const amount = Number(token.amount ?? 0);
+                const price = Number(token.priceUSD ?? 0);
                 const usdValue = amount * price;
 
                 // Dust filter & NaN guard
@@ -155,6 +163,8 @@ export default function DashboardPage() {
         });
       } catch (err) {
         console.error('Insight fetch failed:', err);
+        // Reset to safe defaults on catch
+        setPortfolioStats(p => p || { totalValue: 0, idleAssets: 0 });
       }
     }
     if (mounted && isConnected && address) fetchInsights();
@@ -217,13 +227,13 @@ export default function DashboardPage() {
   );
 
   const avgApy = userGoalsCount > 0 
-    ? userGoals.reduce((acc, goal) => acc + goal.vault.analytics.apy.total, 0) / userGoalsCount 
+    ? userGoals.reduce((acc, goal) => acc + (goal.vault.analytics?.apy?.total || 0), 0) / userGoalsCount 
     : 0;
 
   const totalMonthlyYield = userGoalsCount > 0
     ? userGoals.reduce((acc, goal) => {
         const deposited = goal.contributions.reduce((cAcc, c) => cAcc + c.amountUsd, 0);
-        return acc + (deposited * goal.vault.analytics.apy.total) / 12;
+        return acc + (deposited * (goal.vault.analytics?.apy?.total || 0)) / 12;
       }, 0)
     : 0;
 
@@ -293,7 +303,9 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-3 text-white/70 mb-2 font-bold text-xs uppercase tracking-wider">
                       <Wallet className="w-4 h-4 text-accent" /> Total Stashed
                     </div>
-                    <div className="text-3xl font-numeric font-bold text-white tracking-tight">${totalDeposited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    <div className="text-3xl font-numeric font-bold text-white tracking-tight">
+                      ${(Number.isNaN(totalDeposited) ? 0 : totalDeposited).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
                   </motion.div>
                   
                   <motion.div 
@@ -305,7 +317,9 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-3 text-white/70 mb-2 font-bold text-xs uppercase tracking-wider">
                       <TrendingUp className="w-4 h-4 text-accent" /> Avg. APY
                     </div>
-                    <div className="text-3xl font-numeric font-bold text-white tracking-tight">{(avgApy * 100).toFixed(2)}%</div>
+                    <div className="text-3xl font-numeric font-bold text-white tracking-tight">
+                      {(Number.isNaN(avgApy) ? 0 : avgApy * 100).toFixed(2)}%
+                    </div>
                   </motion.div>
 
                   <motion.div 
@@ -317,9 +331,56 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-3 text-white/70 mb-2 font-bold text-xs uppercase tracking-wider">
                       <TrendingUp className="w-4 h-4 text-secondary" /> Monthly Yield
                     </div>
-                    <div className="text-3xl font-numeric font-bold text-secondary tracking-tight">${totalMonthlyYield.toFixed(2)}</div>
+                    <div className="text-3xl font-numeric font-bold text-secondary tracking-tight">
+                      ${(Number.isNaN(totalMonthlyYield) ? 0 : totalMonthlyYield).toFixed(2)}
+                    </div>
                   </motion.div>
                 </div>
+              )}
+
+              {/* Optimization Opportunity Banner */}
+              {isConnected && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-12 relative overflow-hidden rounded-3xl"
+                >
+                  {!portfolioStats ? (
+                    // Skeleton State
+                    <div className="p-8 bg-surface border border-border animate-pulse flex flex-col md:flex-row justify-between items-center gap-6">
+                      <div className="space-y-3 w-full md:w-2/3">
+                        <div className="h-4 w-32 bg-white/10 rounded-full" />
+                        <div className="h-8 w-64 bg-white/20 rounded-full" />
+                      </div>
+                      <div className="h-12 w-40 bg-white/10 rounded-xl" />
+                    </div>
+                  ) : portfolioStats.idleAssets > 0 ? (
+                    <div className="p-8 bg-gradient-to-r from-accent/20 via-surface to-surface border border-accent/20 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform duration-500">
+                        <Coins className="w-40 h-40 text-accent" />
+                      </div>
+                      
+                      <div className="space-y-2 relative z-10">
+                        <div className="flex items-center gap-2 text-accent font-bold text-xs uppercase tracking-widest">
+                          <Zap className="w-4 h-4" /> Optimization Opportunity Found
+                        </div>
+                        <h2 className="text-2xl font-display font-bold text-white">
+                          We found <span className="text-accent font-numeric">${Math.round(portfolioStats.idleAssets).toLocaleString()}</span> sitting idle in your wallet.
+                        </h2>
+                        <p className="text-gray-400 font-body">
+                          Put this capital to work and earn up to <span className="text-white font-bold">12.5% APY</span> on stable assets.
+                        </p>
+                      </div>
+
+                      <Button 
+                        onClick={() => setCurrentView('portfolio')}
+                        className="bg-white text-black hover:bg-white/90 font-bold px-8 h-14 rounded-2xl relative z-10 shadow-2xl shadow-accent/20"
+                      >
+                       Optimize Now <ArrowRight className="w-5 h-5 ml-2" />
+                      </Button>
+                    </div>
+                  ) : null}
+                </motion.div>
               )}
 
               {goals.length > 0 && (
@@ -335,7 +396,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-sm font-body text-gray-300">
-                        Total Portfolio Yield: Your combined stash is currently covering <span className="text-secondary font-bold">{getYieldEquivalent(totalMonthlyYield)}</span> per month.
+                        Total Portfolio Yield: Your combined stash is currently covering <span className="text-secondary font-bold">{getYieldEquivalent(totalMonthlyYield || 0)}</span> per month.
                       </p>
                     </div>
                   </div>

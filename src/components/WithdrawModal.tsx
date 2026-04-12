@@ -86,13 +86,13 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
     setError(null);
     try {
       // Calculate amount in vault token units
-      // For withdrawal, we use the USD amount to determine how many vault tokens to burn
-      // But LI.FI quote needs fromAmount in source token (vault asset)
       const vaultToken = goal.vault.address;
       
-      // Simulation: We assume 1 vault token = $1 for the quote target if it's a stable vault
-      // In a real app we'd fetch vault token price
-      const fromAmountSmallest = parseUnits(amount, 18).toString(); 
+      const safeAmountStr = (amount && !Number.isNaN(Number(amount))) 
+        ? amount.toString() 
+        : '0';
+
+      const fromAmountSmallest = parseUnits(safeAmountStr, 18).toString(); 
 
       const response = await getQuote({
         fromChain: goal.vault.chainId,

@@ -98,8 +98,17 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
   const { writeContractAsync: approveAsync } = useWriteContract();
   const addContribution = useGoalStore((state) => state.addContribution);
 
-  const fromAmountRaw = isUsdMode ? (Number(amount) / tokenPrice) : Number(amount);
-  const fromAmountSmallest = selectedToken ? parseUnits(fromAmountRaw.toFixed(selectedToken.decimals), selectedToken.decimals) : BigInt(0);
+  const rawAmount = (amount && tokenPrice && tokenPrice > 0)
+    ? (isUsdMode ? (Number(amount) / tokenPrice) : Number(amount))
+    : 0;
+  
+  const safeAmountStr = (rawAmount && !Number.isNaN(rawAmount) && Number.isFinite(rawAmount))
+    ? rawAmount.toFixed(selectedToken?.decimals || 18)
+    : '0';
+
+  const fromAmountSmallest = selectedToken 
+    ? parseUnits(safeAmountStr, selectedToken.decimals) 
+    : BigInt(0);
 
   // Allowance Check
   const { data: allowance, refetch: refetchAllowance } = useReadContract({

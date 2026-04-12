@@ -132,6 +132,7 @@ export async function getWalletBalances(userAddress: string) {
   query.append('address', userAddress);
   query.append('chains', chains.join(','));
 
+  // Point to our NEW stabilized route
   const response = await fetch(`/api/lifi/balances?${query.toString()}`, {
     headers: getHeaders(),
   });

@@ -14,6 +14,7 @@ export const calculateGoalCompletionDate = (
   apy: number,
   weeklyContribution: number = 50
 ): Date | null => {
+  if (Number.isNaN(currentAmount) || Number.isNaN(targetAmount) || Number.isNaN(apy)) return null;
   if (currentAmount >= targetAmount) return new Date();
   if (weeklyContribution <= 0 && apy <= 0) return null;
 
