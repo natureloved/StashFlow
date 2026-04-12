@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     title: 'Stashflow | Save with purpose',
     description: 'Goal-based DeFi savings powered by LI.FI Earn',
     url: 'https://stashflow-two.vercel.app',
-    sideName: 'Stashflow',
+    siteName: 'Stashflow',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     type: 'website',
   },
