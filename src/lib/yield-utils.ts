@@ -19,4 +19,3 @@ export const getYieldEquivalent = (mYield: number) => {
   
   return pick(["your monthly rent payment 🏠", "a dream vacation 🏝️", "a major milestone reached 🏆"]);
 };
- Elias

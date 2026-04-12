@@ -20,6 +20,12 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "700"],
 });
 
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 const kalam = Kalam({
   variable: "--font-kalam",
   subsets: ["latin"],
