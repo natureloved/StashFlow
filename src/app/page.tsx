@@ -275,18 +275,18 @@ export default function Home() {
                   We utilize the audited infrastructure of LI.FI Earn to route your 
                   deposits into the world's most battle-tested DeFi protocols like Aave, Morpho, and Spark.
                 </p>
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
-                    <Shield className="w-3.5 h-3.5 text-green-500" /> Audited Contracts
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
-                    <Globe className="w-3.5 h-3.5 text-accent" /> <span className="font-numeric">60+</span> Chains
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
-                    <Zap className="w-3.5 h-3.5 text-secondary" /> <span className="font-numeric">20+</span> Protocols
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
+                      <Shield className="w-3.5 h-3.5 text-green-500" /> Audited Contracts
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
+                      <Globe className="w-3.5 h-3.5 text-accent" /> <span className="font-numeric">60+</span> Chains
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
+                      <Zap className="w-3.5 h-3.5 text-secondary" /> <span className="font-numeric">20+</span> Protocols
+                    </div>
                   </div>
                 </div>
-              </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {[

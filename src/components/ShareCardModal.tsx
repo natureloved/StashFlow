@@ -83,7 +83,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
             <div className="absolute -inset-1 bg-gradient-to-r from-accent via-secondary to-accent rounded-[24px] blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
             <div 
               ref={cardRef}
-              className="relative w-full aspect-[400/220] rounded-[22px] bg-gradient-to-br from-[#0A0A0F] to-[#0D1F2D] border border-white/5 overflow-hidden p-6 font-display"
+              className="relative w-full aspect-[400/230] rounded-[22px] bg-gradient-to-br from-[#0A0A0F] to-[#0D1621] border border-white/5 overflow-hidden p-6 sm:p-7 font-display"
             >
               {/* Mesh Gradient / Grid */}
               <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
@@ -94,7 +94,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                     <div className="w-6 h-6 bg-accent rounded-md flex items-center justify-center">
                       <span className="text-black font-extrabold text-xs">S</span>
                     </div>
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500">stashflow.app</span>
+                    <span className="text-[10px] uppercase tracking-[0.3em] font-black text-white/40">STASHFLOW</span>
                   </div>
                   <div className="bg-white/5 px-3 py-1 rounded-full border border-white/10 text-[10px] font-bold text-white/60">
                     DEFI MILESTONE
@@ -131,9 +131,9 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                   </div>
                 </div>
                 
-                <div className="absolute bottom-[-10px] left-0 right-0 h-4 bg-accent/20 blur-xl opacity-50" />
-                <div className="flex justify-center pt-2 border-t border-white/5">
-                  <span className="text-[7px] text-gray-600 uppercase font-bold tracking-[0.2em]">
+                <div className="absolute bottom-[-10px] left-0 right-0 h-4 bg-accent/20 blur-xl opacity-30" />
+                <div className="flex justify-center pt-3 border-t border-white/5">
+                  <span className="text-[7px] text-gray-700 uppercase font-black tracking-[0.2em]">
                     Saving on-chain with LI.FI Earn • @stashflow
                   </span>
                 </div>

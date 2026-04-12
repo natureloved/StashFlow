@@ -398,7 +398,8 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-sm font-body text-gray-300">
-                        Total Portfolio Yield: Your combined stash is currently covering <span className="text-secondary font-bold">{getYieldEquivalent(totalMonthlyYield || 0)}</span> per month.
+                        Total Portfolio Yield: Your combined stash is generating <span className="text-secondary font-bold">{getYieldEquivalent(totalMonthlyYield || 0)}</span> in value.
+                        <p className="text-[10px] text-gray-500 mt-1 uppercase font-black tracking-widest">Passive Income • Optimized ⚡</p>
                       </p>
                     </div>
                   </div>
@@ -507,23 +508,28 @@ export default function DashboardPage() {
 
       <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
         <div className="bg-surface/90 backdrop-blur border border-border p-2 rounded-xl text-[10px] font-bold text-gray-400 text-center uppercase shadow-2xl">Visual Audit</div>
-        <div className="flex gap-2">
-          {[1, 25, 50, 75, 100].map((m: any) => (
-            <button 
-              key={m}
-              onClick={() => {
-                if (userGoals.length > 0) {
-                  setMilestoneGoal(userGoals[0]);
-                  setActiveMilestone(m);
-                  setIsShareModalOpen(true);
-                }
-              }}
-              className="bg-surface border border-border w-10 h-10 rounded-full text-gray-500 hover:text-accent transition-all flex items-center justify-center text-xs font-bold shadow-2xl hover:scale-110 active:scale-95"
-            >
-              {m}%
-            </button>
-          ))}
-        </div>
+          <div className="flex gap-2">
+            {[1, 25, 50, 75, 100].map((m: any) => {
+              const demoGoal = userGoals[0] || { targetAmountUsd: 100 };
+              const dollarValue = Math.round((m / 100) * (demoGoal?.targetAmountUsd || 100));
+              return (
+                <button 
+                  key={m}
+                  onClick={() => {
+                    if (userGoals.length > 0) {
+                      setMilestoneGoal(userGoals[0]);
+                      setActiveMilestone(m);
+                      setIsShareModalOpen(true);
+                    }
+                  }}
+                  className="bg-surface border border-border px-3 h-10 rounded-xl text-gray-500 hover:text-accent transition-all flex flex-col items-center justify-center shadow-2xl hover:scale-110 active:scale-95"
+                >
+                  <span className="text-[9px] opacity-70 mb-0.5">{m}%</span>
+                  <span className="font-bold text-xs">${dollarValue}</span>
+                </button>
+              );
+            })}
+          </div>
       </div>
     </div>
   );

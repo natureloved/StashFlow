@@ -267,7 +267,7 @@ export function PortfolioView() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                   >
-                    <Card className="glass-card p-5 border-border hover:border-accent/30 transition-all group shadow-sm bg-surface/20">
+                    <Card className="glass-card p-5 border-border hover:border-accent/30 transition-all group shadow-sm bg-surface/20 max-w-[380px]">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-[#0A0A0F] rounded-xl border border-border flex items-center justify-center overflow-hidden">
