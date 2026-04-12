@@ -32,9 +32,10 @@ import confetti from 'canvas-confetti';
 import { getYieldEquivalent } from '@/lib/yield-utils';
 
 export default function DashboardPage() {
-  const { address, status } = useAccount();
+  const { address, status, isConnecting, isReconnecting } = useAccount();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
+  const [canRedirect, setCanRedirect] = React.useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -59,15 +60,18 @@ export default function DashboardPage() {
 
   React.useEffect(() => {
     setMounted(true);
+    // Give wagmi/rainbowkit 1.5 seconds to restore session before allowing redirect
+    const timer = setTimeout(() => setCanRedirect(true), 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   React.useEffect(() => {
-    // Robust status check: only redirect if definitely NOT connected
-    // This handles the "reconnecting" state during refresh correctly
-    if (mounted && status === 'disconnected') {
-      window.location.href = '/';
+    // Only redirect if we are MOUNTED AND NOT connected AND NOT currently trying to connect or reconnect
+    // We also wait for the canRedirect grace period to end to avoid refresh "kicks"
+    if (mounted && canRedirect && status === 'disconnected' && !isReconnecting && !isConnecting) {
+      router.push('/');
     }
-  }, [mounted, status]);
+  }, [mounted, canRedirect, status, isReconnecting, isConnecting, router]);
 
   const handleScanPortfolio = async () => {
     if (!address) return;
@@ -412,11 +416,11 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     
-                    <div className="flex flex-col items-center md:items-end gap-2">
+                    <div className="flex flex-col items-center md:items-end gap-2 shrink-0">
                       <div className="px-4 py-1.5 rounded-full bg-secondary/5 border border-secondary/20 text-[10px] font-black text-secondary tracking-widest uppercase">
                         Passive Income • Optimized ⚡
                       </div>
-                      <p className="text-[10px] text-gray-600 font-body max-w-[180px] text-center md:text-right italic">
+                      <p className="text-sm text-gray-400 font-body italic whitespace-nowrap">
                         Visualizing your yield as real-world value.
                       </p>
                     </div>

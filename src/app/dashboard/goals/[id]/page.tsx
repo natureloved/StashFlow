@@ -25,8 +25,9 @@ import Link from 'next/link';
 
 export default function GoalDetailPage() {
   const { id } = useParams();
-  const { address, status } = useAccount();
+  const { address, status, isConnecting, isReconnecting } = useAccount();
   const [mounted, setMounted] = React.useState(false);
+  const [canRedirect, setCanRedirect] = React.useState(false);
   const goal = useGoalStore((state) => state.goals.find((g) => g.id === id));
   
   const { data: vaultDetails, isLoading: isLoadingVault } = useVaultDetails(
@@ -40,15 +41,18 @@ export default function GoalDetailPage() {
 
   React.useEffect(() => {
     setMounted(true);
+    // Give wagmi/rainbowkit 1.5 seconds to restore session before allowing redirect
+    const timer = setTimeout(() => setCanRedirect(true), 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   React.useEffect(() => {
     // Robust status check: only redirect if definitely NOT connected
-    // This handles the "reconnecting" state during refresh correctly
-    if (mounted && status === 'disconnected') {
+    // We also wait for the canRedirect grace period to end to avoid refresh "kicks"
+    if (mounted && canRedirect && status === 'disconnected' && !isReconnecting && !isConnecting) {
       window.location.href = '/';
     }
-  }, [mounted, status]);
+  }, [mounted, canRedirect, status, isReconnecting, isConnecting]);
 
   if (!mounted) return null; // Wait for hydration
 
