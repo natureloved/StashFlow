@@ -44,25 +44,23 @@ function YieldBannerSlider({ monthlyYield }: { monthlyYield: number }) {
   }, [allEquivalents]);
 
   return (
-    <div className="space-y-1 min-w-[280px]">
+    <div className="space-y-0.5 min-w-0 flex-1">
       <div className="flex items-center gap-2">
-        <span className="text-[10px] text-secondary font-black uppercase tracking-[0.2em]">Live Yield Insight</span>
+        <span className="text-[8px] md:text-[10px] text-secondary font-black uppercase tracking-[0.2em] opacity-80">Live Yield Insight</span>
         <div className="w-1 h-1 rounded-full bg-secondary animate-pulse" />
       </div>
-      <h3 className="text-lg md:text-xl font-display font-bold text-white leading-tight">
-        Monthly yield: <span className="text-secondary font-numeric">~${monthlyYield.toFixed(2)}</span>
-      </h3>
-      <div className="relative h-6 overflow-hidden">
+      
+      <div className="relative min-h-[3rem] md:min-h-[1.5rem] flex items-center overflow-visible">
         <AnimatePresence mode="wait">
           <motion.p
             key={index}
-            initial={{ y: 10, opacity: 0 }}
+            initial={{ y: 5, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -10, opacity: 0 }}
+            exit={{ y: -5, opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="absolute inset-0 text-sm text-gray-400 font-body"
+            className="text-sm md:text-lg font-display font-medium text-white leading-normal"
           >
-            That's equivalent to <span className="text-white font-bold underline decoration-secondary/30 decoration-2 underline-offset-4">{allEquivalents[index]}</span> each month
+            That's equivalent to <span className="text-secondary font-bold underline decoration-secondary/30 decoration-2 underline-offset-4">{allEquivalents[index]}</span>
           </motion.p>
         </AnimatePresence>
       </div>
@@ -537,22 +535,22 @@ export default function DashboardPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="mb-12 relative group"
+                  className="mb-8 md:mb-12 relative group"
                 >
                   <div className="absolute -inset-1 bg-gradient-to-r from-secondary/20 via-accent/10 to-secondary/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition duration-1000" />
-                  <div className="relative p-6 bg-[#0A0A0F] border border-white/5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
-                    <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-[0_0_20px_rgba(255,184,0,0.1)]">
-                        <Sparkles className="w-7 h-7" />
+                  <div className="relative p-4 md:p-6 bg-[#0A0A0F] border border-white/5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
+                    <div className="flex items-center gap-3 md:gap-5 w-full">
+                      <div className="w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-secondary/10 flex-shrink-0 flex items-center justify-center text-secondary border border-secondary/20 shadow-[0_0_20px_rgba(255,184,0,0.1)]">
+                        <Sparkles className="w-5 h-5 md:w-7 md:h-7" />
                       </div>
                         <YieldBannerSlider monthlyYield={totalMonthlyYield || 0} />
                     </div>
                     
-                    <div className="flex flex-col items-center md:items-end gap-2 shrink-0">
-                      <div className="px-4 py-1.5 rounded-full bg-secondary/5 border border-secondary/20 text-[10px] font-black text-secondary tracking-widest uppercase">
+                    <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-white/5">
+                      <div className="px-3 py-1 rounded-full bg-secondary/5 border border-secondary/10 text-[8px] md:text-[10px] font-black text-secondary/60 tracking-widest uppercase">
                         Passive Income • Optimized ⚡
                       </div>
-                      <p className="text-sm text-secondary font-body font-black italic tracking-wide whitespace-nowrap drop-shadow-[0_0_10px_rgba(255,184,0,0.2)]">
+                      <p className="text-[10px] md:text-xs text-secondary/40 font-body font-bold italic tracking-wide whitespace-nowrap">
                         Visualizing your yield as real-world value.
                       </p>
                     </div>
