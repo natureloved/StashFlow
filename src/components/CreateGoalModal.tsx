@@ -622,7 +622,7 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                 <h3 className="font-display text-3xl font-bold mb-2 text-white">Goal Activated!</h3>
                 <p className="text-gray-400 mb-8 font-body leading-relaxed">
                   🎉 Goal created and funded! <br/>
-                  <span className="text-white font-bold">${isUsdMode ? Number(depositAmount).toFixed(2) : (Number(depositAmount) * tokenPrice).toFixed(2)}</span> is now earning <span className="text-accent font-bold">{selectedVault.analytics.apy.total.toFixed(2)}% APY</span> in your <span className="text-white font-bold">{name}</span> goal.
+                  <span className="text-white font-bold">${isUsdMode ? Number(depositAmount).toFixed(2) : (Number(depositAmount) * tokenPrice).toFixed(2)}</span> is now earning <span className="text-accent font-bold">{selectedVault?.analytics.apy.total.toFixed(2)}% APY</span> in your <span className="text-white font-bold">{name}</span> goal.
                 </p>
                 <Button onClick={() => onOpenChange(false)} className="w-full h-12 bg-accent text-black hover:bg-accent/90 font-bold rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.2)]">
                   Go to Dashboard
