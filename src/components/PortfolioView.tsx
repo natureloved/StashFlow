@@ -195,7 +195,7 @@ export function PortfolioView() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                   >
-                    <Card className="glass-card p-5 border-amber-500/20 bg-amber-500/5 hover:border-amber-500/50 transition-all group overflow-hidden relative">
+                    <Card className="glass-card p-5 border-amber-500/20 bg-amber-500/5 hover:border-amber-500/50 transition-all group !overflow-visible relative">
                       <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -mr-12 -mt-12 blur-2xl" />
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-3">
@@ -266,7 +266,7 @@ export function PortfolioView() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                   >
-                    <Card className="glass-card p-5 border-border hover:border-accent/30 transition-all group shadow-sm bg-surface/20 max-w-[380px]">
+                    <Card className="glass-card p-5 border-border hover:border-accent/30 transition-all group shadow-sm bg-surface/20 max-w-[380px] !overflow-visible">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-[#0A0A0F] rounded-xl border border-border flex items-center justify-center overflow-hidden">

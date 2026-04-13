@@ -151,7 +151,7 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
         />
       )}
 
-      <Card className="glass-card flex flex-col gap-4 md:gap-6 relative overflow-visible group border-border hover:border-accent/50 transition-colors h-full">
+      <Card className="glass-card flex flex-col gap-4 md:gap-6 relative !overflow-visible group border-border hover:border-accent/50 transition-colors h-full">
         <Link href={`/dashboard/goals/${goal.id}`} className="px-3 py-4 md:p-6 pb-0 flex flex-col gap-4 md:gap-6 flex-grow">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-3xl transition-all group-hover:bg-accent/10" />
 
