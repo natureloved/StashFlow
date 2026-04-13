@@ -110,7 +110,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
             <div 
               ref={cardRef}
               data-card-container
-              className="relative w-full min-h-[340px] rounded-[24px] bg-[#0A0A0F] border border-white/10 overflow-hidden p-8 sm:p-10 font-body flex flex-col justify-between shadow-2xl"
+              className="relative w-full min-h-[290px] rounded-[24px] bg-[#0A0A0F] border border-white/10 overflow-hidden p-6 sm:p-8 font-body flex flex-col justify-between shadow-2xl"
             >
               <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,rgba(0,229,255,0.08),transparent_50%)] pointer-events-none" />
               <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_right,rgba(255,184,0,0.08),transparent_50%)] pointer-events-none" />
@@ -118,40 +118,40 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
               <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] select-none pointer-events-none scale-[4] blur-[1px]">
                   {milestoneData.badge}
               </div>
-
+ 
               <div className="relative z-10 flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.4)]">
-                    <span className="text-black font-black text-xl italic">S</span>
+                  <div className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.4)]">
+                    <span className="text-black font-black text-lg italic">S</span>
                   </div>
                   <div>
-                    <span className="block text-[11px] uppercase tracking-[0.4em] font-black text-white/70 leading-none">STASHFLOW</span>
-                    <span className="block text-[8px] uppercase tracking-[0.2em] font-bold text-accent mt-1">On-Chain Wealth</span>
+                    <span className="block text-[10px] uppercase tracking-[0.4em] font-black text-white/70 leading-none">STASHFLOW</span>
+                    <span className="block text-[7px] uppercase tracking-[0.2em] font-bold text-accent mt-1">On-Chain Wealth</span>
                   </div>
                 </div>
-                <div className="bg-white/5 px-4 py-1.5 rounded-full border border-white/10 text-[10px] font-black text-white/50 tracking-widest uppercase italic">
+                <div className="bg-white/5 px-3 py-1 rounded-full border border-white/10 text-[9px] font-black text-white/50 tracking-widest uppercase italic">
                   DEFI MILESTONE
                 </div>
               </div>
-
-              <div className="relative z-10 text-center py-6">
+ 
+              <div className="relative z-10 text-center py-4">
                 <motion.div 
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="text-7xl mb-4 drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]"
+                  className="text-6xl mb-3 drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]"
                 >
                   {milestoneData.badge}
                 </motion.div>
-                <h2 className="text-4xl sm:text-5xl font-black text-white italic tracking-tighter uppercase leading-none mb-3">
+                <h2 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter uppercase leading-none mb-2">
                   {milestoneData.title}
                 </h2>
-                <div className="inline-block px-4 py-1.5 bg-white/5 rounded-xl border border-white/5 backdrop-blur-md">
-                  <p className="text-accent font-black text-sm uppercase tracking-widest drop-shadow-[0_0_5px_rgba(0,229,255,0.3)]">{goal.name}</p>
+                <div className="inline-block px-3 py-1 bg-white/5 rounded-lg border border-white/5 backdrop-blur-md">
+                  <p className="text-accent font-black text-[10px] uppercase tracking-widest drop-shadow-[0_0_5px_rgba(0,229,255,0.3)]">{goal.name}</p>
                 </div>
               </div>
-
-              <div className="relative z-10 space-y-6">
-                <div className="relative h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+ 
+              <div className="relative z-10 space-y-4">
+                <div className="relative h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${milestone}%` }}
@@ -160,20 +160,20 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                   />
                 </div>
                 
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest leading-none">Status</p>
-                    <p className="text-2xl font-black text-white tracking-tighter leading-none">
+                    <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest leading-none">Status</p>
+                    <p className="text-xl font-black text-white tracking-tighter leading-none">
                       {milestone}%
                     </p>
                   </div>
                   <div className="space-y-1 text-center">
-                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest leading-none">APY</p>
-                    <p className="text-2xl font-black text-accent tracking-tighter leading-none italic drop-shadow-[0_0_5px_rgba(0,229,255,0.2)]">{apy}%</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest leading-none">APY</p>
+                    <p className="text-xl font-black text-accent tracking-tighter leading-none italic drop-shadow-[0_0_5px_rgba(0,229,255,0.2)]">{apy}%</p>
                   </div>
                   <div className="text-right space-y-1">
-                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest leading-none">Saved</p>
-                    <p className="text-2xl font-black text-white tracking-tighter leading-none">
+                    <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest leading-none">Saved</p>
+                    <p className="text-xl font-black text-white tracking-tighter leading-none">
                       ${Math.round(amountToDisplay).toLocaleString()}
                     </p>
                   </div>

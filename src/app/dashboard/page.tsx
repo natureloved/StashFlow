@@ -368,9 +368,14 @@ export default function DashboardPage() {
     acc + goal.contributions.reduce((cAcc, c) => cAcc + c.amountUsd, 0), 0
   );
 
-  const avgApy = userGoalsCount > 0 
-    ? userGoals.reduce((acc, goal) => acc + (goal.vault.analytics?.apy?.total || 0), 0) / userGoalsCount 
-    : 0;
+  const avgApy = totalDeposited > 0
+    ? userGoals.reduce((acc, goal) => {
+        const deposited = goal.contributions.reduce((cAcc, c) => cAcc + c.amountUsd, 0);
+        return acc + (deposited * (goal.vault.analytics?.apy?.total || 0));
+      }, 0) / totalDeposited
+    : (userGoalsCount > 0 
+        ? userGoals.reduce((acc, goal) => acc + (goal.vault.analytics?.apy?.total || 0), 0) / userGoalsCount 
+        : 0);
 
   const totalMonthlyYield = userGoalsCount > 0
     ? userGoals.reduce((acc, goal) => {
