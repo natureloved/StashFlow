@@ -158,14 +158,11 @@ export function PortfolioView() {
           <h2 className="text-3xl font-display font-bold mb-1">Portfolio Discovery</h2>
           <p className="text-gray-400">Consolidated view of your managed savings and idle assets.</p>
         </div>
-        <div className="glass-card px-8 py-4 border-amber-500/20 flex flex-col items-end relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-amber-500/10 transition-all" />
-          <div className="text-xs text-amber-500/70 uppercase font-black mb-1 tracking-widest relative z-10">Idle Assets Detected ⚡</div>
-          <div className="text-3xl font-display font-bold text-amber-500 tracking-tight relative z-10">
-            ${idleValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-          </div>
-          <div className="text-[10px] text-gray-500 font-bold mt-1 relative z-10">
-            Your Vault Net Worth: <span className="text-white">${totalNetWorth.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+        <div className="glass-card px-8 py-6 border-accent/20 flex flex-col items-end relative overflow-hidden group shadow-[0_0_20px_rgba(0,229,255,0.15)]">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-accent/10 transition-all" />
+          <div className="text-xs text-accent/70 uppercase font-black mb-1 tracking-widest relative z-10 italic">Your Vault Net Worth 🔒</div>
+          <div className="text-4xl font-display font-bold text-white tracking-tight relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+            ${totalNetWorth.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </div>
         </div>
       </div>
