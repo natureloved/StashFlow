@@ -16,7 +16,7 @@ import { Goal, useGoalStore } from '@/store/useGoalStore';
 import { getQuote } from '@/lib/lifi';
 import { useAccount, useSendTransaction, useSwitchChain, useBalance } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
-import { Loader2, ArrowDown, CheckCircle2, AlertCircle, Info, RefreshCw, Clock, Check } from 'lucide-react';
+import { Loader2, ArrowDown, CheckCircle2, AlertCircle, Info, RefreshCw, Clock, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getTokenPrice } from '@/lib/prices';
 import { EducationPopover } from '@/components/EducationPopover';
@@ -359,19 +359,37 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                       onChange={(e) => setAmount(e.target.value)}
                       className="text-4xl h-24 bg-[#0A0A0F] border-border text-center font-display font-bold focus-visible:ring-accent pr-28"
                     />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                      <button 
-                        onClick={handleMax}
-                        className="font-bold text-accent bg-accent/10 py-1.5 px-2.5 rounded-lg text-[10px] hover:bg-accent/20 transition-all"
-                      >
-                        MAX
-                      </button>
-                      <button 
-                        onClick={() => setIsUsdMode(!isUsdMode)}
-                        className="text-gray-500 font-bold text-xs hover:text-white transition-colors uppercase"
-                      >
-                        {isUsdMode ? 'USD' : selectedToken?.symbol}
-                      </button>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                        <button 
+                          onClick={handleMax}
+                          className="font-bold text-accent bg-accent/10 py-1.5 px-2.5 rounded-lg text-[10px] hover:bg-accent/20 transition-all"
+                        >
+                          MAX
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const current = Number(amount) || 0;
+                            setAmount((current + 1).toString());
+                          }}
+                          className="flex flex-col items-center justify-center p-1 hover:bg-white/5 rounded-lg transition-colors group"
+                          title="Increase amount"
+                        >
+                           <ChevronUp className="w-3 h-3 text-gray-500 group-hover:text-white" />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const current = Number(amount) || 0;
+                            if (current > 0) setAmount(Math.max(0, current - 1).toString());
+                          }}
+                          className="flex flex-col items-center justify-center p-1 hover:bg-white/5 rounded-lg transition-colors group"
+                          title="Decrease amount"
+                        >
+                           <ChevronDown className="w-3 h-3 text-gray-500 group-hover:text-white" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="absolute left-5 bottom-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                       {isUsdMode ? 'Deposit in USD' : `Deposit in ${selectedToken?.symbol || 'Asset'}`}
                     </div>
                   </div>
                   

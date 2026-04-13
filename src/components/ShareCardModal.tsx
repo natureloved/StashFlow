@@ -78,23 +78,31 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
       
       canvas.toBlob(async (blob) => {
         if (!blob) return;
+        
         try {
-          await navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-          ]);
-          setIsCopying(true); // Reusing isCopying for "Copied!" feedback
-          setTimeout(() => setIsCopying(false), 2000);
+          // Check for ClipboardItem support which is required for images
+          if (typeof ClipboardItem !== 'undefined') {
+            const data = [new ClipboardItem({ [blob.type]: blob })];
+            await navigator.clipboard.write(data);
+            setIsCopying(true);
+            setTimeout(() => setIsCopying(false), 2000);
+          } else {
+            throw new Error('ClipboardItem not supported');
+          }
         } catch (err) {
-          console.error('Clipboard error:', err);
-          // Fallback to traditional download if clipboard fails
+          console.error('Clipboard copy failed:', err);
+          // Fallback: Download the image if copy fails
           const link = document.createElement('a');
           link.download = `stashflow-${goal.name.toLowerCase().replace(/\s+/g, '-')}.png`;
           link.href = canvas.toDataURL();
           link.click();
+          // Still show some feedback
+          setIsCopying(true);
+          setTimeout(() => setIsCopying(false), 2000);
         }
-      });
+      }, 'image/png');
     } catch (err: any) {
-      console.error('Failed to copy image:', err);
+      console.error('Failed to capture image:', err);
     } finally {
       setIsSaving(false);
     }
