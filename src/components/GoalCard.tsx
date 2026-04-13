@@ -222,7 +222,6 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
               <div className="relative h-3 w-full bg-surface rounded-full overflow-hidden border border-border">
                 <motion.div 
                   initial={{ width: 0 }}
-initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                   className="absolute top-0 left-0 h-full bg-secondary rounded-full shadow-[0_0_15px_rgba(255,184,0,0.5)]"
