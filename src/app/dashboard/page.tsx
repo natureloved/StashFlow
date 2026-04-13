@@ -24,7 +24,8 @@ import {
   Sparkles,
   Loader2,
   Coins,
-  Zap
+  Zap,
+  RefreshCw
 } from 'lucide-react';
 
 import { ShareCardModal } from '@/components/ShareCardModal';
@@ -369,7 +370,6 @@ export default function DashboardPage() {
   const avgApy = totalDeposited > 0
     ? userGoals.reduce((acc, goal) => {
         const deposited = goal.contributions.reduce((cAcc, c) => cAcc + c.amountUsd, 0);
-        const vaultDecimals = (goal.vault as any).decimals || goal.vault.underlyingTokens?.[0]?.decimals || 18;
         return acc + (deposited * (goal.vault.analytics?.apy?.total || 0));
       }, 0) / totalDeposited
     : (userGoalsCount > 0 
