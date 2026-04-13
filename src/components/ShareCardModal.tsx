@@ -99,9 +99,6 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                <h3 className="font-display font-black text-xl tracking-tight uppercase italic decoration-accent/30 decoration-4 underline-offset-8">Share Milestone</h3>
                <p className="text-gray-500 text-xs font-body font-medium">Download your custom card or share your success</p>
              </div>
-             <button onClick={() => onOpenChange(false)} className="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center transition-colors">
-               <X className="w-5 h-5 text-gray-400" />
-             </button>
           </div>
 
           <div className="relative group">

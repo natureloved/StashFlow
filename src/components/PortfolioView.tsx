@@ -249,15 +249,16 @@ export function PortfolioView() {
                   const displayProtocol = matchedGoal?.vault.protocol.name || pos.protocolName || pos.protocol?.name || 'Unknown Protocol';
                   const displayApy = matchedGoal?.vault.analytics?.apy?.total ?? pos.apy;
                   const displayName = matchedGoal?.name ? `${matchedGoal.name} (${pos.asset?.symbol || 'USDC'})` : (pos.asset?.name || pos.name || 'Managed Asset');
+                  const vaultAddr = matchedGoal?.vault.address || pos.vaultAddress || pos.address || pos.asset?.address;
                   const chainExplorerUrl = pos.chainId === 8453
-                    ? `https://basescan.org/address/${matchedGoal?.vault.address || pos.asset?.address}`
+                    ? `https://basescan.org/address/${vaultAddr}`
                     : pos.chainId === 42161
-                    ? `https://arbiscan.io/address/${matchedGoal?.vault.address || pos.asset?.address}`
+                    ? `https://arbiscan.io/address/${vaultAddr}`
                     : pos.chainId === 10
-                    ? `https://optimistic.etherscan.io/address/${matchedGoal?.vault.address || pos.asset?.address}`
+                    ? `https://optimistic.etherscan.io/address/${vaultAddr}`
                     : pos.chainId === 137
-                    ? `https://polygonscan.com/address/${matchedGoal?.vault.address || pos.asset?.address}`
-                    : `https://etherscan.io/address/${matchedGoal?.vault.address || pos.asset?.address}`;
+                    ? `https://polygonscan.com/address/${vaultAddr}`
+                    : `https://etherscan.io/address/${vaultAddr}`;
 
                   return (
                   <motion.div
@@ -287,8 +288,8 @@ export function PortfolioView() {
                                 <div className="space-y-2">
                                   <p className="font-bold text-accent italic">Suite vs. Building Analogy 🏨</p>
                                   <p className="text-xs leading-relaxed text-gray-300">
-                                    Think of <span className="text-white font-bold">{displayProtocol}</span> as a premium **Suite** (the vault). 
-                                    It's built on top of the **Morpho** infrastructure (the Building). 
+                                    Think of <span className="text-white font-bold">{displayProtocol}</span> as a premium Suite (the vault). 
+                                    It's built on top of the Morpho infrastructure (the Building). 
                                   </p>
                                   <p className="text-[10px] text-gray-500 italic">
                                     Just as a hotel room 204 exists within a Marriott, your vault is secured by Morpho's bedrock technology.
