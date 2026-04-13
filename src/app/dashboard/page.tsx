@@ -540,8 +540,8 @@ export default function DashboardPage() {
                   <div className="absolute -inset-1 bg-gradient-to-r from-secondary/20 via-accent/10 to-secondary/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition duration-1000" />
                   <div className="relative p-4 md:p-6 bg-[#0A0A0F] border border-white/5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
                     <div className="flex items-center gap-3 md:gap-5 w-full">
-                      <div className="w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-secondary/10 flex-shrink-0 flex items-center justify-center text-secondary border border-secondary/20 shadow-[0_0_20px_rgba(255,184,0,0.1)]">
-                        <Sparkles className="w-5 h-5 md:w-7 md:h-7" />
+                      <div className="w-8 h-8 md:w-12 md:h-12 rounded-2xl bg-secondary/10 flex-shrink-0 flex items-center justify-center text-secondary border border-secondary/20 shadow-[0_0_20px_rgba(255,184,0,0.1)]">
+                        <Sparkles className="w-4 h-4 md:w-6 md:h-6" />
                       </div>
                         <YieldBannerSlider monthlyYield={totalMonthlyYield || 0} />
                     </div>
@@ -614,9 +614,9 @@ export default function DashboardPage() {
                 {portfolioStats?.idleAssets && portfolioStats.idleAssets > 0 ? (
                   <>We found approximately <span className="text-white font-bold">${portfolioStats.idleAssets.toFixed(2)}</span> in idle assets in your wallet. Moving them to your goals could increase your monthly yield by <span className="text-accent font-bold">15%</span>.</>
                 ) : isScanning ? (
-                  <>Deep scanning your wallet across 5+ chains for unallocated capital...</>
+                  <>Consolidating your active portfolio data across 5+ chains...</>
                 ) : (
-                  <>Scan your portfolio to find idle assets and optimize your yield strategies across 5+ chains.</>
+                  <>Monitoring your active on-chain positions and tracking cross-chain growth.</>
                 )}
               </p>
               <Button 

@@ -16,7 +16,7 @@ import { Goal, useGoalStore } from '@/store/useGoalStore';
 import { getQuote } from '@/lib/lifi';
 import { useAccount, useSendTransaction, useSwitchChain, useBalance, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
-import { Loader2, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Clock, Wallet } from 'lucide-react';
+import { Loader2, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Clock, Wallet, ChevronUp, ChevronDown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getTokenPrice } from '@/lib/prices';
 
@@ -99,7 +99,8 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
         ? amount.toString() 
         : '0';
 
-      const fromAmountSmallest = parseUnits(safeAmountStr, 18).toString(); 
+      const vaultDecimals = goal.vault.decimals || goal.vault.underlyingTokens?.[0]?.decimals || 18;
+      const fromAmountSmallest = parseUnits(safeAmountStr, vaultDecimals).toString(); 
 
       const response = await getQuote({
         fromChain: goal.vault.chainId,
@@ -182,7 +183,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
 
   return (
     <Dialog open={open} onOpenChange={(val) => { onOpenChange(val); if(!val) reset(); }}>
-      <DialogContent className="max-w-[calc(100%-2.5rem)] sm:max-w-[480px] bg-surface border-border text-white p-0 overflow-hidden">
+      <DialogContent className="max-w-[calc(100%-2.5rem)] sm:max-w-[480px] bg-surface border-border text-white p-0 overflow-hidden !pr-10">
         <div className="max-h-[85vh] overflow-y-auto w-full thin-scrollbar pb-6">
           <div className="p-4 md:p-6 pb-0">
           <DialogHeader className="mb-6">
@@ -216,14 +217,20 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
                         placeholder="0.00"
                         className="w-full bg-[#0A0A0F]/50 border border-border focus:border-accent text-white font-numeric text-3xl p-5 rounded-2xl outline-none transition-all pr-36"
                       />
-                      <button
-                        onClick={() => setAmount(currentBalanceUsd.toString())}
-                        className="absolute right-[4.5rem] top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-accent/10 text-accent text-[10px] font-bold hover:bg-accent/20 transition-colors"
-                      >
-                        MAX
-                      </button>
-                      <div className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xs pointer-events-none">
-                        USDC
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                        <button
+                          onClick={() => setAmount(currentBalanceUsd.toString())}
+                          className="px-2.5 py-1 rounded-lg bg-accent/10 text-accent text-[10px] font-bold hover:bg-accent/20 transition-colors"
+                        >
+                          MAX
+                        </button>
+                        <button 
+                          onClick={() => {}}
+                          className="flex flex-col items-center justify-center p-1 hover:bg-white/5 rounded-lg transition-colors group"
+                        >
+                           <ChevronUp className="w-3 h-3 text-gray-500 group-hover:text-white" />
+                           <ChevronDown className="w-3 h-3 text-gray-500 group-hover:text-white" />
+                        </button>
                       </div>
                     </div>
                   </div>

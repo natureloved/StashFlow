@@ -155,8 +155,8 @@ export function PortfolioView() {
       {/* Header & Net Worth */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-3xl font-display font-bold mb-1">Portfolio Discovery</h2>
-          <p className="text-gray-400">Consolidated view of your managed savings and idle assets.</p>
+          <h2 className="text-3xl font-display font-bold mb-1">Portfolio Monitoring</h2>
+          <p className="text-gray-400">Monitoring your active on-chain positions and tracking cross-chain growth.</p>
         </div>
         <div className="glass-card px-8 py-6 border-accent/20 flex flex-col items-end relative overflow-hidden group shadow-[0_0_20px_rgba(0,229,255,0.15)]">
           <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-accent/10 transition-all" />

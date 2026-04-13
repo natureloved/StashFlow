@@ -38,15 +38,15 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
   const copyTweetText = () => {
     let text = "";
     if (milestone === 1) {
-      text = `Just took my first step towards my ${goal.name} goal! 🌱 Saving on-chain with @stashflow, earning ${apy}% APY. The journey of a thousand miles starts with one click. Powered by @lifiprotocol #DeFi #Stashflow`;
+      text = `Just took my first step towards my Goal - ${goal.name}! 🌱 Saving on-chain with @stashflow, earning ${apy}% APY. The journey of a thousand miles starts with one click. Powered by @lifiprotocol #DeFi #Stashflow`;
     } else if (milestone === 25) {
-      text = `25% of the way to my ${goal.name} goal! 🚀 $${Math.round(amountToDisplay).toLocaleString()} saved and earning ${apy}% APY automatically with @stashflow. DeFi yield hitting different. @lifiprotocol #DeFi`;
+      text = `25% of the way to my Goal - ${goal.name}! 🚀 $${Math.round(amountToDisplay).toLocaleString()} saved and earning ${apy}% APY automatically with @stashflow. DeFi yield hitting different. @lifiprotocol #DeFi`;
     } else if (milestone === 50) {
-      text = `Halfway mark hit for ${goal.name}! 🔥 $${Math.round(amountToDisplay).toLocaleString()} secured on-chain. My @stashflow yield is already building up. Powered by @lifiprotocol #PassiveIncome #DeFi`;
+      text = `Halfway mark hit for Goal - ${goal.name}! 🔥 $${Math.round(amountToDisplay).toLocaleString()} secured on-chain. My @stashflow yield is already building up. Powered by @lifiprotocol #PassiveIncome #DeFi`;
     } else if (milestone === 75) {
-      text = `75% DONE! 💎 Almost reached my ${goal.name} goal with @stashflow. Earning ${apy}% APY while I sleep. On-chain savings at its finest. @lifiprotocol #DeFi #Stashflow`;
+      text = `75% DONE! 💎 Almost reached my Goal - ${goal.name} with @stashflow. Earning ${apy}% APY while I sleep. On-chain savings at its finest. @lifiprotocol #DeFi #Stashflow`;
     } else {
-      text = `GOAL UNLOCKED 🏆 I just hit my ${goal.name} target! $${Math.round(amountToDisplay).toLocaleString()} saved on-chain with @stashflow, powered by @lifiprotocol. This is what DeFi UX should feel like. #DeFi #Stashflow`;
+      text = `GOAL UNLOCKED 🏆 I just hit my Goal - ${goal.name} target! $${Math.round(amountToDisplay).toLocaleString()} saved on-chain with @stashflow, powered by @lifiprotocol. This is what DeFi UX should feel like. #DeFi #Stashflow`;
     }
 
     navigator.clipboard.writeText(text);
