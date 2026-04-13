@@ -18,6 +18,74 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 
+function YieldInsightSlider() {
+  const items = [
+    { name: "your Spotify Premium", icon: "🎵" },
+    { name: "a cinema ticket", icon: "🎬" },
+    { name: "a gourmet lunch", icon: "🍱" },
+    { name: "a gym session", icon: "💪" }
+  ];
+  const [index, setIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % items.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="p-5 rounded-2xl bg-[#0F0F18] border border-white/5 space-y-3 relative overflow-hidden group/insight">
+      <div className="flex items-center justify-between relative z-10">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
+            <Zap className="w-4 h-4 text-secondary" />
+          </div>
+          <span className="text-[10px] text-secondary font-black uppercase tracking-widest">Live Yield Insight</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
+          <span className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">Calculating...</span>
+        </div>
+      </div>
+
+      <div className="relative h-12 flex items-center z-10">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={index}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="absolute inset-0 flex flex-col justify-center"
+          >
+            <p className="text-sm font-display font-bold text-white leading-tight">
+              Monthly yield: <span className="text-secondary font-numeric">~$14.67</span>
+            </p>
+            <p className="text-[11px] text-gray-400 font-body mt-0.5">
+              That's <span className="text-white font-bold">{items[index].name}</span> {items[index].icon} each month
+            </p>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div className="pt-2 border-t border-white/5 flex items-center justify-between relative z-10">
+        <p className="text-[9px] text-gray-600 font-body italic">
+          Visualizing your yield as real-world value.
+        </p>
+        <div className="flex gap-1">
+          {items.map((_, i) => (
+            <div 
+              key={i} 
+              className={`w-1 h-1 rounded-full transition-all duration-500 ${i === index ? 'w-3 bg-secondary' : 'bg-white/10'}`} 
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const { isConnected } = useAccount();
   const [metrics, setMetrics] = React.useState({ vaults: 0, chains: 0, protocols: 0 });
@@ -175,15 +243,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
-                        <Zap className="w-5 h-5 text-secondary" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-bold">Yield Insight</p>
-                        <p className="text-xs text-gray-400 leading-relaxed font-body">Your yield is currently covering your Spotify & Gym membership monthly.</p>
-                    </div>
-                  </div>
+                  <YieldInsightSlider />
                 </div>
 
                 {/* Floating Elements */}
@@ -220,7 +280,7 @@ export default function Home() {
             {[
               { 
                 title: "Pick a Goal", 
-                desc: "Name your target. Whether it's a holiday, a house, or a rainy day fund. Give your savings a identity.", 
+                desc: "Name your target. Whether it's a holiday, a house, or a rainy day fund. Give your savings an identity.", 
                 icon: TargetIcon, 
                 color: "text-accent", 
                 bg: "bg-accent/10" 

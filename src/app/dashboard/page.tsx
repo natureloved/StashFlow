@@ -29,7 +29,46 @@ import {
 
 import { ShareCardModal } from '@/components/ShareCardModal';
 import confetti from 'canvas-confetti';
-import { getYieldEquivalent } from '@/lib/yield-utils';
+import { getYieldEquivalent, getAllYieldEquivalents } from '@/lib/yield-utils';
+
+function YieldBannerSlider({ monthlyYield }: { monthlyYield: number }) {
+  const allEquivalents = React.useMemo(() => getAllYieldEquivalents(monthlyYield), [monthlyYield]);
+  const [index, setIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    if (allEquivalents.length <= 1) return;
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % allEquivalents.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [allEquivalents]);
+
+  return (
+    <div className="space-y-1 min-w-[280px]">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-secondary font-black uppercase tracking-[0.2em]">Live Yield Insight</span>
+        <div className="w-1 h-1 rounded-full bg-secondary animate-pulse" />
+      </div>
+      <h3 className="text-lg md:text-xl font-display font-bold text-white leading-tight">
+        Monthly yield: <span className="text-secondary font-numeric">~${monthlyYield.toFixed(2)}</span>
+      </h3>
+      <div className="relative h-6 overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={index}
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -10, opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="absolute inset-0 text-sm text-gray-400 font-body"
+          >
+            That's equivalent to <span className="text-white font-bold underline decoration-secondary/30 decoration-2 underline-offset-4">{allEquivalents[index]}</span> each month
+          </motion.p>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { address, status, isConnecting, isReconnecting } = useAccount();
@@ -402,18 +441,7 @@ export default function DashboardPage() {
                       <div className="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-[0_0_20px_rgba(255,184,0,0.1)]">
                         <Sparkles className="w-7 h-7" />
                       </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-secondary font-black uppercase tracking-[0.2em]">Live Yield Insight</span>
-                          <div className="w-1 h-1 rounded-full bg-secondary animate-pulse" />
-                        </div>
-                        <h3 className="text-lg md:text-xl font-display font-bold text-white leading-tight">
-                          Monthly yield: <span className="text-secondary font-numeric">~${(totalMonthlyYield || 0).toFixed(2)}</span>
-                        </h3>
-                        <p className="text-sm text-gray-400 font-body">
-                          That's equivalent to <span className="text-white font-bold underline decoration-secondary/30 decoration-2 underline-offset-4">{getYieldEquivalent(totalMonthlyYield || 0)}</span> each month
-                        </p>
-                      </div>
+                        <YieldBannerSlider monthlyYield={totalMonthlyYield || 0} />
                     </div>
                     
                     <div className="flex flex-col items-center md:items-end gap-2 shrink-0">
