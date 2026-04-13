@@ -121,12 +121,12 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
  
               <div className="relative z-10 flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-accent rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.4)]">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.4)]" style={{ backgroundColor: '#00E5FF' }}>
                     <span className="text-black font-black text-lg italic">S</span>
                   </div>
                   <div>
                     <span className="block text-[10px] uppercase tracking-[0.4em] font-black text-white/70 leading-none">STASHFLOW</span>
-                    <span className="block text-[7px] uppercase tracking-[0.2em] font-bold text-accent mt-1">On-Chain Wealth</span>
+                    <span className="block text-[7px] uppercase tracking-[0.2em] font-bold mt-1" style={{ color: '#00E5FF' }}>On-Chain Wealth</span>
                   </div>
                 </div>
                 <div className="bg-white/5 px-3 py-1 rounded-full border border-white/10 text-[9px] font-black text-white/50 tracking-widest uppercase italic">
@@ -146,7 +146,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                   {milestoneData.title}
                 </h2>
                 <div className="inline-block px-3 py-1 bg-white/5 rounded-lg border border-white/5 backdrop-blur-md">
-                  <p className="text-accent font-black text-[10px] uppercase tracking-widest drop-shadow-[0_0_5px_rgba(0,229,255,0.3)]">{goal.name}</p>
+                  <p className="font-black text-[10px] uppercase tracking-widest drop-shadow-[0_0_5px_rgba(0,229,255,0.3)]" style={{ color: '#00E5FF' }}>{goal.name}</p>
                 </div>
               </div>
  
@@ -156,7 +156,8 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                     initial={{ width: 0 }}
                     animate={{ width: `${milestone}%` }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-accent via-secondary to-accent bg-[length:200%_auto] animate-gradient-x rounded-full shadow-[0_0_20px_rgba(0,229,255,0.3)]"
+                    className="absolute top-0 left-0 h-full bg-[length:200%_auto] animate-gradient-x rounded-full shadow-[0_0_20px_rgba(0,229,255,0.3)]"
+                    style={{ background: 'linear-gradient(to right, #00E5FF, #FFB800, #00E5FF)' }}
                   />
                 </div>
                 
@@ -169,7 +170,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                   </div>
                   <div className="space-y-1 text-center">
                     <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest leading-none">APY</p>
-                    <p className="text-xl font-black text-accent tracking-tighter leading-none italic drop-shadow-[0_0_5px_rgba(0,229,255,0.2)]">{apy}%</p>
+                    <p className="text-xl font-black tracking-tighter leading-none italic drop-shadow-[0_0_5px_rgba(0,229,255,0.2)]" style={{ color: '#00E5FF' }}>{apy}%</p>
                   </div>
                   <div className="text-right space-y-1">
                     <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest leading-none">Saved</p>
@@ -182,7 +183,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
               
               <div className="relative z-10 flex justify-center pt-6 mt-4 border-t border-white/5">
                 <span className="text-[9px] text-white/20 uppercase font-black tracking-[0.4em] flex items-center gap-2">
-                   Visualizing your yield as <span className="text-white/40">real-world value</span>
+                   Save with purpose. <span className="text-white/40">Earn while you wait.</span>
                 </span>
               </div>
             </div>
@@ -191,23 +192,23 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
              <Button 
                onClick={copyTweetText}
-               className="bg-[#1DA1F2] text-white hover:bg-[#1A91DA] font-black h-16 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 group"
+               className="bg-[#1DA1F2] text-white hover:bg-[#1A91DA] font-black h-12 rounded-xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 group"
              >
                {isCopying ? (
                  <span className="flex items-center gap-3"><Check className="w-5 h-5" /> Copied!</span>
                ) : (
-                 <span className="flex items-center gap-3 italic"><Share2 className="w-5 h-5 group-hover:rotate-12 transition-transform" /> Copy Text</span>
+                 <span className="flex items-center gap-3 italic text-xs"><Share2 className="w-4 h-4 group-hover:rotate-12 transition-transform" /> Copy Text</span>
                )}
              </Button>
              <Button 
                onClick={saveCardImage}
                disabled={isSaving}
-               className="bg-white text-black hover:bg-gray-100 font-black h-16 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 border-b-8 border-gray-200"
+               className="bg-white text-black hover:bg-gray-100 font-black h-12 rounded-xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 border-b-4 border-gray-200"
              >
                {isSaving ? (
                  <span className="flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin" /> Rendering...</span>
                ) : (
-                 <span className="flex items-center gap-3 italic"><Download className="w-5 h-5" /> Save Image</span>
+                 <span className="flex items-center gap-3 italic text-xs"><Download className="w-4 h-4" /> Save Image</span>
                )}
              </Button>
           </div>
