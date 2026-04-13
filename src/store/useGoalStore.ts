@@ -34,6 +34,7 @@ interface GoalState {
   updateVaults: (vaultUpdates: Record<string, any>) => void;
   fetchGoalsForUser: (address: string) => Promise<void>;
   syncGoalToCloud: (goal: Goal) => Promise<void>;
+  syncAllGoalsToCloud: (address: string) => Promise<void>;
 }
 
 export const useGoalStore = create<GoalState>()(
@@ -136,7 +137,6 @@ export const useGoalStore = create<GoalState>()(
 
             // Merge with local goals to avoid dupes, prioritizing cloud
             set((state) => {
-              const localIds = new Set(state.goals.map(g => g.id));
               const newGoals = [...state.goals];
               
               mappedGoals.forEach(cloudGoal => {
@@ -153,6 +153,33 @@ export const useGoalStore = create<GoalState>()(
           }
         } catch (e) {
           console.error('Failed to fetch user goals', e);
+        }
+      },
+      syncAllGoalsToCloud: async (address) => {
+        if (!supabase || !address) return;
+        const state = useGoalStore.getState();
+        const userGoals = state.goals.filter(g => g.ownerAddress.toLowerCase() === address.toLowerCase());
+        
+        if (userGoals.length === 0) return;
+
+        try {
+          // Bulk upsert all local goals for this user
+          const rows = userGoals.map(g => ({
+            id: g.id,
+            owner_address: g.ownerAddress.toLowerCase(),
+            name: g.name,
+            target_amount_usd: g.targetAmountUsd,
+            vault: g.vault,
+            risk_tier: g.riskTier,
+            contributions: g.contributions,
+            updated_at: new Date().toISOString()
+          }));
+
+          const { error } = await supabase.from(GOALS_TABLE).upsert(rows);
+          if (error) throw error;
+          console.log(`Successfully migrated ${rows.length} goals to cloud.`);
+        } catch (e) {
+          console.error('Failed to migrate local goals to cloud', e);
         }
       },
     }),

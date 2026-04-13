@@ -104,8 +104,9 @@ export default function GoalDetailPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <h1 className="font-display text-4xl md:text-5xl font-extrabold">{goal.name}</h1>
-                <Badge className="bg-accent/10 text-accent border-accent/20 px-4 py-1.5 font-bold text-lg">
-                  {apy.toFixed(2)}% APY
+                <Badge className="bg-accent/10 text-accent border-accent/20 px-4 py-1.5 font-bold text-lg flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  Live: {apy.toFixed(2)}% APY
                 </Badge>
               </div>
               <p className="text-xl text-gray-400 font-body">

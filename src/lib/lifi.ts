@@ -1,3 +1,4 @@
+import { CONFIG } from './config';
 const LIFI_PROXY_URL = '/api/lifi';
 
 const getHeaders = () => {

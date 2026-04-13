@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Goal, useGoalStore } from '@/store/useGoalStore';
 import { getQuote } from '@/lib/lifi';
-import { useAccount, useSendTransaction, useSwitchChain, useBalance } from 'wagmi';
+import { useAccount, useSendTransaction, useSwitchChain, useBalance, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { Loader2, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Clock, Wallet } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -59,7 +59,14 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
 
   const { sendTransactionAsync } = useSendTransaction();
   const { switchChainAsync } = useSwitchChain();
-  const updateGoal = useGoalStore((state) => state.updateGoal);
+  const addContribution = useGoalStore((state) => state.addContribution);
+
+  const [pendingWithdrawHash, setPendingWithdrawHash] = useState<`0x${string}` | undefined>(undefined);
+
+  // Wait for on-chain confirmation
+  const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError } = useWaitForTransactionReceipt({
+    hash: pendingWithdrawHash,
+  });
 
   // Default destination token
   useEffect(() => {
@@ -113,6 +120,34 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
     }
   };
 
+  // Handle confirmation success
+  useEffect(() => {
+    if (isConfirmed && pendingWithdrawHash && goal) {
+      // Record negative contribution to reduce balance
+      addContribution(goal.id, {
+        id: Math.random().toString(36).substr(2, 9),
+        date: new Date().toISOString(),
+        amountUsd: -Number(amount), // Negative to subtract
+        txHash: pendingWithdrawHash,
+        fromChain: goal.vault.chainId,
+        fromToken: 'Vault',
+      });
+      
+      setPendingWithdrawHash(undefined);
+      setStep(3);
+      confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.6 }
+      });
+    }
+    if (isTxError && pendingWithdrawHash) {
+      setError('Withdrawal failed on-chain. Your funds were not moved.');
+      setPendingWithdrawHash(undefined);
+      setIsWithdrawing(false);
+    }
+  }, [isConfirmed, isTxError, pendingWithdrawHash, goal, amount, addContribution]);
+
   const handleWithdraw = async () => {
     if (!quote || !goal) return;
 
@@ -129,17 +164,9 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
         value: BigInt(quote.transactionRequest.value || 0),
       });
 
-      // Optimistically update local state by adding a negative contribution or updating total
-      // Here we'll just show success
-      setStep(3);
-      confetti({
-        particleCount: 150,
-        spread: 100,
-        origin: { y: 0.6 }
-      });
+      setPendingWithdrawHash(tx);
     } catch (err: any) {
       setError(err.message || 'Withdrawal failed');
-    } finally {
       setIsWithdrawing(false);
     }
   };
@@ -264,11 +291,15 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
 
                 <div className="space-y-3">
                   <Button 
-                    disabled={isWithdrawing}
+                    disabled={isWithdrawing || isConfirming}
                     onClick={handleWithdraw}
                     className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
                   >
-                    {isWithdrawing ? <Loader2 className="animate-spin" /> : 'Confirm Withdrawal'}
+                    {isWithdrawing && !pendingWithdrawHash ? (
+                      <><Loader2 className="animate-spin mr-2" /> Submitting...</>
+                    ) : isConfirming ? (
+                      <><Loader2 className="animate-spin mr-2" /> Confirming...</>
+                    ) : 'Confirm Withdrawal'}
                   </Button>
                   <Button variant="ghost" className="w-full text-gray-500" onClick={() => setStep(1)}>
                     Go Back

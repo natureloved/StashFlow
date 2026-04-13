@@ -178,10 +178,11 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
                 Target <span className="font-numeric font-bold">${goal.targetAmountUsd.toLocaleString()}</span>
               </div>
             </div>
-            <Badge className="bg-accent/10 text-accent border-accent/20 px-3 py-1">
+            <Badge className="bg-accent/10 text-accent border-accent/20 px-3 py-1 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
               <EducationPopover 
                 id="apy" 
-                term={<span className="font-numeric font-bold">{apy.toFixed(2)}% APY</span>}
+                term={<span className="font-numeric font-bold uppercase text-[10px] tracking-tight">Live: {apy.toFixed(2)}% APY</span>}
               >
                 APY means you earn {apy.toFixed(2)}% of your deposit 
                 per year, paid continuously. $1,000 today becomes 

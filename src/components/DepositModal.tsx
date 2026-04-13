@@ -123,6 +123,12 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
 
   const needsApproval = selectedToken?.address !== 'native' && quote && allowance !== undefined && allowance < fromAmountSmallest;
   const [isApproving, setIsApproving] = useState(false);
+  const [pendingApprovalHash, setPendingApprovalHash] = useState<`0x${string}` | undefined>(undefined);
+
+  // Wait for on-chain confirmation of Approval
+  const { isLoading: isConfirmingApproval, isSuccess: isApprovalConfirmed } = useWaitForTransactionReceipt({
+    hash: pendingApprovalHash,
+  });
 
   // Default selection
   useEffect(() => {
@@ -228,6 +234,14 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
       setIsDepositing(false);
     }
   }, [isConfirmed, isTxError, pendingTxHash]);
+
+  // Handle successful approval confirmation
+  React.useEffect(() => {
+    if (isApprovalConfirmed && pendingApprovalHash) {
+      refetchAllowance();
+      setPendingApprovalHash(undefined);
+    }
+  }, [isApprovalConfirmed, pendingApprovalHash, refetchAllowance]);
 
   const handleDeposit = async () => {
     if (!quote || !goal || !isAgreed) return;
@@ -488,17 +502,18 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
 
                   {needsApproval ? (
                     <Button 
-                      disabled={isApproving}
+                      disabled={isApproving || isConfirmingApproval}
                       onClick={async () => {
                         setIsApproving(true);
+                        setError(null);
                         try {
-                          await approveAsync({
+                          const hash = await approveAsync({
                             address: selectedToken.address as `0x${string}`,
                             abi: ERC20_ABI,
                             functionName: 'approve',
                             args: [quote.transactionRequest.to as `0x${string}`, fromAmountSmallest],
                           });
-                          await refetchAllowance();
+                          setPendingApprovalHash(hash);
                         } catch (err: any) {
                           setError(err.message || 'Approval failed');
                         } finally {
@@ -507,7 +522,11 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                       }}
                       className="w-full h-14 bg-white text-black hover:bg-white/90 font-bold text-lg rounded-xl glow-cyan"
                     >
-                      {isApproving ? <Loader2 className="animate-spin" /> : `Approve ${selectedToken.symbol}`}
+                      {isApproving && !pendingApprovalHash ? (
+                        <><Loader2 className="animate-spin mr-2" /> Submitting...</>
+                      ) : isConfirmingApproval ? (
+                        <><Loader2 className="animate-spin mr-2" /> Confirming...</>
+                      ) : `Approve ${selectedToken.symbol}`}
                     </Button>
                   ) : (
                     <Button 

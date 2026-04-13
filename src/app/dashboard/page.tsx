@@ -91,6 +91,7 @@ export default function DashboardPage() {
 
   const updateVaults = useGoalStore((state) => state.updateVaults);
   const fetchGoalsForUser = useGoalStore((state) => state.fetchGoalsForUser);
+  const syncAllGoalsToCloud = useGoalStore((state) => state.syncAllGoalsToCloud);
 
   const goals = useGoalStore((state) => state.goals);
   const _hasHydrated = useGoalStore((state) => state._hasHydrated);
@@ -151,10 +152,13 @@ export default function DashboardPage() {
       syncVaults();
       // Also fetch cloud goals on connect/mount
       if (address) {
-        fetchGoalsForUser(address);
+        fetchGoalsForUser(address).then(() => {
+          // After fetching, push any local-only goals to cloud for migration
+          syncAllGoalsToCloud(address);
+        });
       }
     }
-  }, [mounted, status, userGoals.length, address, fetchGoalsForUser]);
+  }, [mounted, status, userGoals.length, address, fetchGoalsForUser, syncAllGoalsToCloud]);
 
   // AUTO-MILESTONE TRIGGER LOGIC
   React.useEffect(() => {

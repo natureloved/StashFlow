@@ -197,7 +197,8 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                         </button>
                       </p>
                     </div>
-                    <Badge className="bg-accent text-black">
+                    <Badge className="bg-accent text-black flex items-center gap-1.5 px-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
                       <EducationPopover id="apy" term={`${(selectedVault.analytics.apy.total).toFixed(2)}% APY`}>
                         APY means you earn {(selectedVault.analytics.apy.total).toFixed(2)}% of your deposit 
                         per year, paid continuously. $1,000 today becomes 
