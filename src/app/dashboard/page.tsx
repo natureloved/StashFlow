@@ -435,10 +435,10 @@ export default function DashboardPage() {
                     className="glass-card p-6 border-accent/20"
                   >
                     <div className="flex items-center gap-3 text-white/70 mb-2 font-bold text-xs uppercase tracking-wider">
-                      <Wallet className="w-4 h-4 text-accent" /> Total Stashed
+                      <TargetIcon className="w-4 h-4 text-accent" /> Total Goals
                     </div>
                     <div className="text-3xl font-numeric font-bold text-white tracking-tight">
-                      ${(Number.isNaN(totalDeposited) ? 0 : totalDeposited).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {userGoalsCount}
                     </div>
                   </motion.div>
                   
