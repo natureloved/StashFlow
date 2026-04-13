@@ -112,6 +112,43 @@ export default function DashboardPage() {
     }
   }, [mounted, canRedirect, status, isReconnecting, isConnecting, router]);
 
+  // AUTO-MILESTONE TRIGGER LOGIC
+  React.useEffect(() => {
+    if (!mounted || userGoals.length === 0) return;
+
+    userGoals.forEach(goal => {
+      const currentSaved = goal.contributions.reduce((acc, curr) => acc + curr.amountUsd, 0);
+      const progress = (currentSaved / goal.targetAmountUsd) * 100;
+      
+      // Determine the highest milestone reached
+      let reached: 1 | 25 | 50 | 75 | 100 | null = null;
+      if (progress >= 100) reached = 100;
+      else if (progress >= 75) reached = 75;
+      else if (progress >= 50) reached = 50;
+      else if (progress >= 25) reached = 25;
+      else if (progress >= 1) reached = 1;
+
+      if (reached) {
+        const key = `stashflow_milestone_${goal.id}_${reached}`;
+        const hasShown = localStorage.getItem(key);
+
+        if (!hasShown) {
+          // Trigger celebration!
+          setMilestoneGoal(goal);
+          setActiveMilestone(reached);
+          setIsShareModalOpen(true);
+          confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#00E5FF', '#FFB800', '#7C3AED']
+          });
+          localStorage.setItem(key, 'true');
+        }
+      }
+    });
+  }, [userGoals, mounted]);
+
   const handleScanPortfolio = async () => {
     if (!address) return;
     setIsScanning(true);
@@ -139,9 +176,16 @@ export default function DashboardPage() {
 
               // NaN safety and Dust filter (> $0.01)
               if (!Number.isNaN(usdValue) && usdValue > 0.01) {
-                const isInPosition = positions.some(
-                  (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase()
-                );
+                // Normalize addresses (especially native tokens)
+                const isInPosition = positions.some((p: any) => {
+                  const pAddr = p.token?.address?.toLowerCase();
+                  const tAddr = token.address?.toLowerCase();
+                  if (pAddr === tAddr) return true;
+                  // Handle Native ETH representations (0x0...0 or 0xEee...e)
+                  const isNative = (addr: string) => addr === '0x0000000000000000000000000000000000000000' || addr === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+                  if (isNative(pAddr) && isNative(tAddr)) return true;
+                  return false;
+                });
                 if (!isInPosition) totalIdleUsd += usdValue;
               }
             });
@@ -190,11 +234,16 @@ export default function DashboardPage() {
                 const price = Number(token.priceUSD ?? 0);
                 const usdValue = amount * price;
 
-                // Dust filter & NaN guard
-                if (!Number.isNaN(usdValue) && usdValue > 1.00) {
-                  const isInPosition = positions.some(
-                    (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase()
-                  );
+                // Dust filter & NaN guard (> $0.05)
+                if (!Number.isNaN(usdValue) && usdValue > 0.05) {
+                  const isInPosition = positions.some((p: any) => {
+                    const pAddr = p.token?.address?.toLowerCase();
+                    const tAddr = token.address?.toLowerCase();
+                    if (pAddr === tAddr) return true;
+                    const isNative = (addr: string) => addr === '0x0000000000000000000000000000000000000000' || addr === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+                    if (isNative(pAddr) && isNative(tAddr)) return true;
+                    return false;
+                  });
                   if (!isInPosition) totalIdleUsd += usdValue;
                 }
               });
@@ -448,7 +497,7 @@ export default function DashboardPage() {
                       <div className="px-4 py-1.5 rounded-full bg-secondary/5 border border-secondary/20 text-[10px] font-black text-secondary tracking-widest uppercase">
                         Passive Income • Optimized ⚡
                       </div>
-                      <p className="text-sm text-secondary font-display font-black italic tracking-wide whitespace-nowrap drop-shadow-[0_0_10px_rgba(255,184,0,0.2)]">
+                      <p className="text-sm text-secondary font-body font-black italic tracking-wide whitespace-nowrap drop-shadow-[0_0_10px_rgba(255,184,0,0.2)]">
                         Visualizing your yield as real-world value.
                       </p>
                     </div>
@@ -554,7 +603,7 @@ export default function DashboardPage() {
       )}
 
       <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
-        <div className="bg-surface/90 backdrop-blur border border-border p-2 rounded-xl text-[10px] font-bold text-gray-400 text-center uppercase shadow-2xl">Visual Audit</div>
+        <div className="bg-surface/90 backdrop-blur border border-border p-2 rounded-xl text-[10px] font-body font-black text-gray-400 text-center uppercase shadow-2xl">Visual Audit</div>
           <div className="flex gap-2">
             {[1, 25, 50, 75, 100].map((m: any) => {
               const demoGoal = userGoals[0] || { targetAmountUsd: 100 };

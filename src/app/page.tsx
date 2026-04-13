@@ -70,7 +70,7 @@ function YieldInsightSlider() {
       </div>
 
       <div className="pt-2 border-t border-white/10 flex items-center justify-between relative z-10">
-        <p className="text-[13px] text-accent font-display font-black italic tracking-tight drop-shadow-[0_0_10px_rgba(0,255,240,0.3)]">
+        <p className="text-[13px] text-accent font-body font-black italic tracking-wide drop-shadow-[0_0_12px_rgba(0,255,240,0.4)]">
           Visualizing your yield as real-world value.
         </p>
         <div className="flex gap-1">
