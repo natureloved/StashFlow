@@ -301,7 +301,7 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(val) => { onOpenChange(val); if(!val) reset(); }}>
-      <DialogContent className="sm:max-w-[500px] bg-surface border-border text-white">
+      <DialogContent className="max-w-[calc(100%-3rem)] sm:max-w-[440px] bg-surface border-border text-white">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Create New Goal</DialogTitle>
           <DialogDescription className="text-white/60">

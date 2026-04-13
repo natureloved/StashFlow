@@ -184,7 +184,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
 
   return (
     <Dialog open={open} onOpenChange={(val) => { onOpenChange(val); if(!val) reset(); }}>
-      <DialogContent className="max-w-[calc(100%-2.5rem)] sm:max-w-[480px] bg-surface border-border text-white p-0 overflow-hidden !pr-10">
+      <DialogContent className="max-w-[calc(100%-3rem)] sm:max-w-[440px] bg-surface border-border text-white p-0 overflow-hidden !pr-10">
         <div className="max-h-[85vh] overflow-y-auto w-full thin-scrollbar pb-6">
           <div className="p-4 md:p-6 pb-0">
           <DialogHeader className="mb-6">
