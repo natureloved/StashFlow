@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-
 import { Vault } from '@/lib/lifi';
+import { supabase, GOALS_TABLE } from '@/lib/supabase';
 
 export interface Contribution {
   id: string;
@@ -32,6 +32,8 @@ interface GoalState {
   deleteGoal: (goalId: string) => void;
   addContribution: (goalId: string, contribution: Contribution) => void;
   updateVaults: (vaultUpdates: Record<string, any>) => void;
+  fetchGoalsForUser: (address: string) => Promise<void>;
+  syncGoalToCloud: (goal: Goal) => Promise<void>;
 }
 
 export const useGoalStore = create<GoalState>()(
@@ -39,26 +41,47 @@ export const useGoalStore = create<GoalState>()(
     (set) => ({
       goals: [],
       _hasHydrated: false,
-      addGoal: (goal) =>
-        set((state) => ({ goals: [...state.goals, goal] })),
+      addGoal: (goal) => {
+        set((state) => ({ goals: [...state.goals, goal] }));
+        useGoalStore.getState().syncGoalToCloud(goal);
+      },
       updateGoal: (goalId, updates) =>
-        set((state) => ({
-          goals: state.goals.map((g) =>
+        set((state) => {
+          const updatedGoals = state.goals.map((g) =>
             g.id === goalId ? { ...g, ...updates } : g
-          ),
-        })),
-      deleteGoal: (goalId) =>
+          );
+          const target = updatedGoals.find(g => g.id === goalId);
+          if (target) useGoalStore.getState().syncGoalToCloud(target);
+          return { goals: updatedGoals };
+        }),
+      deleteGoal: (goalId) => {
         set((state) => ({
           goals: state.goals.filter((g) => g.id !== goalId),
-        })),
-      addContribution: (goalId, contribution) =>
-        set((state) => ({
-          goals: state.goals.map((g) =>
+        }));
+        // Background delete from cloud
+        if (supabase) {
+          supabase.from(GOALS_TABLE).delete().eq('id', goalId).then(({ error }) => {
+            if (error) console.error('Cloud Delete Error:', error);
+          });
+        }
+      },
+      addContribution: (goalId, contribution) => {
+        set((state) => {
+          const updatedGoals = state.goals.map((g) =>
             g.id === goalId
               ? { ...g, contributions: [...g.contributions, contribution] }
               : g
-          ),
-        })),
+          );
+          
+          // Background sync
+          const targetGoal = updatedGoals.find(g => g.id === goalId);
+          if (targetGoal) {
+            useGoalStore.getState().syncGoalToCloud(targetGoal);
+          }
+          
+          return { goals: updatedGoals };
+        });
+      },
       updateVaults: (vaultUpdates) => 
         set((state) => ({
           goals: state.goals.map((g) => {
@@ -69,6 +92,69 @@ export const useGoalStore = create<GoalState>()(
             return g;
           })
         })),
+      syncGoalToCloud: async (goal) => {
+        if (!supabase) return;
+        try {
+          const { error } = await supabase
+            .from(GOALS_TABLE)
+            .upsert({
+              id: goal.id,
+              owner_address: goal.ownerAddress.toLowerCase(),
+              name: goal.name,
+              target_amount_usd: goal.targetAmountUsd,
+              vault: goal.vault,
+              risk_tier: goal.riskTier,
+              contributions: goal.contributions,
+              updated_at: new Date().toISOString()
+            });
+          if (error) console.error('Cloud Sync Error:', error);
+        } catch (e) {
+          console.error('Failed to sync goal to cloud', e);
+        }
+      },
+      fetchGoalsForUser: async (address) => {
+        if (!supabase || !address) return;
+        try {
+          const { data, error } = await supabase
+            .from(GOALS_TABLE)
+            .select('*')
+            .eq('owner_address', address.toLowerCase());
+          
+          if (error) throw error;
+          
+          if (data && data.length > 0) {
+            const mappedGoals: Goal[] = data.map(row => ({
+              id: row.id,
+              ownerAddress: row.owner_address,
+              name: row.name,
+              targetAmountUsd: row.target_amount_usd,
+              riskTier: row.risk_tier,
+              vault: row.vault,
+              contributions: row.contributions || [],
+              createdAt: row.created_at
+            }));
+
+            // Merge with local goals to avoid dupes, prioritizing cloud
+            set((state) => {
+              const localIds = new Set(state.goals.map(g => g.id));
+              const newGoals = [...state.goals];
+              
+              mappedGoals.forEach(cloudGoal => {
+                const idx = newGoals.findIndex(g => g.id === cloudGoal.id);
+                if (idx !== -1) {
+                  newGoals[idx] = cloudGoal; // Overwrite local with cloud
+                } else {
+                  newGoals.push(cloudGoal);
+                }
+              });
+              
+              return { goals: newGoals };
+            });
+          }
+        } catch (e) {
+          console.error('Failed to fetch user goals', e);
+        }
+      },
     }),
     {
       name: 'stashflow-goals',

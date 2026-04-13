@@ -90,6 +90,7 @@ export default function DashboardPage() {
   const [isSyncing, setIsSyncing] = useState(false);
 
   const updateVaults = useGoalStore((state) => state.updateVaults);
+  const fetchGoalsForUser = useGoalStore((state) => state.fetchGoalsForUser);
 
   const goals = useGoalStore((state) => state.goals);
   const _hasHydrated = useGoalStore((state) => state._hasHydrated);
@@ -148,8 +149,12 @@ export default function DashboardPage() {
 
     if (mounted && status === 'connected') {
       syncVaults();
+      // Also fetch cloud goals on connect/mount
+      if (address) {
+        fetchGoalsForUser(address);
+      }
     }
-  }, [mounted, status, userGoals.length]);
+  }, [mounted, status, userGoals.length, address, fetchGoalsForUser]);
 
   // AUTO-MILESTONE TRIGGER LOGIC
   React.useEffect(() => {

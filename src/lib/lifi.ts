@@ -9,6 +9,7 @@ const getHeaders = () => {
 export interface GetVaultsParams {
   sortBy?: 'apy' | 'tvl';
   limit?: number;
+  chains?: number[];
 }
 
 export interface Vault {
@@ -54,6 +55,9 @@ export async function getVaults(params: GetVaultsParams = {}) {
   const query = new URLSearchParams();
   
   if (params.sortBy) query.append('sortBy', params.sortBy);
+  if (params.chains && params.chains.length > 0) {
+    params.chains.forEach(id => query.append('chains', id.toString()));
+  }
   query.append('limit', (params.limit || 100).toString());
 
   const response = await fetch(`${LIFI_PROXY_URL}/earn/vaults?${query.toString()}`, {
@@ -127,7 +131,7 @@ export async function getQuote(params: GetQuoteParams) {
 
 export async function getWalletBalances(userAddress: string) {
   // Common chains to scan
-  const chains = [1, 8453, 42161, 10, 137]; // ETH, Base, Arb, Opt, Poly
+  const chains = CONFIG.STRICT_BASE_MODE ? [CONFIG.TARGET_CHAIN_ID] : [1, 8453, 42161, 10, 137]; 
   const query = new URLSearchParams();
   query.append('address', userAddress);
   query.append('chains', chains.join(','));
