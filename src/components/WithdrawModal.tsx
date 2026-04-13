@@ -48,6 +48,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
   const [amount, setAmount] = useState('');
   const [selectedToken, setSelectedToken] = useState<any>(null);
   const [tokenPrice, setTokenPrice] = useState(0);
+  const [isUsdMode, setIsUsdMode] = useState(true);
   
   const [quote, setQuote] = useState<any>(null);
   const [isFetchingQuote, setIsFetchingQuote] = useState(false);
