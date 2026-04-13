@@ -20,10 +20,60 @@ import { Badge } from '@/components/ui/badge';
 import { RiskTier, findBestVault } from '@/lib/matching';
 import { Vault } from '@/lib/lifi';
 import { useGoalStore } from '@/store/useGoalStore';
-import { Loader2, ShieldCheck, Scale, Flame, ChevronRight, Target, AlertCircle, HelpCircle } from 'lucide-react';
+import { Loader2, ShieldCheck, Scale, Flame, ChevronRight, Target, AlertCircle, HelpCircle, Check, RefreshCw, Clock, CheckCircle2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { useAccount } from 'wagmi';
+import { useAccount, useSendTransaction, useSwitchChain, useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { parseUnits, formatUnits } from 'viem';
+import { getQuote } from '@/lib/lifi';
+import { getTokenPrice } from '@/lib/prices';
+import confetti from 'canvas-confetti';
 import { VaultSafetyModal } from '@/components/VaultSafetyModal';
+
+const ERC20_ABI = [
+  {
+    name: 'allowance',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'approve',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+] as const;
+
+const COMMON_TOKENS: Record<number, any[]> = {
+  1: [
+    { symbol: 'ETH', address: 'native', decimals: 18 },
+    { symbol: 'USDC', address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', decimals: 6 },
+    { symbol: 'USDT', address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', decimals: 6 },
+    { symbol: 'DAI', address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', decimals: 18 },
+    { symbol: 'WBTC', address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', decimals: 8 },
+  ],
+  8453: [
+    { symbol: 'ETH', address: 'native', decimals: 18 },
+    { symbol: 'USDC', address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', decimals: 6 },
+  ],
+  42161: [
+    { symbol: 'ETH', address: 'native', decimals: 18 },
+    { symbol: 'USDC', address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', decimals: 6 },
+    { symbol: 'USDT', address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', decimals: 6 },
+  ],
+  10: [
+    { symbol: 'ETH', address: 'native', decimals: 18 },
+    { symbol: 'USDC', address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', decimals: 6 },
+  ],
+};
 
 interface CreateGoalModalProps {
   open: boolean;
@@ -35,12 +85,39 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [riskTier, setRiskTier] = useState<RiskTier | null>(null);
-  const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
+  const [selectedVault, setSelectedVault] = React.useState<Vault | null>(null);
   const [isLoadingVault, setIsLoadingVault] = useState(false);
   const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
-  const { address } = useAccount();
+  
+  // Deposit Integration State
+  const [newGoalId, setNewGoalId] = useState<string | null>(null);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [isUsdMode, setIsUsdMode] = useState(true);
+  const [selectedToken, setSelectedToken] = useState<any>(null);
+  const [tokenPrice, setTokenPrice] = useState(0);
+  const [quote, setQuote] = useState<any>(null);
+  const [isFetchingQuote, setIsFetchingQuote] = useState(false);
+  const [isDepositing, setIsDepositing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isAgreed, setIsAgreed] = useState(false);
+  const [countdown, setCountdown] = useState(30);
+  const [pendingTxHash, setPendingTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const [pendingApprovalHash, setPendingApprovalHash] = useState<`0x${string}` | undefined>(undefined);
 
+  const { address, chainId } = useAccount();
+  const { sendTransactionAsync } = useSendTransaction();
+  const { switchChainAsync } = useSwitchChain();
+  const { writeContractAsync: approveAsync } = useWriteContract();
   const addGoal = useGoalStore((state) => state.addGoal);
+  const addContribution = useGoalStore((state) => state.addContribution);
+
+  const { data: balanceData } = useBalance({
+    address: address,
+    token: selectedToken?.address === 'native' ? undefined : selectedToken?.address as `0x${string}`,
+    chainId: chainId,
+  });
+
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const handleRiskSelect = async (tier: RiskTier) => {
     setRiskTier(tier);
@@ -58,9 +135,10 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
 
   const handleConfirm = () => {
     if (!riskTier || !selectedVault) return;
-
+    const goalId = uuidv4();
+    
     addGoal({
-      id: uuidv4(),
+      id: goalId,
       ownerAddress: address || '0x0000000000000000000000000000000000000000',
       name,
       targetAmountUsd: Number(amount),
@@ -70,8 +148,143 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
       createdAt: new Date().toISOString(),
     });
 
-    onOpenChange(false);
-    reset();
+    setNewGoalId(goalId);
+    setStep(4);
+  };
+
+  const handleMax = () => {
+    if (!balanceData) return;
+    const formatted = formatUnits(balanceData.value, balanceData.decimals);
+    if (isUsdMode && tokenPrice) {
+      setDepositAmount((Number(formatted) * tokenPrice).toFixed(2));
+    } else {
+      setDepositAmount(formatted);
+    }
+  };
+
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: selectedToken?.address === 'native' ? undefined : selectedToken?.address as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: 'allowance',
+    args: [address as `0x${string}`, quote?.transactionRequest?.to as `0x${string}`],
+    query: {
+      enabled: !!address && !!selectedToken && selectedToken.address !== 'native' && !!quote?.transactionRequest?.to,
+    }
+  });
+
+  const rawAmount = (depositAmount && tokenPrice && tokenPrice > 0)
+    ? (isUsdMode ? (Number(depositAmount) / tokenPrice) : Number(depositAmount))
+    : 0;
+  
+  const fromAmountSmallest = selectedToken 
+    ? parseUnits(rawAmount.toFixed(selectedToken.decimals), selectedToken.decimals) 
+    : BigInt(0);
+
+  const needsApproval = selectedToken?.address !== 'native' && quote && allowance !== undefined && allowance < fromAmountSmallest;
+
+  const { isLoading: isConfirmingApproval, isSuccess: isApprovalConfirmed } = useWaitForTransactionReceipt({
+    hash: pendingApprovalHash,
+  });
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError } = useWaitForTransactionReceipt({
+    hash: pendingTxHash,
+  });
+
+  React.useEffect(() => {
+    if (chainId && COMMON_TOKENS[chainId]) {
+      setSelectedToken(COMMON_TOKENS[chainId].find(t => t.symbol === 'USDC') || COMMON_TOKENS[chainId][0]);
+    }
+  }, [chainId, open]);
+
+  React.useEffect(() => {
+    async function updatePrice() {
+      if (selectedToken && chainId) {
+        const p = await getTokenPrice(chainId, selectedToken.address);
+        setTokenPrice(p);
+      }
+    }
+    updatePrice();
+  }, [selectedToken, chainId]);
+
+  React.useEffect(() => {
+    if (isConfirmed && pendingTxHash && newGoalId) {
+      const depVal = isUsdMode ? Number(depositAmount) : Number(depositAmount) * tokenPrice;
+      addContribution(newGoalId, {
+        id: Math.random().toString(36).substr(2, 9),
+        date: new Date().toISOString(),
+        amountUsd: depVal,
+        txHash: pendingTxHash,
+        fromChain: chainId as number,
+        fromToken: selectedToken.symbol,
+      });
+      setPendingTxHash(undefined);
+      setStep(5); // Success step
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#00E5FF', '#FFB800', '#FFFFFF']
+      });
+    }
+    if (isTxError && pendingTxHash) {
+      setError('Transaction failed on-chain.');
+      setPendingTxHash(undefined);
+      setIsDepositing(false);
+    }
+  }, [isConfirmed, isTxError, pendingTxHash]);
+
+  React.useEffect(() => {
+    if (isApprovalConfirmed && pendingApprovalHash) {
+      refetchAllowance();
+      setPendingApprovalHash(undefined);
+    }
+  }, [isApprovalConfirmed, pendingApprovalHash]);
+
+  const fetchQuote = async () => {
+    if (!selectedVault || !depositAmount || !address || !selectedToken || !chainId) return;
+    setIsFetchingQuote(true);
+    setError(null);
+    try {
+      const fromAmountRaw = isUsdMode ? (Number(depositAmount) / tokenPrice) : Number(depositAmount);
+      const amountStr = fromAmountRaw.toFixed(selectedToken.decimals);
+      const fromAmountSmallestStr = parseUnits(amountStr, selectedToken.decimals).toString();
+
+      const response = await getQuote({
+        fromChain: chainId,
+        toChain: selectedVault.chainId,
+        fromToken: selectedToken.address === 'native' ? '0x0000000000000000000000000000000000000000' : selectedToken.address,
+        toToken: selectedVault.address,
+        fromAddress: address,
+        toAddress: address,
+        fromAmount: fromAmountSmallestStr,
+      });
+      setQuote(response);
+      setCountdown(30);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch quote');
+    } finally {
+      setIsFetchingQuote(false);
+    }
+  };
+
+  const handleDepositTransaction = async () => {
+    if (!quote || !isAgreed) return;
+    setIsDepositing(true);
+    setError(null);
+    try {
+      if (quote.transactionRequest?.chainId !== chainId) {
+        await switchChainAsync({ chainId: quote.transactionRequest.chainId });
+      }
+      const tx = await sendTransactionAsync({
+        to: quote.transactionRequest.to,
+        data: quote.transactionRequest.data,
+        value: BigInt(quote.transactionRequest.value || 0),
+      });
+      setPendingTxHash(tx);
+    } catch (err: any) {
+      setError(err.message || 'Transaction failed');
+      setIsDepositing(false);
+    }
   };
 
   const reset = () => {
@@ -80,6 +293,10 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
     setAmount('');
     setRiskTier(null);
     setSelectedVault(null);
+    setNewGoalId(null);
+    setDepositAmount('');
+    setQuote(null);
+    setError(null);
   };
 
   return (
@@ -91,6 +308,8 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
             {step === 1 && "What are you saving for?"}
             {step === 2 && "Choose a risk level that fits your goal."}
             {step === 3 && "We've matched you with the best strategy."}
+            {step === 4 && "Fund your goal to start earning"}
+            {step === 5 && "Goal Activated!"}
           </DialogDescription>
         </DialogHeader>
 
@@ -242,7 +461,171 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                 )}
 
                 <Button onClick={handleConfirm} className="w-full bg-accent text-black hover:bg-accent/90 font-bold">
-                  Start Saving
+                  Continue to Funding <ChevronRight className="ml-2 w-4 h-4" />
+                </Button>
+              </motion.div>
+            )}
+
+            {step === 4 && selectedVault && (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div className="bg-accent/5 border border-accent/20 p-4 rounded-xl space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-accent font-bold uppercase tracking-wider">Goal Summary</span>
+                    <Badge variant="outline" className="border-accent/30 text-accent text-[10px]">{selectedVault.network}</Badge>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-xl font-display font-bold text-white">{name}</p>
+                      <p className="text-xs text-gray-400">Targeting ${Number(amount).toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-display font-bold text-secondary">{selectedVault.analytics.apy.total.toFixed(2)}% APY</p>
+                      <p className="text-[10px] text-gray-500 uppercase font-black">{selectedVault.protocol.name}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">How much to start with?</div>
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                    {chainId && COMMON_TOKENS[chainId]?.map((token) => (
+                      <TokenChip 
+                        key={token.symbol} 
+                        token={token} 
+                        chainId={chainId}
+                        isSelected={selectedToken?.symbol === token.symbol}
+                        onClick={() => setSelectedToken(token)}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="relative">
+                    <Input 
+                      type="number" 
+                      placeholder="Even $10 gets you started" 
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      className="text-2xl h-16 bg-[#0A0A0F] border-border text-center font-display focus-visible:ring-accent pr-24"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                       <button 
+                        onClick={handleMax}
+                        className="font-bold text-accent bg-accent/10 py-1 px-2 rounded-lg text-[10px] hover:bg-accent/20"
+                      >
+                        MAX
+                      </button>
+                      <button 
+                        onClick={() => setIsUsdMode(!isUsdMode)}
+                        className="text-gray-500 font-bold text-xs hover:text-white uppercase"
+                      >
+                        {isUsdMode ? 'USD' : selectedToken?.symbol}
+                      </button>
+                    </div>
+                  </div>
+
+                  {depositAmount && !quote && (
+                    <Button 
+                      disabled={isFetchingQuote}
+                      onClick={fetchQuote} 
+                      className="w-full h-12 bg-white text-black hover:bg-white/90 font-bold"
+                    >
+                      {isFetchingQuote ? <Loader2 className="animate-spin" /> : 'Review Route'}
+                    </Button>
+                  )}
+
+                  {quote && (
+                    <div className="bg-[#0A0A0F] border border-border rounded-xl p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+                      <div className="flex justify-between items-center text-xs">
+                         <span className="text-gray-400 uppercase font-bold tracking-widest">Fees</span>
+                         <span className="text-white font-numeric">~${(quote.estimate?.feeCosts?.reduce((acc: number, c: any) => acc + Number(c.amountUSD || 0), 0) + quote?.estimate?.gasCosts?.reduce((acc: number, c: any) => acc + Number(c.amountUSD || 0), 0)).toFixed(2)}</span>
+                      </div>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer group p-1">
+                        <input 
+                          type="checkbox" 
+                          checked={isAgreed}
+                          onChange={(e) => setIsAgreed(e.target.checked)}
+                          className="w-4 h-4 rounded border-border bg-surface text-accent"
+                        />
+                        <span className="text-[10px] text-gray-400 group-hover:text-white uppercase font-bold">I understand the fees & risks</span>
+                      </label>
+
+                      {needsApproval ? (
+                        <Button 
+                          disabled={!isAgreed || isConfirmingApproval}
+                          onClick={async () => {
+                            try {
+                              const hash = await approveAsync({
+                                address: selectedToken.address as `0x${string}`,
+                                abi: ERC20_ABI,
+                                functionName: 'approve',
+                                args: [quote.transactionRequest.to as `0x${string}`, fromAmountSmallest],
+                              });
+                              setPendingApprovalHash(hash);
+                            } catch (err: any) {
+                              setError(err.message);
+                            }
+                          }}
+                          className="w-full bg-white text-black hover:bg-white/90 font-bold"
+                        >
+                          {isConfirmingApproval ? <><Loader2 className="animate-spin mr-2" /> Confirming...</> : `Approve ${selectedToken.symbol}`}
+                        </Button>
+                      ) : (
+                        <Button 
+                          disabled={!isAgreed || isDepositing || isConfirming}
+                          onClick={handleDepositTransaction}
+                          className="w-full bg-accent text-black hover:bg-accent/90 font-bold shadow-[0_0_20px_rgba(0,229,255,0.3)]"
+                        >
+                          {isConfirming ? <><Loader2 className="animate-spin mr-2" /> Confirming...</> : 'Start Earning →'}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col items-center gap-3 pt-2">
+                    <button 
+                      onClick={() => onOpenChange(false)}
+                      className="text-xs text-gray-500 hover:text-accent font-bold underline underline-offset-4"
+                    >
+                      Set up goal without funding →
+                    </button>
+                    <p className="text-[10px] text-gray-600 text-center uppercase tracking-widest leading-relaxed">
+                      Your first deposit activates your yield. <br/>You can always add more later.
+                    </p>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex items-center gap-2 text-red-500 text-xs">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {step === 5 && (
+              <motion.div
+                key="step5"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-10 text-center"
+              >
+                <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center mb-6 border border-accent/30 shadow-[0_0_30px_rgba(0,229,255,0.2)]">
+                  <CheckCircle2 className="w-10 h-10 text-accent" />
+                </div>
+                <h3 className="font-display text-3xl font-bold mb-2 text-white">Goal Activated!</h3>
+                <p className="text-gray-400 mb-8 font-body leading-relaxed">
+                  🎉 Goal created and funded! <br/>
+                  <span className="text-white font-bold">${isUsdMode ? Number(depositAmount).toFixed(2) : (Number(depositAmount) * tokenPrice).toFixed(2)}</span> is now earning <span className="text-accent font-bold">{selectedVault.analytics.apy.total.toFixed(2)}% APY</span> in your <span className="text-white font-bold">{name}</span> goal.
+                </p>
+                <Button onClick={() => onOpenChange(false)} className="w-full h-12 bg-accent text-black hover:bg-accent/90 font-bold rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.2)]">
+                  Go to Dashboard
                 </Button>
               </motion.div>
             )}
@@ -257,5 +640,37 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function TokenChip({ token, chainId, isSelected, onClick }: { token: any, chainId: number, isSelected: boolean, onClick: () => void }) {
+  const { address } = useAccount();
+  const { data: balance } = useBalance({
+    address: address,
+    token: token.address === 'native' ? undefined : token.address as `0x${string}`,
+    chainId: chainId,
+  });
+
+  const hasBalance = balance && Number(balance.formatted) > 0;
+
+  return (
+    <button
+      onClick={hasBalance ? onClick : undefined}
+      className={`
+        flex items-center gap-2 px-4 py-2 rounded-xl border transition-all flex-shrink-0
+        ${isSelected ? 'border-accent bg-accent/10 ring-1 ring-accent' : 'border-border bg-surface/50 hover:border-accent/50'}
+        ${!hasBalance ? 'opacity-40 cursor-not-allowed grayscale' : 'cursor-pointer'}
+      `}
+    >
+      <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center text-[10px] font-bold text-accent">
+        {token.symbol[0]}
+      </div>
+      <div className="text-left">
+        <div className="text-xs font-bold text-white uppercase tracking-tighter">{token.symbol}</div>
+        <div className="text-[10px] text-gray-500 font-numeric">
+          {balance ? `${Number(balance.formatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}` : '0.00'}
+        </div>
+      </div>
+    </button>
   );
 }
