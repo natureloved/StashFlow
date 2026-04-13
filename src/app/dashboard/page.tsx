@@ -644,8 +644,8 @@ export default function DashboardPage() {
       )}
 
       <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
-        <div className="bg-surface/90 backdrop-blur border border-border p-2 rounded-xl text-[10px] font-body font-black text-gray-400 text-center uppercase shadow-2xl">Visual Audit</div>
-          <div className="flex gap-2">
+        <div className="bg-surface/90 backdrop-blur border border-border p-1.5 rounded-lg text-[9px] font-body font-black text-gray-400 text-center uppercase shadow-2xl">Visual Audit</div>
+          <div className="flex gap-1.5">
             {[1, 25, 50, 75, 100].map((m: any) => {
               const demoGoal = userGoals[0] || { targetAmountUsd: 100 };
               const dollarValue = Math.round((m / 100) * (demoGoal?.targetAmountUsd || 100));
@@ -659,10 +659,10 @@ export default function DashboardPage() {
                       setIsShareModalOpen(true);
                     }
                   }}
-                  className="bg-surface border border-border px-3 h-10 rounded-xl text-gray-500 hover:text-accent transition-all flex flex-col items-center justify-center shadow-2xl hover:scale-110 active:scale-95"
+                  className="bg-surface border border-border px-2 h-8 rounded-lg text-gray-500 hover:text-accent transition-all flex flex-col items-center justify-center shadow-2xl hover:scale-105 active:scale-95"
                 >
-                  <span className="text-[9px] opacity-70 mb-0.5">{m}%</span>
-                  <span className="font-bold text-xs">${dollarValue}</span>
+                  <span className="text-[8px] opacity-70 mb-0">{m}%</span>
+                  <span className="font-bold text-[10px]">${dollarValue}</span>
                 </button>
               );
             })}

@@ -101,7 +101,7 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
               </div>
               <div>
                 <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Your yearly earn rate</div>
-                <p className="text-sm font-bold text-white">{(vault.analytics.apy.total * 100).toFixed(1)}% — $1,000 grows to ~${(1000 * (1 + vault.analytics.apy.total)).toLocaleString()} in a year</p>
+                <p className="text-sm font-bold text-white">{(vault.analytics.apy.total).toFixed(1)}% — $1,000 grows to ~${(1000 * (1 + vault.analytics.apy.total / 100)).toLocaleString()} in a year</p>
               </div>
             </div>
 

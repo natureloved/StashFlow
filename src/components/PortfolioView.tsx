@@ -317,7 +317,7 @@ export function PortfolioView() {
                           <div className="text-[10px] text-gray-500 uppercase font-bold">APY</div>
                           <div className="text-xl font-display font-bold text-secondary">
                             {displayApy
-                              ? `${(Number(displayApy) * 100).toFixed(2)}%`
+                              ? `${Number(displayApy).toFixed(2)}%`
                               : <span className="text-sm text-gray-500 font-body font-normal">Via Vault</span>
                             }
                           </div>
