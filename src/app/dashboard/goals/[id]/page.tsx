@@ -77,12 +77,12 @@ export default function GoalDetailPage() {
   );
 
   const apy = vaultDetails?.analytics?.apy?.total || goal.vault.analytics.apy.total;
-  const monthlyYield = (currentSaved * apy) / 12;
+  const monthlyYield = (currentSaved * (apy / 100)) / 12;
 
   // Simple projection: days = (remaining) / (daily yield)
   // Assuming no more deposits for simplicity in this calculation
   const remaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
-  const dailyYield = (currentSaved * apy) / 365;
+  const dailyYield = (currentSaved * (apy / 100)) / 365;
   const daysToComplete = dailyYield > 0 ? Math.ceil(remaining / dailyYield) : Infinity;
 
   return (
@@ -105,7 +105,7 @@ export default function GoalDetailPage() {
               <div className="flex items-center gap-4">
                 <h1 className="font-display text-4xl md:text-5xl font-extrabold">{goal.name}</h1>
                 <Badge className="bg-accent/10 text-accent border-accent/20 px-4 py-1.5 font-bold text-lg">
-                  {(apy * 100).toFixed(2)}% APY
+                  {apy.toFixed(2)}% APY
                 </Badge>
               </div>
               <p className="text-xl text-gray-400 font-body">
