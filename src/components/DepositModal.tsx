@@ -98,6 +98,24 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
   const { writeContractAsync: approveAsync } = useWriteContract();
   const addContribution = useGoalStore((state) => state.addContribution);
 
+  // Fetch balance for the selected token
+  const { data: balanceData } = useBalance({
+    address: address,
+    token: selectedToken?.address === 'native' ? undefined : selectedToken?.address as `0x${string}`,
+    chainId: chainId,
+  });
+
+  const handleMax = () => {
+    if (!balanceData) return;
+    const formatted = formatUnits(balanceData.value, balanceData.decimals);
+    // If in USD mode, we need to convert the token balance to USD
+    if (isUsdMode && tokenPrice) {
+      setAmount((Number(formatted) * tokenPrice).toFixed(2));
+    } else {
+      setAmount(formatted);
+    }
+  };
+
   const rawAmount = (amount && tokenPrice && tokenPrice > 0)
     ? (isUsdMode ? (Number(amount) / tokenPrice) : Number(amount))
     : 0;
@@ -339,14 +357,22 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                       placeholder="0.00" 
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="text-4xl h-24 bg-[#0A0A0F] border-border text-center font-display font-bold focus-visible:ring-accent"
+                      className="text-4xl h-24 bg-[#0A0A0F] border-border text-center font-display font-bold focus-visible:ring-accent pr-28"
                     />
-                    <button 
-                      onClick={() => setIsUsdMode(!isUsdMode)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-accent bg-accent/10 py-1 px-3 rounded-full text-xs hover:bg-accent/20 transition-all"
-                    >
-                      {isUsdMode ? 'USD' : selectedToken?.symbol}
-                    </button>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      <button 
+                        onClick={handleMax}
+                        className="font-bold text-accent bg-accent/10 py-1.5 px-2.5 rounded-lg text-[10px] hover:bg-accent/20 transition-all"
+                      >
+                        MAX
+                      </button>
+                      <button 
+                        onClick={() => setIsUsdMode(!isUsdMode)}
+                        className="text-gray-500 font-bold text-xs hover:text-white transition-colors uppercase"
+                      >
+                        {isUsdMode ? 'USD' : selectedToken?.symbol}
+                      </button>
+                    </div>
                   </div>
                   
                   {amount && tokenPrice > 0 && (
