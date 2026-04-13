@@ -99,7 +99,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
         ? amount.toString() 
         : '0';
 
-      const vaultDecimals = goal.vault.decimals || goal.vault.underlyingTokens?.[0]?.decimals || 18;
+      const vaultDecimals = (goal.vault as any).decimals || goal.vault.underlyingTokens?.[0]?.decimals || 18;
       const fromAmountSmallest = parseUnits(safeAmountStr, vaultDecimals).toString(); 
 
       const response = await getQuote({
@@ -225,12 +225,16 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
                           MAX
                         </button>
                         <button 
-                          onClick={() => {}}
+                          onClick={() => setIsUsdMode(!isUsdMode)}
                           className="flex flex-col items-center justify-center p-1 hover:bg-white/5 rounded-lg transition-colors group"
+                          title={`Switch to ${isUsdMode ? (goal?.vault.underlyingTokens?.[0]?.symbol || 'Asset') : 'USD'}`}
                         >
                            <ChevronUp className="w-3 h-3 text-gray-500 group-hover:text-white" />
                            <ChevronDown className="w-3 h-3 text-gray-500 group-hover:text-white" />
                         </button>
+                      </div>
+                      <div className="absolute left-5 bottom-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                        {isUsdMode ? 'Withdraw in USD' : `Withdraw in ${goal?.vault.underlyingTokens?.[0]?.symbol || 'Assets'}`}
                       </div>
                     </div>
                   </div>

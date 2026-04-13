@@ -60,7 +60,7 @@ function YieldBannerSlider({ monthlyYield }: { monthlyYield: number }) {
             transition={{ duration: 0.4 }}
             className="text-sm md:text-lg font-display font-medium text-white leading-normal"
           >
-            That's equivalent to <span className="text-secondary font-bold underline decoration-secondary/30 decoration-2 underline-offset-4">{allEquivalents[index]}</span>
+            Monthly yield is equivalent to <span className="text-secondary font-bold underline decoration-secondary/30 decoration-2 underline-offset-4">{allEquivalents[index]}</span>
           </motion.p>
         </AnimatePresence>
       </div>
@@ -142,7 +142,7 @@ export default function DashboardPage() {
         }
       } finally {
         // Short delay to prevent rapid re-syncing
-        setTimeout(() => setIsSyncing(false), 5000);
+        setTimeout(() => setIsSyncing(false), 2000);
       }
     }
 
@@ -369,6 +369,7 @@ export default function DashboardPage() {
   const avgApy = totalDeposited > 0
     ? userGoals.reduce((acc, goal) => {
         const deposited = goal.contributions.reduce((cAcc, c) => cAcc + c.amountUsd, 0);
+        const vaultDecimals = (goal.vault as any).decimals || goal.vault.underlyingTokens?.[0]?.decimals || 18;
         return acc + (deposited * (goal.vault.analytics?.apy?.total || 0));
       }, 0) / totalDeposited
     : (userGoalsCount > 0 
@@ -396,6 +397,20 @@ export default function DashboardPage() {
           </Link>
           
           <div className="flex items-center gap-4">
+            {address && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  fetchGoalsForUser(address);
+                  syncAllGoalsToCloud(address);
+                }}
+                className="text-[10px] font-bold text-gray-500 hover:text-accent group flex items-center gap-2"
+              >
+                <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+                {isSyncing ? 'Syncing...' : 'Cloud Sync'}
+              </Button>
+            )}
             <div className="hidden md:flex items-center gap-6 mr-6 text-sm font-body">
               <button 
                 onClick={() => setCurrentView('dashboard')}
@@ -530,7 +545,7 @@ export default function DashboardPage() {
                 </motion.div>
               )}
 
-              {goals.length > 0 && (
+              {goals.length > 0 && totalMonthlyYield > 0 && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
