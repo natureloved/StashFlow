@@ -53,8 +53,8 @@ export function PortfolioView() {
                 const price = Number(token.priceUSD || 0);
                 const usdValue = amount * price;
 
-                // NaN safety and Dust filter (< $1.00 USD)
-                if (!Number.isNaN(usdValue) && usdValue > 1.00) {
+                // NaN safety and Dust filter (> $0.01)
+                if (!Number.isNaN(usdValue) && usdValue > 0.01) {
                   // Ensure it's not already in a position (simplified check)
                   const isInPosition = Array.isArray(positionsData.positions) && positionsData.positions.some(
                     (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase() && p.chainId === Number(chainId)
@@ -165,7 +165,7 @@ export function PortfolioView() {
             ${idleValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </div>
           <div className="text-[10px] text-gray-500 font-bold mt-1 relative z-10">
-            Total Net Worth: <span className="text-white">${totalNetWorth.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            Your Vault Net Worth: <span className="text-white">${totalNetWorth.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
       </div>
