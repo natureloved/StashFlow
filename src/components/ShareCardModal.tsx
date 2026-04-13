@@ -25,7 +25,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
   const [isSaving, setIsSaving] = useState(false);
 
   const amountToDisplay = (goal.targetAmountUsd * milestone) / 100;
-  const apy = (goal.vault.analytics.apy.total * 100).toFixed(1);
+  const apy = (goal.vault.analytics.apy.total || 0).toFixed(1);
 
   const milestoneData = {
     1: { badge: '🌱', title: 'First Step Taken', color: '#00E5FF' },

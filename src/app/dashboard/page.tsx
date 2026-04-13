@@ -87,6 +87,9 @@ export default function DashboardPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<1 | 25 | 50 | 75 | 100>(50);
   const [milestoneGoal, setMilestoneGoal] = useState<Goal | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const updateVaults = useGoalStore((state) => state.updateVaults);
 
   const goals = useGoalStore((state) => state.goals);
   const _hasHydrated = useGoalStore((state) => state._hasHydrated);
@@ -111,6 +114,42 @@ export default function DashboardPage() {
       router.push('/');
     }
   }, [mounted, canRedirect, status, isReconnecting, isConnecting, router]);
+
+  // LIVE APY SYNC
+  React.useEffect(() => {
+    async function syncVaults() {
+      if (!mounted || userGoals.length === 0 || isSyncing) return;
+      
+      setIsSyncing(true);
+      try {
+        const uniqueVaults = Array.from(new Set(userGoals.map(g => `${g.vault.chainId}-${g.vault.address.toLowerCase()}`)));
+        const updates: Record<string, any> = {};
+
+        await Promise.all(uniqueVaults.map(async (key) => {
+          const [chainId, address] = key.split('-');
+          try {
+            const data = await getVaultDetails(Number(chainId), address);
+            if (data && data.analytics) {
+              updates[key] = data.analytics;
+            }
+          } catch (e) {
+            console.warn(`Failed to sync vault ${key}`, e);
+          }
+        }));
+
+        if (Object.keys(updates).length > 0) {
+          updateVaults(updates);
+        }
+      } finally {
+        // Short delay to prevent rapid re-syncing
+        setTimeout(() => setIsSyncing(false), 5000);
+      }
+    }
+
+    if (mounted && status === 'connected') {
+      syncVaults();
+    }
+  }, [mounted, status, userGoals.length]);
 
   // AUTO-MILESTONE TRIGGER LOGIC
   React.useEffect(() => {
@@ -327,7 +366,8 @@ export default function DashboardPage() {
   const totalMonthlyYield = userGoalsCount > 0
     ? userGoals.reduce((acc, goal) => {
         const deposited = goal.contributions.reduce((cAcc, c) => cAcc + c.amountUsd, 0);
-        return acc + (deposited * (goal.vault.analytics?.apy?.total || 0)) / 12;
+        // Corrected: raw APY is e.g. 16.46%, so we divide by 100 for the multiplier
+        return acc + (deposited * ((goal.vault.analytics?.apy?.total || 0) / 100)) / 12;
       }, 0)
     : 0;
 
@@ -411,8 +451,9 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-3 text-white/70 mb-2 font-bold text-xs uppercase tracking-wider">
                       <TrendingUp className="w-4 h-4 text-accent" /> Avg. APY
                     </div>
-                    <div className="text-3xl font-numeric font-bold text-white tracking-tight">
-                      {(Number.isNaN(avgApy) ? 0 : avgApy * 100).toFixed(2)}%
+                    <div className="text-3xl font-numeric font-bold text-white tracking-tight flex items-center gap-2">
+                      {(Number.isNaN(avgApy) ? 0 : avgApy).toFixed(2)}%
+                      {isSyncing && <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />}
                     </div>
                   </motion.div>
 

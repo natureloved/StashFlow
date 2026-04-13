@@ -31,6 +31,7 @@ interface GoalState {
   updateGoal: (goalId: string, updates: Partial<Goal>) => void;
   deleteGoal: (goalId: string) => void;
   addContribution: (goalId: string, contribution: Contribution) => void;
+  updateVaults: (vaultUpdates: Record<string, any>) => void;
 }
 
 export const useGoalStore = create<GoalState>()(
@@ -57,6 +58,16 @@ export const useGoalStore = create<GoalState>()(
               ? { ...g, contributions: [...g.contributions, contribution] }
               : g
           ),
+        })),
+      updateVaults: (vaultUpdates) => 
+        set((state) => ({
+          goals: state.goals.map((g) => {
+            const key = `${g.vault.chainId}-${g.vault.address.toLowerCase()}`;
+            if (vaultUpdates[key]) {
+              return { ...g, vault: { ...g.vault, analytics: vaultUpdates[key] } };
+            }
+            return g;
+          })
         })),
     }),
     {

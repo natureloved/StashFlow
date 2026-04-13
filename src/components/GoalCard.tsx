@@ -105,7 +105,7 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
   const progress = Math.min((currentSaved / goal.targetAmountUsd) * 100, 100);
   
   const apy = goal.vault.analytics?.apy?.total ?? 0;
-  const yearlyYield = currentSaved * apy;
+  const yearlyYield = currentSaved * (apy / 100);
   const monthlyYield = yearlyYield / 12;
   
   // Custom Subscription State
@@ -135,7 +135,7 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
   // Dynamic Projection Logic
   const remaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
   const weeklySave = remaining > 0 ? Math.ceil(remaining / 52) : 0;
-  const completionDate = calculateGoalCompletionDate(currentSaved, goal.targetAmountUsd, apy, weeklySave || 50);
+  const completionDate = calculateGoalCompletionDate(currentSaved, goal.targetAmountUsd, apy / 100, weeklySave || 50);
   const completionStr = formatCompletionDate(completionDate);
 
   return (
@@ -181,11 +181,11 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
             <Badge className="bg-accent/10 text-accent border-accent/20 px-3 py-1">
               <EducationPopover 
                 id="apy" 
-                term={<span className="font-numeric font-bold">{Math.round(apy * 1000) / 10}% APY</span>}
+                term={<span className="font-numeric font-bold">{apy.toFixed(2)}% APY</span>}
               >
-                APY means you earn {Math.round(apy * 1000) / 10}% of your deposit 
+                APY means you earn {apy.toFixed(2)}% of your deposit 
                 per year, paid continuously. $1,000 today becomes 
-                ~${(1000 * (1 + apy)).toLocaleString()} in a year — automatically, no action needed.
+                ~${(1000 * (1 + apy / 100)).toLocaleString()} in a year — automatically, no action needed.
               </EducationPopover>
             </Badge>
           </div>

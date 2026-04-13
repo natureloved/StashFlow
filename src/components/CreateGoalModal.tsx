@@ -198,10 +198,10 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                       </p>
                     </div>
                     <Badge className="bg-accent text-black">
-                      <EducationPopover id="apy" term={`${(selectedVault.analytics.apy.total * 100).toFixed(2)}% APY`}>
-                        APY means you earn {(selectedVault.analytics.apy.total * 100).toFixed(2)}% of your deposit 
+                      <EducationPopover id="apy" term={`${(selectedVault.analytics.apy.total).toFixed(2)}% APY`}>
+                        APY means you earn {(selectedVault.analytics.apy.total).toFixed(2)}% of your deposit 
                         per year, paid continuously. $1,000 today becomes 
-                        ~${(1000 * (1 + selectedVault.analytics.apy.total)).toLocaleString()} in a year — automatically, no action needed.
+                        ~${(1000 * (1 + selectedVault.analytics.apy.total / 100)).toLocaleString()} in a year — automatically, no action needed.
                       </EducationPopover>
                     </Badge>
                   </div>
