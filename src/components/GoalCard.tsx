@@ -222,6 +222,7 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
               <div className="relative h-3 w-full bg-surface rounded-full overflow-hidden border border-border">
                 <motion.div 
                   initial={{ width: 0 }}
+initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                   className="absolute top-0 left-0 h-full bg-secondary rounded-full shadow-[0_0_15px_rgba(255,184,0,0.5)]"
@@ -230,17 +231,17 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
             </div>
           )}
 
-          {!isUnfunded && monthlyYield >= 0.01 && (
-            <div className="bg-[#0A0A0F]/50 p-4 rounded-xl border border-white/5 space-y-3 relative group/yield">
+          {!isUnfunded && (
+            <div className={`bg-[#0A0A0F]/50 p-4 rounded-xl border border-white/5 space-y-3 relative group/yield ${monthlyYield < 0.01 ? 'overflow-hidden' : ''}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[10px] text-accent uppercase font-black tracking-widest">
-                  <TrendingUp className="w-3 h-3" /> Yield Equivalent
+                  <TrendingUp className="w-3 h-3" /> {monthlyYield < 0.01 ? 'Potential Yield' : 'Yield Equivalent'}
                 </div>
-                <div className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-bold">
-                  PASSIVE
+                <div className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${monthlyYield < 0.01 ? 'bg-gray-500/10 text-gray-500' : 'bg-accent/10 text-accent'}`}>
+                  {monthlyYield < 0.01 ? 'PENDING' : 'PASSIVE'}
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className={`space-y-2 transition-all duration-500 ${monthlyYield < 0.01 ? 'blur-[2px] opacity-40 grayscale pointer-events-none select-none' : ''}`}>
                 <div className="text-sm font-body text-gray-300 leading-snug">
                   Monthly yield: <span className="text-white font-bold">~${monthlyYield.toFixed(2)}</span> · 
                   That's <span className="text-accent font-bold underline decoration-accent/30 lowercase">
@@ -262,46 +263,54 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
                     <Settings2 className="w-2.5 h-2.5" /> 
                     {customSubscription ? "Change preference →" : "Not your subscription? Pick one →"}
                   </button>
-
-                  <AnimatePresence>
-                    {isPickerOpen && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full left-0 mb-2 w-48 bg-[#0F0F18] border border-border rounded-xl shadow-2xl p-2 z-50 overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest p-2 border-b border-border/50 mb-1">
-                          Select Preference
-                        </div>
-                        <div className="space-y-1">
-                          {presets.map((p) => (
-                            <button
-                              key={p.name}
-                              onClick={() => handleSelectPreset(p)}
-                              className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition-colors flex items-center justify-between group"
-                            >
-                              <span className="text-xs text-gray-300 group-hover:text-white">{p.emoji} {p.name}</span>
-                              <span className="text-[10px] text-gray-500">${p.price}</span>
-                            </button>
-                          ))}
-                          <button
-                            onClick={() => {
-                              setCustomSubscription(null);
-                              localStorage.removeItem(`stashflow_sub_${goal.id}`);
-                              setIsPickerOpen(false);
-                            }}
-                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-500 text-[10px] font-bold mt-1"
-                          >
-                            Reset to Auto-detect
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
               </div>
+
+              {monthlyYield < 0.01 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/5 flex-col gap-1 z-10">
+                  <span className="text-[10px] text-white/60 font-black uppercase tracking-widest bg-[#0A0A0F] px-3 py-1 rounded-full border border-white/5 shadow-2xl">
+                    Add funds to activate yield
+                  </span>
+                </div>
+              )}
+              
+              <AnimatePresence>
+                {isPickerOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute bottom-full left-0 mb-2 w-48 bg-[#0F0F18] border border-border rounded-xl shadow-2xl p-2 z-50 overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest p-2 border-b border-border/50 mb-1">
+                      Select Preference
+                    </div>
+                    <div className="space-y-1">
+                      {presets.map((p) => (
+                        <button
+                          key={p.name}
+                          onClick={() => handleSelectPreset(p)}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition-colors flex items-center justify-between group"
+                        >
+                          <span className="text-xs text-gray-300 group-hover:text-white">{p.emoji} {p.name}</span>
+                          <span className="text-[10px] text-gray-500">${p.price}</span>
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setCustomSubscription(null);
+                          localStorage.removeItem(`stashflow_sub_${goal.id}`);
+                          setIsPickerOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-500 text-[10px] font-bold mt-1"
+                      >
+                        Reset to Auto-detect
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
