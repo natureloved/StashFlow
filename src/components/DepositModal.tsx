@@ -388,17 +388,16 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                         </button>
                       </div>
                     </div>
-                    <div className="absolute left-5 bottom-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                    <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
                        {isUsdMode ? 'Deposit in USD' : `Deposit in ${selectedToken?.symbol || 'Asset'}`}
                     </div>
+                    {amount && tokenPrice > 0 && (
+                      <p className="text-center text-xs text-gray-500 font-body">
+                        ≈ {isUsdMode ? `${(Number(amount) / tokenPrice).toFixed(6)} ${selectedToken?.symbol}` : `$${(Number(amount) * tokenPrice).toFixed(2)}`}
+                      </p>
+                    )}
                   </div>
                   
-                  {amount && tokenPrice > 0 && (
-                    <p className="text-center text-xs text-gray-500 font-body">
-                      ≈ {isUsdMode ? `${(Number(amount) / tokenPrice).toFixed(6)} ${selectedToken?.symbol}` : `$${(Number(amount) * tokenPrice).toFixed(2)}`}
-                    </p>
-                  )}
-
                   {selectedToken && (
                     <div className="bg-accent/5 border border-accent/20 p-3 rounded-xl flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent">
@@ -417,7 +416,6 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                       </div>
                     </div>
                   )}
-                </div>
 
                 {error && (
                   <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex items-center gap-2 text-red-500 text-sm">
