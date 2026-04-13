@@ -54,7 +54,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
     setTimeout(() => setIsCopying(false), 2000);
   };
 
-  const saveCardImage = async () => {
+  const copyCardImage = async () => {
     if (!cardRef.current) return;
     setIsSaving(true);
     
@@ -67,7 +67,6 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
         scale: 3,
         useCORS: true,
         allowTaint: true,
-        logging: true, // Helpful for debugging
         imageTimeout: 15000,
         onclone: (clonedDoc) => {
           const element = clonedDoc.querySelector('[data-card-container]');
@@ -77,14 +76,25 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
         }
       });
       
-      const link = document.createElement('a');
-      link.download = `stashflow-${goal.name.toLowerCase().replace(/\s+/g, '-')}-${milestone}pct.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
-      link.click();
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          setIsCopying(true); // Reusing isCopying for "Copied!" feedback
+          setTimeout(() => setIsCopying(false), 2000);
+        } catch (err) {
+          console.error('Clipboard error:', err);
+          // Fallback to traditional download if clipboard fails
+          const link = document.createElement('a');
+          link.download = `stashflow-${goal.name.toLowerCase().replace(/\s+/g, '-')}.png`;
+          link.href = canvas.toDataURL();
+          link.click();
+        }
+      });
     } catch (err: any) {
-      console.error('Failed to save image:', err);
-      // More descriptive error for logging
-      alert(`Could not generate image: ${err.message || 'Unknown error'}. Please try again.`);
+      console.error('Failed to copy image:', err);
     } finally {
       setIsSaving(false);
     }
@@ -123,7 +133,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                   </div>
                   <div>
                     <span className="block text-[10px] uppercase tracking-[0.4em] font-black text-white/70 leading-none">STASHFLOW</span>
-                    <span className="block text-[7px] uppercase tracking-[0.2em] font-bold mt-1" style={{ color: '#00E5FF' }}>On-Chain Wealth</span>
+                    <span className="block text-[7px] uppercase tracking-[0.2em] font-bold mt-1" style={{ color: '#00E5FF' }}>Goal-based DeFi savings</span>
                   </div>
                 </div>
                 <div className="bg-white/5 px-3 py-1 rounded-full border border-white/10 text-[9px] font-black text-white/50 tracking-widest uppercase italic">
@@ -198,14 +208,16 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                )}
              </Button>
              <Button 
-               onClick={saveCardImage}
+               onClick={copyCardImage}
                disabled={isSaving}
                className="bg-white text-black hover:bg-gray-100 font-black h-12 rounded-xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 border-b-4 border-gray-200"
              >
                {isSaving ? (
                  <span className="flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin" /> Rendering...</span>
+               ) : isCopying ? (
+                 <span className="flex items-center gap-3"><Copy className="w-4 h-4" /> Copied Image!</span>
                ) : (
-                 <span className="flex items-center gap-3 italic text-xs"><Download className="w-4 h-4" /> Save Image</span>
+                 <span className="flex items-center gap-3 italic text-xs"><Copy className="w-4 h-4" /> Copy Image</span>
                )}
              </Button>
           </div>

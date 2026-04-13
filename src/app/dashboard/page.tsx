@@ -397,20 +397,6 @@ export default function DashboardPage() {
           </Link>
           
           <div className="flex items-center gap-4">
-            {address && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => {
-                  fetchGoalsForUser(address);
-                  syncAllGoalsToCloud(address);
-                }}
-                className="text-[10px] font-bold text-gray-500 hover:text-accent group flex items-center gap-2"
-              >
-                <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-                {isSyncing ? 'Syncing...' : 'Cloud Sync'}
-              </Button>
-            )}
             <div className="hidden md:flex items-center gap-6 mr-6 text-sm font-body">
               <button 
                 onClick={() => setCurrentView('dashboard')}

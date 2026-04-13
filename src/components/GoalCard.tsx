@@ -230,7 +230,7 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
             </div>
           )}
 
-          {!isUnfunded && (
+          {!isUnfunded && monthlyYield >= 0.01 && (
             <div className="bg-[#0A0A0F]/50 p-4 rounded-xl border border-white/5 space-y-3 relative group/yield">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[10px] text-accent uppercase font-black tracking-widest">

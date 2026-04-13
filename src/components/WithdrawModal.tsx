@@ -226,16 +226,28 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
                           MAX
                         </button>
                         <button 
-                          onClick={() => setIsUsdMode(!isUsdMode)}
+                          onClick={() => {
+                            const current = Number(amount) || 0;
+                            setAmount((current + 1).toString());
+                          }}
                           className="flex flex-col items-center justify-center p-1 hover:bg-white/5 rounded-lg transition-colors group"
-                          title={`Switch to ${isUsdMode ? (goal?.vault.underlyingTokens?.[0]?.symbol || 'Asset') : 'USD'}`}
+                          title="Increase amount"
                         >
                            <ChevronUp className="w-3 h-3 text-gray-500 group-hover:text-white" />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const current = Number(amount) || 0;
+                            if (current > 0) setAmount(Math.max(0, current - 1).toString());
+                          }}
+                          className="flex flex-col items-center justify-center p-1 hover:bg-white/5 rounded-lg transition-colors group"
+                          title="Decrease amount"
+                        >
                            <ChevronDown className="w-3 h-3 text-gray-500 group-hover:text-white" />
                         </button>
                       </div>
                       <div className="absolute left-5 bottom-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                        {isUsdMode ? 'Withdraw in USD' : `Withdraw in ${goal?.vault.underlyingTokens?.[0]?.symbol || 'Assets'}`}
+                        Withdraw in USD
                       </div>
                     </div>
                   </div>
