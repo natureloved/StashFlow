@@ -590,7 +590,7 @@ function TokenChip({ token, chainId, isSelected, onClick }: { token: any, chainI
       <div className="text-left">
         <div className="text-xs font-bold text-white">{token.symbol}</div>
         <div className="text-[10px] text-gray-500 font-body">
-          {balance ? `${Number(balance.formatted).toFixed(3)}` : '0.00'}
+          {balance ? `${Number(balance.formatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}` : '0.00'}
         </div>
       </div>
     </button>
