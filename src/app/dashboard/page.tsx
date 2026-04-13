@@ -137,8 +137,8 @@ export default function DashboardPage() {
               const price = Number(token.priceUSD || 0);
               const usdValue = amount * price;
 
-              // NaN safety and Dust filter
-              if (!Number.isNaN(usdValue) && usdValue > 1.00) {
+              // NaN safety and Dust filter (> $0.01)
+              if (!Number.isNaN(usdValue) && usdValue > 0.01) {
                 const isInPosition = positions.some(
                   (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase()
                 );
@@ -448,7 +448,7 @@ export default function DashboardPage() {
                       <div className="px-4 py-1.5 rounded-full bg-secondary/5 border border-secondary/20 text-[10px] font-black text-secondary tracking-widest uppercase">
                         Passive Income • Optimized ⚡
                       </div>
-                      <p className="text-sm text-gray-400 font-body italic whitespace-nowrap">
+                      <p className="text-sm text-secondary font-display font-black italic tracking-wide whitespace-nowrap drop-shadow-[0_0_10px_rgba(255,184,0,0.2)]">
                         Visualizing your yield as real-world value.
                       </p>
                     </div>

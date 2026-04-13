@@ -16,7 +16,7 @@ import { useGoalStore } from '@/store/useGoalStore';
 import { MilestoneBadge } from '@/components/MilestoneBadge';
 import { VaultSafetyModal } from '@/components/VaultSafetyModal';
 import { getYieldEquivalent } from '@/lib/yield-utils';
-import { calculateGoalCompletionDate, formatCompletionDate } from '@/lib/projection-utils';
+import { calculateGoalCompletionDate, formatCompletionDate, calculateRequiredWeeklySaving } from '@/lib/projection-utils';
 
 interface GoalCardProps {
   goal: Goal;

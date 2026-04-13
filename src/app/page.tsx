@@ -69,8 +69,8 @@ function YieldInsightSlider() {
         </AnimatePresence>
       </div>
 
-      <div className="pt-2 border-t border-white/5 flex items-center justify-between relative z-10">
-        <p className="text-[9px] text-gray-600 font-body italic">
+      <div className="pt-2 border-t border-white/10 flex items-center justify-between relative z-10">
+        <p className="text-[13px] text-accent font-display font-black italic tracking-tight drop-shadow-[0_0_10px_rgba(0,255,240,0.3)]">
           Visualizing your yield as real-world value.
         </p>
         <div className="flex gap-1">

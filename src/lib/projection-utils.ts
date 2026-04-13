@@ -19,26 +19,19 @@ export const calculateGoalCompletionDate = (
   if (weeklyContribution <= 0 && apy <= 0) return null;
 
   let balance = currentAmount;
-  let currentDate = new Date();
-  const maxYears = 50; // Safety cap
   let weeks = 0;
+  const maxWeeks = 52 * 50; // 50 years max
 
-  // Weekly yield multiplier
-  const weeklyYield = Math.pow(1 + apy, 1 / 52) - 1;
+  const r = Math.pow(1 + apy, 1 / 52) - 1;
 
-  while (balance < targetAmount && weeks < maxYears * 52) {
-    // Add weekly yield
-    balance += balance * weeklyYield;
-    // Add weekly contribution
-    balance += weeklyContribution;
-    
+  while (balance < targetAmount && weeks < maxWeeks) {
+    balance = (balance * (1 + r)) + weeklyContribution;
     weeks++;
   }
 
-  const completionDate = new Date();
-  completionDate.setDate(completionDate.getDate() + (weeks * 7));
-  
-  return weeks < maxYears * 52 ? completionDate : null;
+  const result = new Date();
+  result.setDate(result.getDate() + (weeks * 7));
+  return weeks < maxWeeks ? result : null;
 };
 
 export const formatCompletionDate = (date: Date | null): string => {
