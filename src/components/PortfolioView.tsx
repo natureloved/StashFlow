@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { getUserPositions, getWalletBalances } from '@/lib/lifi';
 import { useGoalStore } from '@/store/useGoalStore';
 import { Card } from '@/components/ui/card';
-import { Loader2, Wallet, ExternalLink, TrendingUp, AlertCircle, Zap, Coins } from 'lucide-react';
+import { Loader2, Wallet, ExternalLink, TrendingUp, AlertCircle, Zap, Coins, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
