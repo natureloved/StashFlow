@@ -109,15 +109,15 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
     hash: pendingWithdrawHash,
   });
 
-  // Allowance Check
+  // Allowance Check for LiFi Diamond (Universal Spender for Withdrawals)
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: goal?.vault.address as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'allowance',
-    args: [address as `0x${string}`, quote?.transactionRequest?.to as `0x${string}`],
-    chainId: goal?.vault.chainId, // CRITICAL: Check allowance on the source chain
+    args: [address as `0x${string}`, LIFI_DIAMOND_ADDRESS as `0x${string}`],
+    chainId: goal?.vault.chainId,
     query: {
-      enabled: !!address && !!goal && !!quote?.transactionRequest?.to,
+      enabled: !!address && !!goal,
     }
   });
 
@@ -176,9 +176,10 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
         fromAmountSmallest = parseUnits(amountRaw.toString(), vaultDecimals).toString(); 
       }
 
-      // If allowance is missing, we need to approve before we can even get a reliable quote 
-      // (or at least before we can proceed in the new 2-step UI)
-      if (allowance !== undefined && allowance < BigInt(fromAmountSmallest)) {
+      // If allowance is missing or loading, we wait/trigger approval step
+      if (allowance === undefined) {
+         // Optionally wait or just proceed and handle the error later
+      } else if (allowance < BigInt(fromAmountSmallest)) {
         setStep(1.5); // New intermediate step for approval
         setIsFetchingQuote(false);
         return;
