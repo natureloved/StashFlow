@@ -23,7 +23,6 @@ export async function GET(
   try {
     const response = await fetch(url, {
       headers: {
-        'x-lifi-api-key': process.env.LIFI_API_KEY || '',
         'accept': 'application/json',
       },
     });

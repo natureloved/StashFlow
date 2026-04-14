@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
           `https://li.quest/v1/balances/${address}?chains=${chainId}`,
           {
             headers: {
-              'x-lifi-api-key': process.env.LIFI_API_KEY || '',
+              'accept': 'application/json',
             },
           }
         )
