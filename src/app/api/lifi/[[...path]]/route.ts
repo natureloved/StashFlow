@@ -15,7 +15,8 @@ export async function GET(
   const targetBaseUrl = 'https://li.quest/v1';
   const subPath = path.join('/');
 
-  searchParams.set('integrator', 'stashflow');
+  // Use 'lifi' integrator for higher default rate limits
+  searchParams.set('integrator', 'lifi');
   const queryString = searchParams.toString();
   const url = `${targetBaseUrl}/${subPath}${queryString ? `?${queryString}` : ''}`;
 
