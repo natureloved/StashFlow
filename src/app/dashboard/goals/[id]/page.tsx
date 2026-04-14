@@ -268,6 +268,7 @@ export default function GoalDetailPage() {
         open={isWithdrawModalOpen} 
         onOpenChange={setIsWithdrawModalOpen}
         currentBalanceUsd={currentSaved}
+        livePosition={livePosition}
       />
     </div>
   );

@@ -19,6 +19,30 @@ import { parseUnits, formatUnits } from 'viem';
 import { Loader2, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Clock, Wallet, ChevronUp, ChevronDown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getTokenPrice } from '@/lib/prices';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+
+const ERC20_ABI = [
+  {
+    name: 'allowance',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'approve',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+] as const;
 
 const COMMON_TOKENS: Record<number, any[]> = {
   1: [
@@ -40,9 +64,10 @@ interface WithdrawModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentBalanceUsd: number;
+  livePosition?: any;
 }
 
-export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: WithdrawModalProps) {
+export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, livePosition }: WithdrawModalProps) {
   const { address, chainId } = useAccount();
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState('');
@@ -60,6 +85,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
 
   const { sendTransactionAsync } = useSendTransaction();
   const { switchChainAsync } = useSwitchChain();
+  const { writeContractAsync: approveAsync } = useWriteContract();
   const addContribution = useGoalStore((state) => state.addContribution);
 
   const [pendingWithdrawHash, setPendingWithdrawHash] = useState<`0x${string}` | undefined>(undefined);
@@ -68,6 +94,33 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
   const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError } = useWaitForTransactionReceipt({
     hash: pendingWithdrawHash,
   });
+
+  // Allowance Check
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: goal?.vault.address as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: 'allowance',
+    args: [address as `0x${string}`, quote?.transactionRequest?.to as `0x${string}`],
+    query: {
+      enabled: !!address && !!goal && !!quote?.transactionRequest?.to,
+    }
+  });
+
+  const [isApproving, setIsApproving] = useState(false);
+  const [pendingApprovalHash, setPendingApprovalHash] = useState<`0x${string}` | undefined>(undefined);
+
+  // Wait for on-chain confirmation of Approval
+  const { isLoading: isConfirmingApproval, isSuccess: isApprovalConfirmed } = useWaitForTransactionReceipt({
+    hash: pendingApprovalHash,
+  });
+
+  // Handle successful approval confirmation
+  useEffect(() => {
+    if (isApprovalConfirmed && pendingApprovalHash) {
+      refetchAllowance();
+      setPendingApprovalHash(undefined);
+    }
+  }, [isApprovalConfirmed, pendingApprovalHash, refetchAllowance]);
 
   // Default destination token
   useEffect(() => {
@@ -94,19 +147,33 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
     setError(null);
     try {
       // Calculate amount in vault token units
-      const vaultToken = goal.vault.address;
+      let fromAmountSmallest: string;
       
-      const safeAmountStr = (amount && !Number.isNaN(Number(amount))) 
-        ? amount.toString() 
-        : '0';
+      const safeAmountNum = (amount && !Number.isNaN(Number(amount))) 
+        ? Number(amount)
+        : 0;
 
-      const vaultDecimals = (goal.vault as any).decimals || goal.vault.underlyingTokens?.[0]?.decimals || 18;
-      const fromAmountSmallest = parseUnits(safeAmountStr, vaultDecimals).toString(); 
+      if (livePosition && Number(livePosition.balanceUsd) > 0) {
+        // Proportional shares: (requestedUsd / totalUsd) * totalShares
+        const totalUsd = Number(livePosition.balanceUsd);
+        const totalShares = BigInt(livePosition.amount);
+        
+        // Use a safer calculation to avoid floats where possible
+        // (totalShares * requestedUsdScaled) / totalUsdScaled
+        const requestedUsdScaled = BigInt(Math.floor(safeAmountNum * 1000000));
+        const totalUsdScaled = BigInt(Math.floor(totalUsd * 1000000));
+        
+        fromAmountSmallest = ((totalShares * requestedUsdScaled) / totalUsdScaled).toString();
+      } else {
+        // Fallback to 1:1 if no position data (less accurate but better than failing)
+        const vaultDecimals = (goal.vault as any).decimals || goal.vault.underlyingTokens?.[0]?.decimals || 18;
+        fromAmountSmallest = parseUnits(safeAmountNum.toString(), vaultDecimals).toString(); 
+      }
 
       const response = await getQuote({
         fromChain: goal.vault.chainId,
         toChain: chainId,
-        fromToken: vaultToken,
+        fromToken: goal.vault.address,
         toToken: selectedToken.address === 'native' ? '0x0000000000000000000000000000000000000000' : selectedToken.address,
         fromAddress: address,
         toAddress: address,
@@ -314,17 +381,47 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd }: W
                 </div>
 
                 <div className="space-y-3">
-                  <Button 
-                    disabled={isWithdrawing || isConfirming}
-                    onClick={handleWithdraw}
-                    className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
-                  >
-                    {isWithdrawing && !pendingWithdrawHash ? (
-                      <><Loader2 className="animate-spin mr-2" /> Submitting...</>
-                    ) : isConfirming ? (
-                      <><Loader2 className="animate-spin mr-2" /> Confirming...</>
-                    ) : 'Confirm Withdrawal'}
-                  </Button>
+                  {quote && allowance !== undefined && allowance < BigInt(quote.estimate.fromAmount || 0) ? (
+                    <Button 
+                      disabled={isApproving || isConfirmingApproval}
+                      onClick={async () => {
+                        setIsApproving(true);
+                        setError(null);
+                        try {
+                          const hash = await approveAsync({
+                            address: goal.vault.address as `0x${string}`,
+                            abi: ERC20_ABI,
+                            functionName: 'approve',
+                            args: [quote.transactionRequest.to as `0x${string}`, BigInt(quote.estimate.fromAmount)],
+                          });
+                          setPendingApprovalHash(hash);
+                        } catch (err: any) {
+                          setError(err.message || 'Approval failed');
+                        } finally {
+                          setIsApproving(false);
+                        }
+                      }}
+                      className="w-full h-14 bg-white text-black hover:bg-white/90 font-bold text-lg rounded-xl glow-cyan"
+                    >
+                      {isApproving && !pendingApprovalHash ? (
+                        <><Loader2 className="animate-spin mr-2" /> Submitting...</>
+                      ) : isConfirmingApproval ? (
+                        <><Loader2 className="animate-spin mr-2" /> Confirming...</>
+                      ) : `Approve Withdrawal`}
+                    </Button>
+                  ) : (
+                    <Button 
+                      disabled={isWithdrawing || isConfirming}
+                      onClick={handleWithdraw}
+                      className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
+                    >
+                      {isWithdrawing && !pendingWithdrawHash ? (
+                        <><Loader2 className="animate-spin mr-2" /> Submitting...</>
+                      ) : isConfirming ? (
+                        <><Loader2 className="animate-spin mr-2" /> Confirming...</>
+                      ) : 'Confirm Withdrawal'}
+                    </Button>
+                  )}
                   <Button variant="ghost" className="w-full text-gray-500" onClick={() => setStep(1)}>
                     Go Back
                   </Button>
