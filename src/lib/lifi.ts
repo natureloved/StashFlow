@@ -11,6 +11,7 @@ export interface GetVaultsParams {
   sortBy?: 'apy' | 'tvl';
   limit?: number;
   chains?: number[];
+  integrator?: string;
 }
 
 export interface Vault {
@@ -56,6 +57,8 @@ export async function getVaults(params: GetVaultsParams = {}) {
   const query = new URLSearchParams();
   
   if (params.sortBy) query.append('sortBy', params.sortBy);
+  if (params.limit) query.append('limit', params.limit.toString());
+  if (params.integrator) query.append('integrator', params.integrator);
   if (params.chains && params.chains.length > 0) {
     params.chains.forEach(id => query.append('chains', id.toString()));
   }
