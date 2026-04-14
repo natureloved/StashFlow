@@ -125,10 +125,15 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
     setIsLoadingVault(true);
     try {
       const bestVault = await findBestVault(tier);
-      setSelectedVault(bestVault as any);
-      setStep(3);
-    } catch (error) {
+      if (bestVault) {
+        setSelectedVault(bestVault as any);
+        setStep(3);
+      } else {
+        setError('No vaults found matching this risk level. Try again or choose another tier.');
+      }
+    } catch (error: any) {
       console.error('Failed to match vault:', error);
+      setError('Connection error while finding vaults. Please try again.');
     } finally {
       setIsLoadingVault(false);
     }

@@ -13,21 +13,25 @@ export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
     fetchParams.chains = [CONFIG.TARGET_CHAIN_ID];
   }
   
-  const { data: vaultsRaw } = await getVaults(fetchParams);
-  const vaults = (vaultsRaw || []) as Vault[];
+  const response = await getVaults(fetchParams);
+  // LI.FI Earn API can return the array directly or inside a 'vaults' property
+  const vaults = (Array.isArray(response) ? response : (response.vaults || response.data || [])) as Vault[];
   
-  if (vaults.length === 0) return null;
+  if (vaults.length === 0) {
+    console.warn('No vaults returned from API');
+    return null;
+  }
 
   if (riskTier === 'safe') {
     const filtered = vaults.filter(v => 
       v.isTransactional === true &&
       (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
       v.tags?.includes('stablecoin') &&
-      v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 10_000_000 &&
+      v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 1_000_000 && // Lowered from 10M
       v.analytics?.apy?.total != null
     ).sort((a,b) => Number(b.analytics.tvl.usd) - Number(a.analytics.tvl.usd));
     
-    return filtered[0] || null;
+    if (filtered[0]) return filtered[0];
   }
 
   if (riskTier === 'balanced') {
@@ -35,19 +39,19 @@ export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
       v.isTransactional === true &&
       (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
       v.underlyingTokens.some(t => CONFIG.GROWTH_TOKENS.includes(t.symbol)) &&
-      v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 1_000_000 &&
+      v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 100_000 && // Lowered from 1M
       v.analytics?.apy?.total != null
     ).sort((a,b) => (b.analytics.apy.total || 0) - (a.analytics.apy.total || 0));
     
-    return filtered[0] || null;
+    if (filtered[0]) return filtered[0];
   }
 
-  // DEGEN Tier
-  const filtered = vaults.filter(v =>
+  // DEGEN Tier or Fallback for others
+  const degenFiltered = vaults.filter(v =>
     v.isTransactional === true &&
     (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
     v.analytics?.apy?.total != null
   ).sort((a,b) => (b.analytics.apy.total || 0) - (a.analytics.apy.total || 0));
 
-  return filtered[0] || null;
+  return degenFiltered[0] || degenFiltered[1] || vaults[0] || degenFiltered[0] || null;
 }
