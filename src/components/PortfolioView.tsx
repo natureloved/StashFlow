@@ -148,7 +148,7 @@ export function PortfolioView() {
     );
   }
 
-  const activeValue = positions.reduce((acc, p) => acc + (Number(p.balanceUsd) || Number(p.amountUsd) || 0), 0);
+  const activeValue = positions.reduce((acc, p) => acc + (Number(p.balanceUsd) || Number(p.amountUsd) || Number(p.value) || 0), 0);
   const idleValue = idleAssets.reduce((acc, a) => acc + a.balanceUsd, 0);
   const totalNetWorth = activeValue + idleValue;
 
@@ -169,8 +169,17 @@ export function PortfolioView() {
     <div className="space-y-12 pb-20">
       {/* Header & Net Worth */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <h2 className="text-3xl font-display font-bold mb-1">Portfolio Monitoring</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-3xl font-display font-bold">Portfolio Monitoring</h2>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.location.reload()} 
+            className="h-8 border-accent/20 text-accent hover:bg-accent/10 gap-2 font-bold px-3"
+          >
+            <RefreshCw className={cn("w-3 h-3", isLoading && "animate-spin")} />
+            Sync Now
+          </Button>
         </div>
         <div className="glass-card px-8 py-6 border-accent/20 flex flex-col items-end relative overflow-hidden group shadow-[0_0_20px_rgba(0,229,255,0.15)]">
           <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-accent/10 transition-all" />
@@ -271,7 +280,8 @@ export function PortfolioView() {
                   });
 
                   // If no on-chain position with balance, don't show it as "Active"
-                  if (!pos || (Number(pos.balanceUsd) || 0) < 0.05) return null; // Increased dust filter slightly for safety
+                  // Tiny dust filter (0.001) for test balances like $0.2
+                  if (!pos || (Number(pos.balanceUsd) || Number(pos.amountUsd) || 0) < 0.001) return null; 
 
                   const displayProtocol = goal.vault.protocol.name || 'Unknown Protocol';
                   const displayApy = goal.vault.analytics?.apy?.total ?? pos.apy;

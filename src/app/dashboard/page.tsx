@@ -271,7 +271,7 @@ function DashboardContent() {
           getWalletBalances(address).catch(() => ({})),
         ]);
 
-        const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
+        const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.balanceUsd) || Number(p.amountUsd) || Number(p.value) || 0), 0);
         const rawBalances = (balancesData && typeof balancesData === 'object' && 'balances' in balancesData) 
           ? (balancesData as any).balances 
           : balancesData;
@@ -282,7 +282,7 @@ function DashboardContent() {
             if (Array.isArray(tokens)) {
               tokens.forEach((token: any) => {
                 const usdValue = (Number(token.amount) || 0) * (Number(token.priceUSD) || 0);
-                if (usdValue > 0.05) {
+                if (usdValue > 0.001) {
                   const isInPosition = positions.some((p: any) => p.token?.address?.toLowerCase() === token.address?.toLowerCase());
                   if (!isInPosition) totalIdleUsd += usdValue;
                 }

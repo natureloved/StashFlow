@@ -201,7 +201,11 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
       setQuote(response);
       setStep(2);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch withdrawal route');
+      let msg = err.message || 'Failed to fetch withdrawal route';
+      if (msg.toLowerCase().includes('no route') || msg.toLowerCase().includes('no available quotes')) {
+        msg = `No available quotes. For tiny amounts like $${amount}, liquidity providers might not have profitable routes due to gas fees. (Min ~$1 recommended)`;
+      }
+      setError(msg);
     } finally {
       setIsFetchingQuote(false);
     }
