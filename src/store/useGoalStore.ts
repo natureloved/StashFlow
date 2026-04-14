@@ -135,8 +135,6 @@ export const useGoalStore = create<GoalState>()(
               createdAt: row.created_at
             }));
 
-            // Merge with local goals to avoid dupes, prioritizing cloud
-            set((state) => {
             // REPLACE local user goals with cloud goals to ensure deletions are reflected
             set((state) => {
               // Keep goals from other users (if any), but refresh goals for this user
@@ -144,7 +142,6 @@ export const useGoalStore = create<GoalState>()(
                 ? state.goals.filter(g => (g.ownerAddress || '').toLowerCase() !== address.toLowerCase())
                 : [];
               return { goals: [...otherUserGoals, ...mappedGoals] };
-            });
             });
           }
         } catch (e) {
