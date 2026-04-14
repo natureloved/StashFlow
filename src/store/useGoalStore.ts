@@ -137,18 +137,14 @@ export const useGoalStore = create<GoalState>()(
 
             // Merge with local goals to avoid dupes, prioritizing cloud
             set((state) => {
-              const newGoals = [...state.goals];
-              
-              mappedGoals.forEach(cloudGoal => {
-                const idx = newGoals.findIndex(g => g.id === cloudGoal.id);
-                if (idx !== -1) {
-                  newGoals[idx] = cloudGoal; // Overwrite local with cloud
-                } else {
-                  newGoals.push(cloudGoal);
-                }
-              });
-              
-              return { goals: newGoals };
+            // REPLACE local user goals with cloud goals to ensure deletions are reflected
+            set((state) => {
+              // Keep goals from other users (if any), but refresh goals for this user
+              const otherUserGoals = Array.isArray(state.goals) 
+                ? state.goals.filter(g => (g.ownerAddress || '').toLowerCase() !== address.toLowerCase())
+                : [];
+              return { goals: [...otherUserGoals, ...mappedGoals] };
+            });
             });
           }
         } catch (e) {
