@@ -180,7 +180,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
       // If allowance is missing or loading, we wait/trigger approval step
       if (allowance === undefined) {
          // Optionally wait or just proceed and handle the error later
-      } else if (allowance < BigInt(fromAmountSmallest)) {
+      } else if (allowance < BigInt(fromAmountSmallest) && !isApprovalConfirmed) {
         setStep(1.5); // New intermediate step for approval
         setIsFetchingQuote(false);
         return;

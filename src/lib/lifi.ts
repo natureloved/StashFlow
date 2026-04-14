@@ -88,7 +88,14 @@ export async function getVaultDetails(chainId: number, address: string) {
     throw new Error(`Earn API Error: ${response.statusText}${errorBody.message ? ` - ${errorBody.message}` : ''}`);
   }
 
-  return response.json();
+    return response.json();
+  } catch (error: any) {
+    if (error.message?.includes('429')) {
+      console.warn('Rate limit hit for vault details, using cached/empty data');
+      return {};
+    }
+    throw error;
+  }
 }
 
 export async function getUserPositions(userAddress: string) {
@@ -102,7 +109,14 @@ export async function getUserPositions(userAddress: string) {
     throw new Error(`Earn API Error: ${response.statusText}${errorBody.message ? ` - ${errorBody.message}` : ''}`);
   }
 
-  return response.json();
+    return response.json();
+  } catch (error: any) {
+    if (error.message?.includes('429')) {
+      console.warn('Rate limit hit for positions, returning empty list');
+      return { positions: [] };
+    }
+    throw error;
+  }
 }
 
 export interface GetQuoteParams {

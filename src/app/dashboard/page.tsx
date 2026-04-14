@@ -120,14 +120,13 @@ function DashboardContent() {
   }, [tab]);
 
   React.useEffect(() => {
-    // Only redirect if we are MOUNTED AND NOT connected AND NOT currently trying to connect or reconnect
-    // We also wait for the canRedirect grace period to end to avoid refresh "kicks"
     if (mounted && canRedirect && status === 'disconnected' && !isReconnecting && !isConnecting) {
       router.push('/');
     }
   }, [mounted, canRedirect, status, isReconnecting, isConnecting, router]);
 
-  // LIVE APY SYNC
+  // LIVE APY SYNC - DISABLED FOR DEMO STABILITY (Reduces 429 Errors)
+  /*
   React.useEffect(() => {
     async function syncVaults() {
       if (!mounted || userGoals.length === 0 || isSyncing) return;
@@ -153,22 +152,24 @@ function DashboardContent() {
           updateVaults(updates);
         }
       } finally {
-        // Short delay to prevent rapid re-syncing
         setTimeout(() => setIsSyncing(false), 2000);
       }
     }
 
     if (mounted && status === 'connected') {
       syncVaults();
-      // Also fetch cloud goals on connect/mount
-      if (address) {
-        fetchGoalsForUser(address).then(() => {
-          // After fetching, push any local-only goals to cloud for migration
-          syncAllGoalsToCloud(address);
-        });
-      }
     }
-  }, [mounted, status, userGoals.length, address, fetchGoalsForUser, syncAllGoalsToCloud]);
+  }, [mounted, status, userGoals.length]);
+  */
+
+  // Fetch cloud goals on connect/mount
+  React.useEffect(() => {
+    if (mounted && status === 'connected' && address) {
+      fetchGoalsForUser(address).then(() => {
+        syncAllGoalsToCloud(address);
+      });
+    }
+  }, [mounted, status, address, fetchGoalsForUser, syncAllGoalsToCloud]);
 
   // AUTO-MILESTONE TRIGGER LOGIC
   React.useEffect(() => {
@@ -178,7 +179,6 @@ function DashboardContent() {
       const currentSaved = goal.contributions.reduce((acc, curr) => acc + curr.amountUsd, 0);
       const progress = (currentSaved / goal.targetAmountUsd) * 100;
       
-      // Determine the highest milestone reached
       let reached: 1 | 25 | 50 | 75 | 100 | null = null;
       if (progress >= 100) reached = 100;
       else if (progress >= 75) reached = 75;
@@ -191,7 +191,6 @@ function DashboardContent() {
         const hasShown = localStorage.getItem(key);
 
         if (!hasShown) {
-          // Trigger celebration!
           setMilestoneGoal(goal);
           setActiveMilestone(reached);
           setIsShareModalOpen(true);
@@ -212,34 +211,30 @@ function DashboardContent() {
     setIsScanning(true);
     try {
       const [{ positions = [] }, balancesData] = await Promise.all([
-        getUserPositions(address),
-        getWalletBalances(address)
+        getUserPositions(address).catch(() => ({ positions: [] })),
+        getWalletBalances(address).catch(() => ({})),
       ]);
 
+      const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
+      
       const rawBalances = (balancesData && typeof balancesData === 'object' && 'balances' in balancesData) 
         ? (balancesData as any).balances 
         : balancesData;
 
-      const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
-      
       let totalIdleUsd = 0;
-      // Defensive check: Ensure we have a valid balances record
       if (rawBalances && typeof rawBalances === 'object' && !Array.isArray(rawBalances)) {
         Object.entries(rawBalances).forEach(([_, tokens]: [string, any]) => {
           if (Array.isArray(tokens)) {
             tokens.forEach((token: any) => {
-              const amount = Number(token.amount);
-              const price = Number(token.priceUSD || 0);
+              const amount = Number(token.amount ?? 0);
+              const price = Number(token.priceUSD ?? 0);
               const usdValue = amount * price;
 
-              // NaN safety and Dust filter (> $0.01)
-              if (!Number.isNaN(usdValue) && usdValue > 0.01) {
-                // Normalize addresses (especially native tokens)
+              if (!Number.isNaN(usdValue) && usdValue > 0.05) {
                 const isInPosition = positions.some((p: any) => {
                   const pAddr = p.token?.address?.toLowerCase();
                   const tAddr = token.address?.toLowerCase();
                   if (pAddr === tAddr) return true;
-                  // Handle Native ETH representations (0x0...0 or 0xEee...e)
                   const isNative = (addr: string) => addr === '0x0000000000000000000000000000000000000000' || addr === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
                   if (isNative(pAddr) && isNative(tAddr)) return true;
                   return false;
@@ -250,7 +245,7 @@ function DashboardContent() {
           }
         });
       }
-      
+
       setPortfolioStats({ 
         totalValue: (Number.isNaN(totalActiveUsd) ? 0 : totalActiveUsd) + (Number.isNaN(totalIdleUsd) ? 0 : totalIdleUsd), 
         idleAssets: Number.isNaN(totalIdleUsd) ? 0 : totalIdleUsd 
@@ -260,13 +255,13 @@ function DashboardContent() {
       setCurrentView('portfolio');
     } catch (err) {
       console.error('Scan failed:', err);
-      // Ensure we don't leave the UI in an inconsistent state on failure
       setPortfolioStats(prev => prev || { totalValue: 0, idleAssets: 0 });
     } finally {
       setIsScanning(false);
     }
   };
 
+  // FETCH INSIGHTS ON MOUNT
   React.useEffect(() => {
     async function fetchInsights() {
       if (!address || status !== 'connected') return;
@@ -277,31 +272,18 @@ function DashboardContent() {
         ]);
 
         const totalActiveUsd = positions.reduce((acc: number, p: any) => acc + (Number(p.amountUsd) || 0), 0);
-        
         const rawBalances = (balancesData && typeof balancesData === 'object' && 'balances' in balancesData) 
           ? (balancesData as any).balances 
           : balancesData;
 
         let totalIdleUsd = 0;
-        // Defensive check: Ensure we have a valid balances record
         if (rawBalances && typeof rawBalances === 'object' && !Array.isArray(rawBalances)) {
           Object.entries(rawBalances).forEach(([_, tokens]: [string, any]) => {
             if (Array.isArray(tokens)) {
               tokens.forEach((token: any) => {
-                const amount = Number(token.amount ?? 0);
-                const price = Number(token.priceUSD ?? 0);
-                const usdValue = amount * price;
-
-                // Dust filter & NaN guard (> $0.05)
-                if (!Number.isNaN(usdValue) && usdValue > 0.05) {
-                  const isInPosition = positions.some((p: any) => {
-                    const pAddr = p.token?.address?.toLowerCase();
-                    const tAddr = token.address?.toLowerCase();
-                    if (pAddr === tAddr) return true;
-                    const isNative = (addr: string) => addr === '0x0000000000000000000000000000000000000000' || addr === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-                    if (isNative(pAddr) && isNative(tAddr)) return true;
-                    return false;
-                  });
+                const usdValue = (Number(token.amount) || 0) * (Number(token.priceUSD) || 0);
+                if (usdValue > 0.05) {
+                  const isInPosition = positions.some((p: any) => p.token?.address?.toLowerCase() === token.address?.toLowerCase());
                   if (!isInPosition) totalIdleUsd += usdValue;
                 }
               });
@@ -314,8 +296,6 @@ function DashboardContent() {
           idleAssets: Number.isNaN(totalIdleUsd) ? 0 : totalIdleUsd 
         });
       } catch (err) {
-        console.error('Insight fetch failed:', err);
-        // Reset to safe defaults on catch
         setPortfolioStats(p => p || { totalValue: 0, idleAssets: 0 });
       }
     }
@@ -324,8 +304,6 @@ function DashboardContent() {
 
   const handleDepositSuccess = (prevAmount: number, newAmount: number) => {
     if (!selectedGoal) return;
-    
-    // Refresh goals from store might be needed or just use current goals state
     const goal = goals.find(g => g.id === selectedGoal.id);
     if (!goal) return;
 
@@ -354,16 +332,6 @@ function DashboardContent() {
     setIsDepositModalOpen(true);
   };
 
-  const triggerDevMilestone = () => {
-    if (goals.length > 0) {
-      setMilestoneGoal(goals[0]);
-      setActiveMilestone(50);
-      setIsShareModalOpen(true);
-    } else {
-      alert("Create a goal first to test milestones!");
-    }
-  };
-
   if (!mounted || !_hasHydrated) {
     return (
       <div className="min-h-screen bg-[#0A0A0F] flex flex-col items-center justify-center">
@@ -390,14 +358,12 @@ function DashboardContent() {
   const totalMonthlyYield = userGoalsCount > 0
     ? userGoals.reduce((acc, goal) => {
         const deposited = goal.contributions.reduce((cAcc, c) => cAcc + c.amountUsd, 0);
-        // Corrected: raw APY is e.g. 16.46%, so we divide by 100 for the multiplier
         return acc + (deposited * ((goal.vault.analytics?.apy?.total || 0) / 100)) / 12;
       }, 0)
     : 0;
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white">
-      {/* Navigation */}
       <nav className="border-b border-border bg-surface/50 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group hover:opacity-80 transition-opacity">
@@ -427,7 +393,6 @@ function DashboardContent() {
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="container mx-auto px-6 py-10">
         <AnimatePresence mode="wait">
           {currentView === 'dashboard' ? (
@@ -453,40 +418,23 @@ function DashboardContent() {
 
               {goals.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="glass-card p-6 border-accent/20"
-                  >
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 border-accent/20">
                     <div className="flex items-center gap-3 text-white/70 mb-2 font-bold text-xs uppercase tracking-wider">
                       <TargetIcon className="w-4 h-4 text-accent" /> Total Goals
                     </div>
-                    <div className="text-3xl font-numeric font-bold text-white tracking-tight">
-                      {userGoalsCount}
-                    </div>
+                    <div className="text-3xl font-numeric font-bold text-white tracking-tight">{userGoalsCount}</div>
                   </motion.div>
                   
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="glass-card p-6 border-accent/20"
-                  >
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-6 border-accent/20">
                     <div className="flex items-center gap-3 text-white/70 mb-2 font-bold text-xs uppercase tracking-wider">
                       <TrendingUp className="w-4 h-4 text-accent" /> Avg. APY
                     </div>
                     <div className="text-3xl font-numeric font-bold text-white tracking-tight flex items-center gap-2">
                       {(Number.isNaN(avgApy) ? 0 : avgApy).toFixed(2)}%
-                      {isSyncing && <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />}
                     </div>
                   </motion.div>
 
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="glass-card p-6 border-secondary/20"
-                  >
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-6 border-secondary/20">
                     <div className="flex items-center gap-3 text-white/70 mb-2 font-bold text-xs uppercase tracking-wider">
                       <TrendingUp className="w-4 h-4 text-secondary" /> Monthly Yield
                     </div>
@@ -497,15 +445,9 @@ function DashboardContent() {
                 </div>
               )}
 
-              {/* Optimization Opportunity Banner */}
               {status === 'connected' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-12 relative overflow-hidden rounded-3xl"
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12 relative overflow-hidden rounded-3xl">
                   {!portfolioStats ? (
-                    // Skeleton State
                     <div className="p-8 bg-surface border border-border animate-pulse flex flex-col md:flex-row justify-between items-center gap-6">
                       <div className="space-y-3 w-full md:w-2/3">
                         <div className="h-4 w-32 bg-white/10 rounded-full" />
@@ -518,7 +460,6 @@ function DashboardContent() {
                       <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform duration-500">
                         <Coins className="w-40 h-40 text-accent" />
                       </div>
-                      
                       <div className="space-y-2 relative z-10">
                         <div className="flex items-center gap-2 text-accent font-bold text-xs uppercase tracking-widest">
                           <Zap className="w-4 h-4" /> Optimization Opportunity Found
@@ -526,11 +467,8 @@ function DashboardContent() {
                         <h2 className="text-2xl font-display font-bold text-white">
                           We found <span className="text-accent font-numeric">${Math.round(portfolioStats.idleAssets).toLocaleString()}</span> sitting idle in your wallet.
                         </h2>
-                        <p className="text-gray-400 font-body">
-                          Put this capital to work and earn up to <span className="text-white font-bold">12.5% APY</span> on stable assets.
-                        </p>
+                        <p className="text-gray-400 font-body">Put this capital to work and earn up to <span className="text-white font-bold">12.5% APY</span> on stable assets.</p>
                       </div>
-
                       <Button 
                         onClick={() => setCurrentView('portfolio')}
                         className="bg-white text-black hover:bg-white/90 font-bold px-8 h-14 rounded-2xl relative z-10 shadow-2xl shadow-accent/20"
@@ -538,33 +476,29 @@ function DashboardContent() {
                        Optimize Now <ArrowRight className="w-5 h-5 ml-2" />
                       </Button>
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="p-8 bg-surface border border-border flex flex-col md:flex-row justify-between items-center gap-6">
+                      <div className="space-y-2">
+                        <h2 className="text-xl font-display font-bold text-white">Monitoring your on-chain positions...</h2>
+                        <p className="text-gray-400 text-sm">We're tracking your assets to find growth opportunities.</p>
+                      </div>
+                      <Button onClick={handleScanPortfolio} disabled={isScanning} className="bg-white/10 text-white hover:bg-white/20 px-6 h-12 rounded-xl border border-white/5">
+                        {isScanning ? <Loader2 className="animate-spin" /> : 'Scan Portfolio'}
+                      </Button>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
               {goals.length > 0 && totalMonthlyYield > 0 && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mb-8 md:mb-12 relative group"
-                >
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mb-8 md:mb-12 relative group">
                   <div className="absolute -inset-1 bg-gradient-to-r from-secondary/20 via-accent/10 to-secondary/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition duration-1000" />
-                  <div className="relative p-4 md:p-6 bg-[#0A0A0F] border border-white/5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
-                    <div className="flex items-center gap-3 md:gap-5 w-full">
-                      <div className="w-8 h-8 md:w-12 md:h-12 rounded-2xl bg-secondary/10 flex-shrink-0 flex items-center justify-center text-secondary border border-secondary/20 shadow-[0_0_20px_rgba(255,184,0,0.1)]">
-                        <Sparkles className="w-4 h-4 md:w-6 md:h-6" />
+                  <div className="relative p-6 bg-[#0A0A0F] border border-white/5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-5 w-full">
+                      <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+                        <Sparkles className="w-6 h-6" />
                       </div>
-                        <YieldBannerSlider monthlyYield={totalMonthlyYield || 0} />
-                    </div>
-                    
-                    <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-white/5">
-                      <div className="px-3 py-1 rounded-full bg-secondary/5 border border-secondary/10 text-[8px] md:text-[10px] font-black text-secondary/60 tracking-widest uppercase">
-                        Passive Income • Optimized ⚡
-                      </div>
-                      <p className="text-[10px] md:text-xs text-secondary/40 font-body font-bold italic tracking-wide whitespace-nowrap">
-                        Visualizing your yield as real-world value.
-                      </p>
+                      <YieldBannerSlider monthlyYield={totalMonthlyYield || 0} />
                     </div>
                   </div>
                 </motion.div>
@@ -572,11 +506,7 @@ function DashboardContent() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {userGoals.map((goal) => (
-                  <GoalCard 
-                    key={goal.id} 
-                    goal={goal} 
-                    onAddFunds={() => handleAddFunds(goal)} 
-                  />
+                  <GoalCard key={goal.id} goal={goal} onAddFunds={() => handleAddFunds(goal)} />
                 ))}
 
                 {userGoals.length === 0 && (
@@ -585,9 +515,7 @@ function DashboardContent() {
                       <TargetIcon className="w-10 h-10 text-accent" />
                     </div>
                     <h2 className="font-display text-2xl font-bold mb-2 text-white">No goals set yet</h2>
-                    <p className="text-white/60 max-w-sm mb-8 font-body">
-                      Ready to save with purpose? Create your first goal and we'll find the best vault for you.
-                    </p>
+                    <p className="text-white/60 max-w-sm mb-8 font-body">Ready to save with purpose? Create your first goal and we'll find the best vault for you.</p>
                     <Button 
                       onClick={() => setIsCreateModalOpen(true)}
                       className="bg-accent text-black hover:bg-accent/90 font-bold px-8 h-12 rounded-xl glow-cyan group"
@@ -610,44 +538,6 @@ function DashboardContent() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {status === 'connected' && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            className="mt-16 p-8 bg-gradient-to-r from-accent/20 via-surface to-accent/5 rounded-3xl border border-accent/20 relative overflow-hidden group"
-          >
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-              <TrendingUp className="w-32 h-32 text-accent" />
-            </div>
-            <div className="relative z-10 max-w-2xl">
-              <h3 className="font-display text-2xl font-bold mb-2 text-accent">Optimization Opportunity 🚀</h3>
-              <p className="text-gray-300 mb-6 font-body">
-                {portfolioStats?.idleAssets && portfolioStats.idleAssets > 0 ? (
-                  <>We found approximately <span className="text-white font-bold">${portfolioStats.idleAssets.toFixed(2)}</span> in idle assets in your wallet. Moving them to your goals could increase your monthly yield by <span className="text-accent font-bold">15%</span>.</>
-                ) : isScanning ? (
-                  <>Consolidating your active portfolio data across 5+ chains...</>
-                ) : (
-                  <>Monitoring your active on-chain positions and tracking cross-chain growth.</>
-                )}
-              </p>
-              <Button 
-                onClick={handleScanPortfolio}
-                disabled={isScanning}
-                className="bg-white text-black hover:bg-white/90 font-bold px-6"
-              >
-                {isScanning ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Scanning...
-                  </>
-                ) : (
-                  portfolioStats ? 'View Portfolio' : 'Scan Portfolio'
-                )}
-              </Button>
-            </div>
-          </motion.div>
-        )}
       </main>
 
       <CreateGoalModal open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen} />
@@ -666,32 +556,6 @@ function DashboardContent() {
           onOpenChange={setIsShareModalOpen}
         />
       )}
-
-      <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
-        <div className="bg-surface/90 backdrop-blur border border-border p-1.5 rounded-lg text-[9px] font-body font-black text-gray-400 text-center uppercase shadow-2xl">Visual Audit</div>
-          <div className="flex gap-1.5">
-            {[1, 25, 50, 75, 100].map((m: any) => {
-              const demoGoal = userGoals[0] || { targetAmountUsd: 100 };
-              const dollarValue = Math.round((m / 100) * (demoGoal?.targetAmountUsd || 100));
-              return (
-                <button 
-                  key={m}
-                  onClick={() => {
-                    if (userGoals.length > 0) {
-                      setMilestoneGoal(userGoals[0]);
-                      setActiveMilestone(m);
-                      setIsShareModalOpen(true);
-                    }
-                  }}
-                  className="bg-surface border border-border px-2 h-8 rounded-lg text-gray-500 hover:text-accent transition-all flex flex-col items-center justify-center shadow-2xl hover:scale-105 active:scale-95"
-                >
-                  <span className="text-[8px] opacity-70 mb-0">{m}%</span>
-                  <span className="font-bold text-[10px]">${dollarValue}</span>
-                </button>
-              );
-            })}
-          </div>
-      </div>
     </div>
   );
 }
