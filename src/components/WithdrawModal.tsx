@@ -20,6 +20,7 @@ import { Loader2, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Clock, Walle
 import confetti from 'canvas-confetti';
 import { getTokenPrice } from '@/lib/prices';
 import { AmountInput } from '@/components/AmountInput';
+import { cn } from '@/lib/utils';
 
 const LIFI_DIAMOND_ADDRESS = '0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE';
 
