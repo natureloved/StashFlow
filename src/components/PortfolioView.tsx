@@ -288,21 +288,7 @@ export function PortfolioView() {
                             <h3 className="font-display font-bold text-base text-white">{displayName}</h3>
                             <div className="flex items-center gap-2 group/infra">
                               <p className="text-xs text-gray-400 font-body">{displayProtocol}</p>
-                              <EducationPopover 
-                                id={`protocol-infra-${goal.id}`} 
-                                term={<InfoCircle className="w-3 h-3 text-gray-500 hover:text-accent transition-colors cursor-help" />}
-                              >
-                                <div className="space-y-2">
-                                  <p className="font-bold text-accent italic">Suite vs. Building Analogy 🏨</p>
-                                  <p className="text-xs leading-relaxed text-gray-300">
-                                    Think of <span className="text-white font-bold">{displayProtocol}</span> as a premium Suite (the vault). 
-                                    It's built on top of the Morpho infrastructure (the Building). 
-                                  </p>
-                                  <p className="text-[10px] text-gray-500 italic">
-                                    Just as a hotel room 204 exists within a Marriott, your vault is secured by Morpho's bedrock technology.
-                                  </p>
-                                </div>
-                              </EducationPopover>
+                              <p className="text-xs text-gray-400 font-body">{displayProtocol}</p>
                             </div>
                           </div>
                         </div>
