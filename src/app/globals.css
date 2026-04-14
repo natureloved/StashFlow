@@ -124,38 +124,64 @@ h1, h2, h3, h4, h5, h6 {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-.dark {
+/* Dark mode (default) */
+:root,
+[data-theme="dark"] {
   --background: #0A0A0F;
-  --foreground: #fbfbfb;
-  --card: #343434;
-  --card-foreground: #fbfbfb;
-  --popover: #343434;
-  --popover-foreground: #fbfbfb;
-  --primary: #ebebeb;
-  --primary-foreground: #343434;
-  --secondary: #454545;
-  --secondary-foreground: #fbfbfb;
-  --muted: #454545;
-  --muted-foreground: #b5b5b5;
-  --accent: #00E5FF;
+  --surface: #13131A;
+  --border: rgba(255,255,255,0.08);
+  --foreground: #ffffff;
+  --muted: rgba(255,255,255,0.5);
+  --card-bg: rgba(255,255,255,0.03);
+  --card: #13131A;
+  --card-foreground: #ffffff;
+  --popover: #13131A;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary-foreground: #ffffff;
+  --muted-foreground: #8e8e8e;
   --accent-foreground: #000000;
-  --destructive: #ef4444;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: #8e8e8e;
-  --chart-1: #dfdfdf;
-  --chart-2: #8e8e8e;
-  --chart-3: #707070;
-  --chart-4: #5f5f5f;
-  --chart-5: #454545;
-  --sidebar: #343434;
-  --sidebar-foreground: #fbfbfb;
-  --sidebar-primary: #3d5afe;
-  --sidebar-primary-foreground: #fbfbfb;
-  --sidebar-accent: #454545;
-  --sidebar-accent-foreground: #fbfbfb;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #8e8e8e;
+  --input: rgba(255,255,255,0.1);
+  --ring: #00E5FF;
+}
+
+/* Light mode */
+[data-theme="light"] {
+  --background: #f8fafc;      /* slate-50 */
+  --surface: #ffffff;
+  --border: #e2e8f0;          /* slate-200 */
+  --foreground: #0f172a;      /* slate-900 */
+  --muted: #64748b;           /* slate-500 */
+  --card-bg: #ffffff;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #0f172a;
+  --primary-foreground: #ffffff;
+  --secondary-foreground: #0f172a;
+  --muted-foreground: #64748b;
+  --accent-foreground: #ffffff;
+  --input: #f1f5f9;
+  --ring: #00E5FF;
+
+  /* Override glass-card for light mode */
+  .glass-card {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1) !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Ensure text inside glass-cards is readable in light mode */
+  .glass-card h1,
+  .glass-card h2,
+  .glass-card h3,
+  .glass-card h4,
+  .glass-card p {
+    color: #0f172a;
+  }
 }
 
 @layer base {
