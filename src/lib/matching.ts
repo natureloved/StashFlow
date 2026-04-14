@@ -9,49 +9,51 @@ const ETH_SYMBOLS = ['WETH', 'wstETH', 'rETH', 'ETH'];
 export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
   // Fetch a broad set of vaults, strictly filtered by chain if configured
   const fetchParams: GetVaultsParams = { limit: 100 };
-  if (CONFIG.STRICT_BASE_MODE) {
-    fetchParams.chains = [CONFIG.TARGET_CHAIN_ID];
-  }
-  
-  const response = await getVaults(fetchParams);
-  // LI.FI Earn API can return the array directly or inside a 'vaults' property
-  const vaults = (Array.isArray(response) ? response : (response.vaults || response.data || [])) as Vault[];
-  
-  if (vaults.length === 0) {
-    console.warn('No vaults returned from API');
+  const fetchParams: GetVaultsParams = {
+    limit: 100,
+    integrator: 'stashflow',
+  };
+
+  try {
+    const response = await getVaults(fetchParams);
+    // Standard extraction from LI.FI response
+    const vaults = Array.isArray(response) ? response : (response as any).vaults || (response as any).data || [];
+    
+    if (!vaults || vaults.length === 0) return null;
+
+    if (riskTier === 'safe') {
+      const filtered = vaults.filter((v: any) =>
+        v.isTransactional === true &&
+        (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
+        v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 5_000_000 &&
+        v.analytics?.apy?.total != null
+      ).sort((a: any, b: any) => Number(b.analytics.tvl.usd) - Number(a.analytics.tvl.usd));
+      
+      return filtered[0] || null;
+    }
+
+    if (riskTier === 'balanced') {
+      const filtered = vaults.filter((v: any) =>
+        v.isTransactional === true &&
+        (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
+        v.underlyingTokens.some((t: any) => CONFIG.GROWTH_TOKENS.includes(t.symbol)) &&
+        v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 1_000_000 &&
+        v.analytics?.apy?.total != null
+      ).sort((a: any, b: any) => (b.analytics.apy.total || 0) - (a.analytics.apy.total || 0));
+      
+      return filtered[0] || null;
+    }
+
+    // DEGEN Tier
+    const filtered = vaults.filter((v: any) =>
+      v.isTransactional === true &&
+      (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
+      v.analytics?.apy?.total != null
+    ).sort((a: any, b: any) => (b.analytics.apy.total || 0) - (a.analytics.apy.total || 0));
+
+    return filtered[0] || null;
+  } catch (error) {
+    console.error('findBestVault error:', error);
     return null;
   }
-
-  if (riskTier === 'safe') {
-    const filtered = vaults.filter(v => 
-      v.isTransactional === true &&
-      (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
-      v.tags?.includes('stablecoin') &&
-      v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 1_000_000 && // Lowered from 10M
-      v.analytics?.apy?.total != null
-    ).sort((a,b) => Number(b.analytics.tvl.usd) - Number(a.analytics.tvl.usd));
-    
-    if (filtered[0]) return filtered[0];
-  }
-
-  if (riskTier === 'balanced') {
-    const filtered = vaults.filter(v =>
-      v.isTransactional === true &&
-      (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
-      v.underlyingTokens.some(t => CONFIG.GROWTH_TOKENS.includes(t.symbol)) &&
-      v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 100_000 && // Lowered from 1M
-      v.analytics?.apy?.total != null
-    ).sort((a,b) => (b.analytics.apy.total || 0) - (a.analytics.apy.total || 0));
-    
-    if (filtered[0]) return filtered[0];
-  }
-
-  // DEGEN Tier or Fallback for others
-  const degenFiltered = vaults.filter(v =>
-    v.isTransactional === true &&
-    (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
-    v.analytics?.apy?.total != null
-  ).sort((a,b) => (b.analytics.apy.total || 0) - (a.analytics.apy.total || 0));
-
-  return degenFiltered[0] || degenFiltered[1] || vaults[0] || degenFiltered[0] || null;
 }
