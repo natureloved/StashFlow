@@ -110,6 +110,7 @@ export interface GetQuoteParams {
   fromAddress: string;
   toAddress: string;
   fromAmount: string; // Smallest units
+  skipSimulation?: boolean;
 }
 
 export async function getQuote(params: GetQuoteParams) {
