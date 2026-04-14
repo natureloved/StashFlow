@@ -243,13 +243,27 @@ export function PortfolioView() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {goals.map((goal, idx) => {
                   // Find the on-chain position that matches this goal strictly by address
-                  const pos = positions.find(p => 
-                    p.chainId === goal.vault.chainId && 
-                    (p.vaultAddress || p.address || '').toLowerCase() === goal.vault.address.toLowerCase()
-                  );
+                  // Find the on-chain position that matches this goal.
+                  // We check multiple address fields in case the API uses the underlying or the shared vault address.
+                  const pos = positions.find(p => {
+                    const sameChain = p.chainId === goal.vault.chainId;
+                    if (!sameChain) return false;
+
+                    const matchAddr = (addr: string) => addr.toLowerCase() === goal.vault.address.toLowerCase();
+                    
+                    return (
+                      matchAddr(p.vaultAddress || '') || 
+                      matchAddr(p.address || '') || 
+                      matchAddr(p.token?.address || '') ||
+                      // Fallback: If same protocol and same asset, it's likely the same position 
+                      // (important for UI consistency even if addresses vary slightly)
+                      (p.protocol?.name?.toLowerCase() === goal.vault.protocol.name.toLowerCase() && 
+                       p.asset?.symbol?.toLowerCase() === goal.vault.underlyingTokens[0]?.symbol?.toLowerCase())
+                    );
+                  });
 
                   // If no on-chain position with balance, don't show it as "Active"
-                  if (!pos || (Number(pos.balanceUsd) || 0) < 0.01) return null;
+                  if (!pos || (Number(pos.balanceUsd) || 0) < 0.05) return null; // Increased dust filter slightly for safety
 
                   const displayProtocol = goal.vault.protocol.name || 'Unknown Protocol';
                   const displayApy = goal.vault.analytics?.apy?.total ?? pos.apy;
