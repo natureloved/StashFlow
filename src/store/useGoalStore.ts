@@ -86,7 +86,7 @@ export const useGoalStore = create<GoalState>()(
       updateVaults: (vaultUpdates) => 
         set((state) => ({
           goals: state.goals.map((g) => {
-            const key = `${g.vault.chainId}-${g.vault.address.toLowerCase()}`;
+            const key = `${g.vault.chainId}-${(g.vault.address || '').toLowerCase()}`;
             if (vaultUpdates[key]) {
               return { ...g, vault: { ...g.vault, analytics: vaultUpdates[key] } };
             }
@@ -158,7 +158,7 @@ export const useGoalStore = create<GoalState>()(
       syncAllGoalsToCloud: async (address) => {
         if (!supabase || !address) return;
         const state = useGoalStore.getState();
-        const userGoals = state.goals.filter(g => g.ownerAddress.toLowerCase() === address.toLowerCase());
+        const userGoals = state.goals.filter(g => (g.ownerAddress || '').toLowerCase() === address.toLowerCase());
         
         if (userGoals.length === 0) return;
 
