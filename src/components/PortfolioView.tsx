@@ -35,8 +35,15 @@ export function PortfolioView() {
           getWalletBalances(address)
         ]);
 
-        // 1. Process positions (yield positions)
-        setPositions(positionsData.positions || []);
+        // 1. Process positions (yield positions) & deduplicate
+        const rawPositions = positionsData.positions || [];
+        const uniquePositions = rawPositions.filter((pos: any, index: number, self: any[]) =>
+          index === self.findIndex((p: any) => 
+            (p.vaultAddress || p.address) === (pos.vaultAddress || pos.address) && 
+            p.chainId === pos.chainId
+          )
+        );
+        setPositions(uniquePositions);
 
         // 2. Process wallet balances (idle assets)
         const allIdle: any[] = [];
@@ -241,11 +248,21 @@ export function PortfolioView() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {positions.map((pos, idx) => {
                   // Cross-reference with stored goals for enriched display
-                  const matchedGoal = goals.find(g =>
+                  // Try to match by vault address first (most accurate)
+                  let matchedGoal = goals.find(g =>
                     g.vault.chainId === pos.chainId &&
-                    (g.vault.address.toLowerCase() === (pos.vaultAddress || '').toLowerCase() ||
-                     g.vault.underlyingTokens?.some((t: any) => t.address.toLowerCase() === pos.asset?.address?.toLowerCase()))
+                    g.vault.address.toLowerCase() === (pos.vaultAddress || pos.address || '').toLowerCase()
                   );
+
+                  // Fallback to asset name/protocol if no direct vault address match
+                  if (!matchedGoal) {
+                    matchedGoal = goals.find(g =>
+                      g.vault.chainId === pos.chainId &&
+                      (g.vault.name.toLowerCase() === (pos.name || '').toLowerCase() ||
+                       g.vault.protocol.name.toLowerCase() === (pos.protocolName || pos.protocol?.name || '').toLowerCase())
+                    );
+                  }
+
                   const displayProtocol = matchedGoal?.vault.protocol.name || pos.protocolName || pos.protocol?.name || 'Unknown Protocol';
                   const displayApy = matchedGoal?.vault.analytics?.apy?.total ?? pos.apy;
                   const displayName = matchedGoal?.name ? `${matchedGoal.name} (${pos.asset?.symbol || 'USDC'})` : (pos.asset?.name || pos.name || 'Managed Asset');
