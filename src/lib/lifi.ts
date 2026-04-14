@@ -78,15 +78,16 @@ export async function getVaults(params: GetVaultsParams = {}) {
 }
 
 export async function getVaultDetails(chainId: number, address: string) {
-  const response = await fetch(`${LIFI_PROXY_URL}/earn/vaults/${chainId}/${address}`, {
-    headers: getHeaders(),
-  });
+  try {
+    const response = await fetch(`${LIFI_PROXY_URL}/earn/vaults/${chainId}/${address}`, {
+      headers: getHeaders(),
+    });
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    console.error('LIFI API Error Body:', errorBody);
-    throw new Error(`Earn API Error: ${response.statusText}${errorBody.message ? ` - ${errorBody.message}` : ''}`);
-  }
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      console.error('LIFI API Error Body:', errorBody);
+      throw new Error(`Earn API Error: ${response.statusText}${errorBody.message ? ` - ${errorBody.message}` : ''}`);
+    }
 
     return response.json();
   } catch (error: any) {
@@ -99,15 +100,16 @@ export async function getVaultDetails(chainId: number, address: string) {
 }
 
 export async function getUserPositions(userAddress: string) {
-  const response = await fetch(`${LIFI_PROXY_URL}/earn/portfolio/${userAddress}/positions`, {
-    headers: getHeaders(),
-  });
+  try {
+    const response = await fetch(`${LIFI_PROXY_URL}/earn/portfolio/${userAddress}/positions`, {
+      headers: getHeaders(),
+    });
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    console.error('LIFI API Error Body:', errorBody);
-    throw new Error(`Earn API Error: ${response.statusText}${errorBody.message ? ` - ${errorBody.message}` : ''}`);
-  }
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      console.error('LIFI API Error Body:', errorBody);
+      throw new Error(`Earn API Error: ${response.statusText}${errorBody.message ? ` - ${errorBody.message}` : ''}`);
+    }
 
     return response.json();
   } catch (error: any) {
