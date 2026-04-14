@@ -8,7 +8,6 @@ const ETH_SYMBOLS = ['WETH', 'wstETH', 'rETH', 'ETH'];
 
 export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
   // Fetch a broad set of vaults, strictly filtered by chain if configured
-  const fetchParams: GetVaultsParams = { limit: 100 };
   const fetchParams: GetVaultsParams = {
     limit: 100,
     integrator: 'stashflow',
