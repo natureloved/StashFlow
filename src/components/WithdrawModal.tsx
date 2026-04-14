@@ -109,6 +109,14 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
     hash: pendingWithdrawHash,
   });
 
+  const [isApproving, setIsApproving] = useState(false);
+  const [pendingApprovalHash, setPendingApprovalHash] = useState<`0x${string}` | undefined>(undefined);
+
+  // Wait for on-chain confirmation of Approval
+  const { isLoading: isConfirmingApproval, isSuccess: isApprovalConfirmed } = useWaitForTransactionReceipt({
+    hash: pendingApprovalHash,
+  });
+
   // Allowance Check for LiFi Diamond or Dynamic Spender from Quote
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: goal?.vault.address as `0x${string}`,
@@ -120,14 +128,6 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
       enabled: !!address && !!goal,
       refetchInterval: isApproving || isConfirmingApproval ? 2000 : undefined, // Poll during approval
     }
-  });
-
-  const [isApproving, setIsApproving] = useState(false);
-  const [pendingApprovalHash, setPendingApprovalHash] = useState<`0x${string}` | undefined>(undefined);
-
-  // Wait for on-chain confirmation of Approval
-  const { isLoading: isConfirmingApproval, isSuccess: isApprovalConfirmed } = useWaitForTransactionReceipt({
-    hash: pendingApprovalHash,
   });
 
   // Handle successful approval confirmation
