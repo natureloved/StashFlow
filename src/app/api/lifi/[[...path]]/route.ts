@@ -10,20 +10,11 @@ export async function GET(
   const path = params.path || [];
   const searchParams = new URL(request.url).searchParams;
   
-  // Construct the target sub-path
-  // Earn API calls come in as /earn/vaults, /earn/portfolio/... etc.
-  // → strip 'earn' prefix and forward to earn.li.fi/v1
-  // All other calls go to li.quest/v1
-  let targetBaseUrl: string;
-  let subPath: string;
-
-  if (path[0] === 'earn') {
-    targetBaseUrl = 'https://earn.li.fi/v1';
-    subPath = path.slice(1).join('/'); // Strip 'earn' prefix
-  } else {
-    targetBaseUrl = 'https://li.quest/v1';
-    subPath = path.join('/');
-  }
+  // ALL LI.FI API calls (earn, portfolio, quote, balances) go through li.quest/v1
+  // Earn: /api/lifi/earn/vaults → li.quest/v1/earn/vaults
+  // Portfolio: /api/lifi/earn/portfolio/0x.../positions → li.quest/v1/earn/portfolio/...
+  const subPath = path.join('/');
+  const targetBaseUrl = 'https://li.quest/v1';
 
   searchParams.set('integrator', 'stashflow');
   const queryString = searchParams.toString();

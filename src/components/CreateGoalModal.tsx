@@ -123,17 +123,18 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
   const handleRiskSelect = async (tier: RiskTier) => {
     setRiskTier(tier);
     setIsLoadingVault(true);
+    setError(null);
     try {
       const bestVault = await findBestVault(tier);
       if (bestVault) {
         setSelectedVault(bestVault as any);
         setStep(3);
       } else {
-        setError('No vaults found matching this risk level. Try again or choose another tier.');
+        setError('No matching vault found. Please try a different risk level.');
       }
     } catch (error: any) {
       console.error('Failed to match vault:', error);
-      setError('Connection error while finding vaults. Please try again.');
+      setError(`Could not load yield protocols: ${error.message?.split(':').pop()?.trim() || 'Please retry'}.`);
     } finally {
       setIsLoadingVault(false);
     }
@@ -386,9 +387,16 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                         <h4 className="font-display font-bold text-lg text-white">{tier.title}</h4>
                         <p className="text-sm text-gray-400">{tier.desc}</p>
                       </div>
+                      {isLoadingVault && riskTier === tier.id && <Loader2 className="w-4 h-4 animate-spin text-accent" />}
                     </div>
                   </Card>
                 ))}
+                {error && !isLoadingVault && (
+                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex flex-col gap-2 text-red-400 text-xs">
+                    <div className="flex items-center gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}</div>
+                    <button onClick={() => setError(null)} className="text-accent underline text-xs self-start">← Try again</button>
+                  </div>
+                )}
               </motion.div>
             )}
 
