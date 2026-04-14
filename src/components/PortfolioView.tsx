@@ -246,7 +246,7 @@ export function PortfolioView() {
   };
 
   return (
-    <div className={cn('space-y-12 pb-20', bg transition-colors duration-300')}>
+    <div className={cn('space-y-12 pb-20', bg, 'transition-colors duration-300')}>
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-center gap-4">
