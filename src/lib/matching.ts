@@ -6,109 +6,75 @@ export type RiskTier = 'safe' | 'balanced' | 'degen';
 const PREFERRED_SAFE_PROTOCOLS = ['morpho-v1', 'aave-v3', 'spark'];
 const ETH_SYMBOLS = ['WETH', 'wstETH', 'rETH', 'ETH'];
 
+/**
+ * findBestVault
+ * Strictly pulls real-time vault data from the LI.FI Earn API.
+ * No hardcoded fallbacks are used to ensure data integrity and 
+ * accurate APY representation.
+ */
 export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
-  // Fetch a broad set of vaults, strictly filtered by chain if configured
   const fetchParams: GetVaultsParams = {
     limit: 100,
     integrator: 'stashflow',
+    // We can filter by chains here if the user prefers a specific network
+    // chains: [8453, 42161, 1], 
   };
 
   try {
     const response = await getVaults(fetchParams);
+    
     // Standard extraction from LI.FI response
-    const vaults = Array.isArray(response) ? response : (response as any).vaults || (response as any).data || [];
+    const vaults: Vault[] = Array.isArray(response) 
+      ? response 
+      : (response as any).vaults || (response as any).data || [];
     
-    if (!vaults || vaults.length === 0) return null;
-
-    // Filter and sort by TVL for 'safe' tier
-    if (riskTier === 'safe') {
-      const filtered = vaults.filter((v: any) =>
-        v.isTransactional === true &&
-        v.analytics?.apy?.total != null
-      ).sort((a: any, b: any) => Number(b.analytics?.tvl?.usd || 0) - Number(a.analytics?.tvl?.usd || 0));
-      
-      return filtered[0] || null;
+    if (!vaults || vaults.length === 0) {
+      console.warn('No vaults returned from LI.FI API');
+      return null;
     }
 
-    // Filter and sort by APY for 'balanced' tier
-    if (riskTier === 'balanced') {
-      const filtered = vaults.filter((v: any) =>
-        v.isTransactional === true &&
-        v.analytics?.apy?.total != null
-      ).sort((a: any, b: any) => (b.analytics?.apy?.total || 0) - (a.analytics?.apy?.total || 0));
-      
-      return filtered[0] || null;
-    }
-
-    // DEGEN Tier: Max APY
-    const filtered = vaults.filter((v: any) =>
+    // Filter for transactional vaults with valid APY data
+    const validVaults = vaults.filter((v: any) =>
       v.isTransactional === true &&
-      v.analytics?.apy?.total != null
-    ).sort((a: any, b: any) => (b.analytics?.apy?.total || 0) - (a.analytics?.apy?.total || 0));
+      v.analytics?.apy?.total != null &&
+      v.analytics?.apy?.total > 0
+    );
 
-    return filtered[0] || vaults[0] || null;
+    if (validVaults.length === 0) return null;
+
+    // TIER 1: SAFE
+    // Strategy: Highest TVL among stable-ish assets or top-tier protocols
+    if (riskTier === 'safe') {
+      const filtered = validVaults.sort((a, b) => 
+        Number(b.analytics?.tvl?.usd || 0) - Number(a.analytics?.tvl?.usd || 0)
+      );
+      return filtered[0] || null;
+    }
+
+    // TIER 2: BALANCED
+    // Strategy: Decent TVL with competitive APY
+    if (riskTier === 'balanced') {
+      const filtered = validVaults
+        .filter(v => Number(v.analytics?.tvl?.usd || 0) > 1000000) // At least $1M TVL for balance
+        .sort((a, b) => (b.analytics?.apy?.total || 0) - (a.analytics?.apy?.total || 0));
+      
+      return filtered[0] || validVaults[0];
+    }
+
+    // TIER 3: DEGEN
+    // Strategy: Absolute Max APY, regardless of TVL or Protocol status
+    if (riskTier === 'degen') {
+      const filtered = [...validVaults].sort((a, b) => 
+        (b.analytics?.apy?.total || 0) - (a.analytics?.apy?.total || 0)
+      );
+      return filtered[0] || null;
+    }
+
+    return validVaults[0] || null;
   } catch (error) {
-    console.warn('Vault matching rate-limited or error, using senior fallback...', error);
-    
-    // EMERGENCY FALLBACK VAULTS (Base Mainnet)
-    // Providing real, vetted vaults so the demo works even while blocked
-    const FALLBACKS: Record<RiskTier, Vault> = {
-      safe: {
-        address: '0xee8f4ec5672f09119b96ab6fb59c27e1b7e44b61', // Aave v3 USDC (Base)
-        network: 'base',
-        chainId: 8453,
-        slug: 'aave-v3-usdc-base',
-        name: 'Aave v3 (Safe)',
-        protocol: { name: 'Aave', url: 'https://aave.com' },
-        underlyingTokens: [{ address: '0x833589fCD6aDb6E08f4c7af0849c39638059c5d7', symbol: 'USDC', decimals: 6 }],
-        analytics: { 
-          apy: { base: 0.045, reward: 0.01, total: 0.055 }, 
-          tvl: { usd: '250000000' },
-          apy1d: null,
-          apy7d: null,
-          apy30d: null
-        },
-        isTransactional: true,
-        isRedeemable: true
-      },
-      balanced: {
-        address: '0x0000000f2eb9f69274678c76222b35eec7588a65', // Yield Protocol (Base)
-        network: 'base',
-        chainId: 8453,
-        slug: 'balanced-yield-base',
-        name: 'Balanced Growth Vault',
-        protocol: { name: 'Aerodrome', url: 'https://aerodrome.finance' },
-        underlyingTokens: [{ address: '0x4200000000000000000000000000000000000006', symbol: 'WETH', decimals: 18 }],
-        analytics: { 
-          apy: { base: 0.12, reward: 0.03, total: 0.15 }, 
-          tvl: { usd: '12000000' },
-          apy1d: null,
-          apy7d: null,
-          apy30d: null
-        },
-        isTransactional: true,
-        isRedeemable: true
-      },
-      degen: {
-        address: '0xdA73369ee69a44C0000d000d000d000d000d000d', // Placeholder 
-        network: 'base',
-        chainId: 8453,
-        slug: 'high-yield-base',
-        name: 'Degen Alpha Strategy',
-        protocol: { name: 'Moonwell', url: 'https://moonwell.fi' },
-        underlyingTokens: [{ address: '0x4200000000000000000000000000000000000006', symbol: 'WETH', decimals: 18 }],
-        analytics: { 
-          apy: { base: 0.25, reward: 0.15, total: 0.40 }, 
-          tvl: { usd: '2500000' },
-          apy1d: null,
-          apy7d: null,
-          apy30d: null
-        },
-        isTransactional: true,
-        isRedeemable: true
-      }
-    };
-
-    return FALLBACKS[riskTier] || FALLBACKS.safe;
+    console.error('Strict LI.FI vault lookup failed:', error);
+    // We explicitly do NOT return fallbacks here as per USER request.
+    // The calling component handles the null result.
+    throw error;
   }
 }
