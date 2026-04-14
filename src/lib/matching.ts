@@ -61,7 +61,13 @@ export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
         name: 'Aave v3 (Safe)',
         protocol: { name: 'Aave', url: 'https://aave.com' },
         underlyingTokens: [{ address: '0x833589fCD6aDb6E08f4c7af0849c39638059c5d7', symbol: 'USDC', decimals: 6 }],
-        analytics: { apy: { base: 0.045, reward: 0.01, total: 0.055 }, tvl: { usd: '250000000' } },
+        analytics: { 
+          apy: { base: 0.045, reward: 0.01, total: 0.055 }, 
+          tvl: { usd: '250000000' },
+          apy1d: null,
+          apy7d: null,
+          apy30d: null
+        },
         isTransactional: true,
         isRedeemable: true
       },
@@ -73,19 +79,31 @@ export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
         name: 'Balanced Growth Vault',
         protocol: { name: 'Aerodrome', url: 'https://aerodrome.finance' },
         underlyingTokens: [{ address: '0x4200000000000000000000000000000000000006', symbol: 'WETH', decimals: 18 }],
-        analytics: { apy: { base: 0.12, reward: 0.03, total: 0.15 }, tvl: { usd: '12000000' } },
+        analytics: { 
+          apy: { base: 0.12, reward: 0.03, total: 0.15 }, 
+          tvl: { usd: '12000000' },
+          apy1d: null,
+          apy7d: null,
+          apy30d: null
+        },
         isTransactional: true,
         isRedeemable: true
       },
       degen: {
-        address: '0x0000000000000000000000000000000000000000', // Placeholder 
+        address: '0xdA73369ee69a44C0000d000d000d000d000d000d', // Placeholder 
         network: 'base',
         chainId: 8453,
         slug: 'high-yield-base',
         name: 'Degen Alpha Strategy',
         protocol: { name: 'Moonwell', url: 'https://moonwell.fi' },
         underlyingTokens: [{ address: '0x4200000000000000000000000000000000000006', symbol: 'WETH', decimals: 18 }],
-        analytics: { apy: { base: 0.25, reward: 0.15, total: 0.40 }, tvl: { usd: '2500000' } },
+        analytics: { 
+          apy: { base: 0.25, reward: 0.15, total: 0.40 }, 
+          tvl: { usd: '2500000' },
+          apy1d: null,
+          apy7d: null,
+          apy30d: null
+        },
         isTransactional: true,
         isRedeemable: true
       }
