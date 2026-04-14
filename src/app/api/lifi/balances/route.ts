@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const results = await Promise.allSettled(
       chainList.map(async (chainId) => {
         const res = await fetch(
-          `https://li.fi/v1/balances/${address}?chains=${chainId}`,
+          `https://li.quest/v1/balances/${address}?chains=${chainId}`,
           {
             headers: {
               'x-lifi-api-key': process.env.LIFI_API_KEY || '',

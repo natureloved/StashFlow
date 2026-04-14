@@ -30,13 +30,21 @@ export function PortfolioView() {
       setIsLoading(true);
       setError(null);
       try {
-        const [positionsData, balancesData] = await Promise.all([
+        const [positionsResult, balancesResult] = await Promise.allSettled([
           getUserPositions(address),
           getWalletBalances(address)
         ]);
 
-        // 1. Process positions (yield positions) & deduplicate
-        const rawPositions = positionsData.positions || [];
+        const rawPositions = positionsResult.status === 'fulfilled' ? (positionsResult.value.positions || []) : [];
+        const balancesData = balancesResult.status === 'fulfilled' ? balancesResult.value : null;
+
+        if (positionsResult.status === 'rejected') {
+          console.error('Positions fetch failed:', positionsResult.reason);
+        }
+        if (balancesResult.status === 'rejected') {
+          console.error('Balances fetch failed:', balancesResult.reason);
+        }
+
         const uniquePositions = rawPositions.filter((pos: any, index: number, self: any[]) =>
           index === self.findIndex((p: any) => 
             (p.vaultAddress || p.address) === (pos.vaultAddress || pos.address) && 
@@ -63,7 +71,7 @@ export function PortfolioView() {
                 // NaN safety and Dust filter (> $0.01)
                 if (!Number.isNaN(usdValue) && usdValue > 0.01) {
                   // Ensure it's not already in a position (simplified check)
-                  const isInPosition = Array.isArray(positionsData.positions) && positionsData.positions.some(
+                  const isInPosition = rawPositions.some(
                     (p: any) => p.token?.address.toLowerCase() === token.address.toLowerCase() && p.chainId === Number(chainId)
                   );
                   
