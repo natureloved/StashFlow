@@ -109,15 +109,16 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
     hash: pendingWithdrawHash,
   });
 
-  // Allowance Check for LiFi Diamond (Universal Spender for Withdrawals)
+  // Allowance Check for LiFi Diamond or Dynamic Spender from Quote
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: goal?.vault.address as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'allowance',
-    args: [address as `0x${string}`, LIFI_DIAMOND_ADDRESS as `0x${string}`],
+    args: [address as `0x${string}`, (quote?.transactionRequest?.to || LIFI_DIAMOND_ADDRESS) as `0x${string}`],
     chainId: goal?.vault.chainId,
     query: {
       enabled: !!address && !!goal,
+      refetchInterval: isApproving || isConfirmingApproval ? 2000 : undefined, // Poll during approval
     }
   });
 
@@ -194,6 +195,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
         fromAddress: address,
         toAddress: address,
         fromAmount: fromAmountSmallest,
+        skipSimulation: true, // IMPORTANT: Avoid simulation errors before approval
       });
       
       setQuote(response);
@@ -380,34 +382,35 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                   </div>
                 )}
 
-                <Button 
-                  disabled={isApproving || isConfirmingApproval || isApprovalConfirmed}
-                  onClick={async () => {
-                    if (goal.vault.chainId !== chainId) {
-                      try {
-                        await switchChainAsync({ chainId: goal.vault.chainId });
-                      } catch (err) {
-                        return;
-                      }
-                    }
-                    setIsApproving(true);
-                    setError(null);
-                    try {
-                      const hash = await approveAsync({
-                        address: goal.vault.address as `0x${string}`,
-                        abi: ERC20_ABI,
-                        functionName: 'approve',
-                        args: [LIFI_DIAMOND_ADDRESS, BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")],
-                      });
-                      setPendingApprovalHash(hash);
-                    } catch (err: any) {
-                      setError(err.message || 'Approval failed');
-                    } finally {
-                      setIsApproving(false);
-                    }
-                  }}
-                  className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
-                >
+                    <Button 
+                      disabled={isApproving || isConfirmingApproval || isApprovalConfirmed}
+                      onClick={async () => {
+                        if (goal.vault.chainId !== chainId) {
+                          try {
+                            await switchChainAsync({ chainId: goal.vault.chainId });
+                          } catch (err) {
+                            return;
+                          }
+                        }
+                        setIsApproving(true);
+                        setError(null);
+                        try {
+                          const spender = quote?.transactionRequest?.to || LIFI_DIAMOND_ADDRESS;
+                          const hash = await approveAsync({
+                            address: goal.vault.address as `0x${string}`,
+                            abi: ERC20_ABI,
+                            functionName: 'approve',
+                            args: [spender, BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")],
+                          });
+                          setPendingApprovalHash(hash);
+                        } catch (err: any) {
+                          setError(err.message || 'Approval failed');
+                        } finally {
+                          setIsApproving(false);
+                        }
+                      }}
+                      className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
+                    >
                   {isApproving ? <Loader2 className="animate-spin mr-2" /> : isConfirmingApproval ? <Loader2 className="animate-spin mr-2" /> : isApprovalConfirmed ? "Proceeding to Quote..." : "Approve Vault"}
                 </Button>
 
