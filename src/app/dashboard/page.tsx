@@ -11,7 +11,7 @@ import { DepositModal } from '@/components/DepositModal';
 import { Goal, useGoalStore } from '@/store/useGoalStore';
 import { Button } from '@/components/ui/button';
 import { PortfolioView } from '@/components/PortfolioView';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getUserPositions, getWalletBalances, getVaultDetails } from '@/lib/lifi';
 import { 
@@ -69,7 +69,7 @@ function YieldBannerSlider({ monthlyYield }: { monthlyYield: number }) {
   );
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { address, status, isConnecting, isReconnecting } = useAccount();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
@@ -107,6 +107,17 @@ export default function DashboardPage() {
     const timer = setTimeout(() => setCanRedirect(true), 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab');
+
+  React.useEffect(() => {
+    if (tab === 'portfolio') {
+      setCurrentView('portfolio');
+    } else if (tab === 'dashboard') {
+      setCurrentView('dashboard');
+    }
+  }, [tab]);
 
   React.useEffect(() => {
     // Only redirect if we are MOUNTED AND NOT connected AND NOT currently trying to connect or reconnect
@@ -682,5 +693,18 @@ export default function DashboardPage() {
           </div>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="min-h-screen bg-[#0A0A0F] flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-accent animate-spin mb-4" />
+        <p className="font-display text-xl font-bold animate-pulse text-white">Loading StashFlow Dashboard...</p>
+      </div>
+    }>
+      <DashboardContent />
+    </React.Suspense>
   );
 }

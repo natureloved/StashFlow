@@ -19,6 +19,9 @@ import { parseUnits, formatUnits } from 'viem';
 import { Loader2, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Clock, Wallet, ChevronUp, ChevronDown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getTokenPrice } from '@/lib/prices';
+import { AmountInput } from '@/components/AmountInput';
+
+const LIFI_DIAMOND_ADDRESS = '0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE';
 
 const ERC20_ABI = [
   {
@@ -157,30 +160,30 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
     setIsFetchingQuote(true);
     setError(null);
     try {
-      // Calculate amount in vault token units
-      let fromAmountSmallest: string;
+      // Step 0: Check Allowance for LiFi Diamond if not already done
+      const vaultDecimals = (goal.vault as any).decimals || goal.vault.underlyingTokens?.[0]?.decimals || 18;
+      const amountRaw = Number(amount) || 0;
       
-      const safeAmountNum = (amount && !Number.isNaN(Number(amount))) 
-        ? Number(amount)
-        : 0;
-
+      let fromAmountSmallest: string;
       if (livePosition && Number(livePosition.balanceUsd) > 0) {
-        // Proportional shares: (requestedUsd / totalUsd) * totalShares
         const totalUsd = Number(livePosition.balanceUsd);
         const totalShares = BigInt(livePosition.amount);
-        
-        // Use a safer calculation to avoid floats where possible
-        // (totalShares * requestedUsdScaled) / totalUsdScaled
-        const requestedUsdScaled = BigInt(Math.floor(safeAmountNum * 1000000));
+        const requestedUsdScaled = BigInt(Math.floor(amountRaw * 1000000));
         const totalUsdScaled = BigInt(Math.floor(totalUsd * 1000000));
-        
         fromAmountSmallest = ((totalShares * requestedUsdScaled) / totalUsdScaled).toString();
       } else {
-        // Fallback to 1:1 if no position data (less accurate but better than failing)
-        const vaultDecimals = (goal.vault as any).decimals || goal.vault.underlyingTokens?.[0]?.decimals || 18;
-        fromAmountSmallest = parseUnits(safeAmountNum.toString(), vaultDecimals).toString(); 
+        fromAmountSmallest = parseUnits(amountRaw.toString(), vaultDecimals).toString(); 
       }
 
+      // If allowance is missing, we need to approve before we can even get a reliable quote 
+      // (or at least before we can proceed in the new 2-step UI)
+      if (allowance !== undefined && allowance < BigInt(fromAmountSmallest)) {
+        setStep(1.5); // New intermediate step for approval
+        setIsFetchingQuote(false);
+        return;
+      }
+
+      // Calculate amount in vault token units
       const response = await getQuote({
         fromChain: goal.vault.chainId,
         toChain: chainId,
@@ -246,7 +249,13 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
 
       setPendingWithdrawHash(tx);
     } catch (err: any) {
-      setError(err.message || 'Withdrawal failed');
+      console.error('Withdrawal error:', err);
+      if (err.message?.includes('TRANSFER_FROM_FAILED') || err.message?.includes('Simulation failed')) {
+        setError('Approval required or simulation failed. Please approve vault access and try again.');
+        setStep(1.5); // Redirect to approval step
+      } else {
+        setError(err.message || 'Withdrawal failed');
+      }
       setIsWithdrawing(false);
     }
   };
@@ -288,43 +297,14 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-gray-500 uppercase">Amount to Withdraw (USD)</label>
-                    <div className="relative group">
-                      <input
-                        type="number"
+                    <div className="space-y-4">
+                      <AmountInput
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        onChange={setAmount}
+                        onMax={() => setAmount(currentBalanceUsd.toString())}
                         placeholder="0.00"
-                        className="w-full bg-[#0A0A0F]/50 border border-border focus:border-accent text-white font-numeric text-3xl p-5 rounded-2xl outline-none transition-all pr-36"
                       />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                        <button
-                          onClick={() => setAmount(currentBalanceUsd.toString())}
-                          className="px-2.5 py-1 rounded-lg bg-accent/10 text-accent text-[10px] font-bold hover:bg-accent/20 transition-colors"
-                        >
-                          MAX
-                        </button>
-                        <button 
-                          onClick={() => {
-                            const current = Number(amount) || 0;
-                            setAmount((current + 1).toString());
-                          }}
-                          className="flex flex-col items-center justify-center p-1 hover:bg-white/5 rounded-lg transition-colors group"
-                          title="Increase amount"
-                        >
-                           <ChevronUp className="w-3 h-3 text-gray-500 group-hover:text-white" />
-                        </button>
-                        <button 
-                          onClick={() => {
-                            const current = Number(amount) || 0;
-                            if (current > 0) setAmount(Math.max(0, current - 1).toString());
-                          }}
-                          className="flex flex-col items-center justify-center p-1 hover:bg-white/5 rounded-lg transition-colors group"
-                          title="Decrease amount"
-                        >
-                           <ChevronDown className="w-3 h-3 text-gray-500 group-hover:text-white" />
-                        </button>
-                      </div>
-                      <div className="absolute left-5 bottom-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest text-center">
                         Withdraw in USD
                       </div>
                     </div>
@@ -359,6 +339,84 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 >
                   {isFetchingQuote ? <Loader2 className="animate-spin" /> : 'Review Withdrawal'}
                 </Button>
+              </motion.div>
+            )}
+
+            {step === 1.5 && (
+              <motion.div
+                key="step1.5"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-6"
+              >
+                <div className="bg-[#0A0A0F] p-6 rounded-2xl border border-border space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
+                      isApprovalConfirmed ? "bg-green-500 text-white" : "bg-[#00E5FF] text-black"
+                    )}>
+                      {isApprovalConfirmed ? "✓" : "1"}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold">Step 1: Approve vault access</p>
+                      <p className="text-[10px] text-gray-500">
+                        {isApprovalConfirmed ? "Success! Vault access granted." : "Approving vault access... please confirm in your wallet"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 opacity-50">
+                    <div className="w-6 h-6 rounded-full bg-surface border border-border flex items-center justify-center text-xs font-bold text-gray-500">2</div>
+                    <div>
+                      <p className="text-sm font-bold">Step 2: Execute withdrawal</p>
+                    </div>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex items-center gap-2 text-red-500 text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
+                  </div>
+                )}
+
+                <Button 
+                  disabled={isApproving || isConfirmingApproval || isApprovalConfirmed}
+                  onClick={async () => {
+                    if (goal.vault.chainId !== chainId) {
+                      try {
+                        await switchChainAsync({ chainId: goal.vault.chainId });
+                      } catch (err) {
+                        return;
+                      }
+                    }
+                    setIsApproving(true);
+                    setError(null);
+                    try {
+                      const hash = await approveAsync({
+                        address: goal.vault.address as `0x${string}`,
+                        abi: ERC20_ABI,
+                        functionName: 'approve',
+                        args: [LIFI_DIAMOND_ADDRESS, BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")],
+                      });
+                      setPendingApprovalHash(hash);
+                    } catch (err: any) {
+                      setError(err.message || 'Approval failed');
+                    } finally {
+                      setIsApproving(false);
+                    }
+                  }}
+                  className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
+                >
+                  {isApproving ? <Loader2 className="animate-spin mr-2" /> : isConfirmingApproval ? <Loader2 className="animate-spin mr-2" /> : isApprovalConfirmed ? "Proceeding to Quote..." : "Approve Vault"}
+                </Button>
+
+                {isApprovalConfirmed && (
+                  <Button 
+                    onClick={() => fetchWithdrawQuote()}
+                    className="w-full h-11 bg-white text-black hover:bg-white/90 font-bold text-sm rounded-xl"
+                  >
+                    Continue to Step 2
+                  </Button>
+                )}
               </motion.div>
             )}
 
@@ -444,7 +502,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                       }}
                       className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
                     >
-                      {isWithdrawing && !pendingWithdrawHash ? (
+                      {isWithdrawing ? (
                         <><Loader2 className="animate-spin mr-2" /> Submitting...</>
                       ) : isConfirming ? (
                         <><Loader2 className="animate-spin mr-2" /> Confirming...</>

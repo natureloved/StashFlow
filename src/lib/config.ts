@@ -6,7 +6,7 @@
 
 export const CONFIG = {
   // Set to true to hide all non-Base chains and assets
-  STRICT_BASE_MODE: true,
+  STRICT_BASE_MODE: false,
   
   // The primary chain for everything (Goal Matching, Portfolio Detection)
   TARGET_CHAIN_ID: 8453, // Base

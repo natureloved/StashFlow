@@ -5,6 +5,8 @@ import { Providers } from "@/components/Providers";
 import "@rainbow-me/rainbowkit/styles.css";
 import { cn } from "@/lib/utils";
 import { Footer } from "@/components/Footer";
+import { MobileNav } from "@/components/MobileNav";
+import { Suspense } from "react";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -67,8 +69,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#0A0A0F] text-white">
         <Providers>
-          {children}
+          <div className="flex-1 pb-16 md:pb-0">
+            {children}
+          </div>
           <Footer />
+          <Suspense fallback={null}>
+            <MobileNav />
+          </Suspense>
         </Providers>
       </body>
     </html>

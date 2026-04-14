@@ -240,20 +240,18 @@ export function PortfolioView() {
                 <ShieldCheck className="w-5 h-5 text-accent fill-accent/10" />
                 <h3 className="text-xl font-display font-bold tracking-tight">Active Savings</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {goals.map((goal, idx) => {
-                  // Find the on-chain position that matches this goal
+                  // Find the on-chain position that matches this goal strictly by address
                   const pos = positions.find(p => 
                     p.chainId === goal.vault.chainId && 
-                    ((p.vaultAddress || p.address || '').toLowerCase() === goal.vault.address.toLowerCase() ||
-                     (p.token?.address || p.asset?.address || '').toLowerCase() === goal.vault.address.toLowerCase() ||
-                     (p.protocolName || p.protocol?.name || '').toLowerCase() === goal.vault.protocol.name.toLowerCase())
+                    (p.vaultAddress || p.address || '').toLowerCase() === goal.vault.address.toLowerCase()
                   );
 
                   // If no on-chain position with balance, don't show it as "Active"
                   if (!pos || (Number(pos.balanceUsd) || 0) < 0.01) return null;
 
-                  const displayProtocol = goal.vault.protocol.name || pos.protocolName || 'Unknown Protocol';
+                  const displayProtocol = goal.vault.protocol.name || 'Unknown Protocol';
                   const displayApy = goal.vault.analytics?.apy?.total ?? pos.apy;
                   const displayName = `${goal.name} (${pos.asset?.symbol || 'USDC'})`;
                   const vaultAddr = goal.vault.address || pos.vaultAddress || pos.address;
@@ -273,8 +271,9 @@ export function PortfolioView() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
+                    className="w-full"
                   >
-                    <Card className="glass-card p-5 border-border hover:border-accent/30 transition-all group shadow-sm bg-surface/20 max-w-[380px] !overflow-visible">
+                    <Card className="glass-card p-4 border-border hover:border-accent/30 transition-all group shadow-sm bg-surface/20 w-full !overflow-hidden">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-[#0A0A0F] rounded-xl border border-border flex items-center justify-center overflow-hidden">
@@ -285,10 +284,9 @@ export function PortfolioView() {
                             )}
                           </div>
                           <div>
-                            <h3 className="font-display font-bold text-base text-white">{displayName}</h3>
+                            <h3 className="font-display font-bold text-sm text-white truncate max-w-[120px]">{displayName}</h3>
                             <div className="flex items-center gap-2 group/infra">
-                              <p className="text-xs text-gray-400 font-body">{displayProtocol}</p>
-                              <p className="text-xs text-gray-400 font-body">{displayProtocol}</p>
+                              <p className="text-[10px] text-gray-400 font-body">{displayProtocol}</p>
                             </div>
                           </div>
                         </div>

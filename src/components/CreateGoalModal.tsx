@@ -26,6 +26,7 @@ import { useAccount, useSendTransaction, useSwitchChain, useBalance, useReadCont
 import { parseUnits, formatUnits } from 'viem';
 import { getQuote } from '@/lib/lifi';
 import { getTokenPrice } from '@/lib/prices';
+import { AmountInput } from '@/components/AmountInput';
 import confetti from 'canvas-confetti';
 import { VaultSafetyModal } from '@/components/VaultSafetyModal';
 
@@ -505,26 +506,19 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                     ))}
                   </div>
 
-                  <div className="relative">
-                    <Input 
-                      type="number" 
-                      placeholder="Even $10 gets you started" 
+                  <div className="space-y-4">
+                    <AmountInput
                       value={depositAmount}
-                      onChange={(e) => setDepositAmount(e.target.value)}
-                      className="text-2xl h-16 bg-[#0A0A0F] border-border text-center font-display focus-visible:ring-accent pr-24"
+                      onChange={setDepositAmount}
+                      onMax={handleMax}
+                      placeholder="Even $10 gets you started"
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                       <button 
-                        onClick={handleMax}
-                        className="font-bold text-accent bg-accent/10 py-1 px-2 rounded-lg text-[10px] hover:bg-accent/20"
-                      >
-                        MAX
-                      </button>
+                    <div className="flex justify-center gap-4">
                       <button 
                         onClick={() => setIsUsdMode(!isUsdMode)}
-                        className="text-gray-500 font-bold text-xs hover:text-white uppercase"
+                        className="text-gray-500 font-bold text-[10px] hover:text-white uppercase tracking-widest border border-border px-2 py-0.5 rounded-md transition-colors"
                       >
-                        {isUsdMode ? 'USD' : selectedToken?.symbol}
+                        Mode: {isUsdMode ? 'USD' : selectedToken?.symbol}
                       </button>
                     </div>
                   </div>
