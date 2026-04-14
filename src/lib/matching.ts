@@ -20,37 +20,36 @@ export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
     
     if (!vaults || vaults.length === 0) return null;
 
+    // Filter and sort by TVL for 'safe' tier
     if (riskTier === 'safe') {
       const filtered = vaults.filter((v: any) =>
         v.isTransactional === true &&
         (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
-        v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 5_000_000 &&
         v.analytics?.apy?.total != null
-      ).sort((a: any, b: any) => Number(b.analytics.tvl.usd) - Number(a.analytics.tvl.usd));
+      ).sort((a: any, b: any) => Number(b.analytics?.tvl?.usd || 0) - Number(a.analytics?.tvl?.usd || 0));
       
       return filtered[0] || null;
     }
 
+    // Filter and sort by APY for 'balanced' tier
     if (riskTier === 'balanced') {
       const filtered = vaults.filter((v: any) =>
         v.isTransactional === true &&
         (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
-        v.underlyingTokens.some((t: any) => CONFIG.GROWTH_TOKENS.includes(t.symbol)) &&
-        v.analytics?.tvl?.usd && Number(v.analytics.tvl.usd) > 1_000_000 &&
         v.analytics?.apy?.total != null
-      ).sort((a: any, b: any) => (b.analytics.apy.total || 0) - (a.analytics.apy.total || 0));
+      ).sort((a: any, b: any) => (b.analytics?.apy?.total || 0) - (a.analytics?.apy?.total || 0));
       
       return filtered[0] || null;
     }
 
-    // DEGEN Tier
+    // DEGEN Tier: Max APY
     const filtered = vaults.filter((v: any) =>
       v.isTransactional === true &&
       (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
       v.analytics?.apy?.total != null
-    ).sort((a: any, b: any) => (b.analytics.apy.total || 0) - (a.analytics.apy.total || 0));
+    ).sort((a: any, b: any) => (b.analytics?.apy?.total || 0) - (a.analytics?.apy?.total || 0));
 
-    return filtered[0] || null;
+    return filtered[0] || vaults[0] || null;
   } catch (error) {
     console.error('findBestVault error:', error);
     return null;
