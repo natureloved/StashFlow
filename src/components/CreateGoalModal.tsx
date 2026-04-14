@@ -474,19 +474,19 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="bg-accent/5 border border-accent/20 p-4 rounded-xl space-y-3">
+                <div className="bg-accent/5 border border-accent/20 p-3 rounded-xl space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-accent font-bold uppercase tracking-wider">Goal Summary</span>
                     <Badge variant="outline" className="border-accent/30 text-accent text-[10px]">{selectedVault.network}</Badge>
                   </div>
                   <div className="flex justify-between items-end">
                     <div>
-                      <p className="text-xl font-display font-bold text-white">{name}</p>
-                      <p className="text-xs text-gray-400">Targeting ${Number(amount).toLocaleString()}</p>
+                      <p className="text-lg font-display font-bold text-white leading-tight">{name}</p>
+                      <p className="text-[10px] text-gray-400">Targeting ${Number(amount).toLocaleString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-display font-bold text-secondary">{selectedVault.analytics.apy.total.toFixed(2)}% APY</p>
-                      <p className="text-[10px] text-gray-500 uppercase font-black">{selectedVault.protocol.name}</p>
+                      <p className="text-lg font-display font-bold text-secondary leading-tight">{selectedVault.analytics.apy.total.toFixed(2)}% APY</p>
+                      <p className="text-[9px] text-gray-500 uppercase font-black">{selectedVault.protocol.name}</p>
                     </div>
                   </div>
                 </div>

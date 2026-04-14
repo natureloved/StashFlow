@@ -54,6 +54,24 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
     setTimeout(() => setIsCopying(false), 2000);
   };
 
+  const shareOnTwitter = () => {
+    let text = "";
+    if (milestone === 1) {
+      text = `Just took my first step towards my Goal - ${goal.name}! 🌱 Saving on-chain with @stashflow, earning ${apy}% APY. Powered by @lifiprotocol #DeFi #Stashflow`;
+    } else if (milestone === 25) {
+      text = `25% of the way to my Goal - ${goal.name}! 🚀 $${amountToDisplay.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} saved on-chain. Powered by @lifiprotocol #DeFi`;
+    } else if (milestone === 50) {
+      text = `Halfway mark hit for Goal - ${goal.name}! 🔥 $${amountToDisplay.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} secured on-chain. Powered by @lifiprotocol #PassiveIncome #DeFi`;
+    } else if (milestone === 75) {
+      text = `75% DONE! 💎 Almost reached my Goal - ${goal.name} with @stashflow. Earning ${apy}% APY while I sleep. #DeFi #Stashflow`;
+    } else {
+      text = `GOAL UNLOCKED 🏆 I just hit my Goal - ${goal.name} target! $${amountToDisplay.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} saved on-chain with @stashflow. #DeFi #Stashflow`;
+    }
+
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://stashflow.finance')}`;
+    window.open(twitterUrl, '_blank');
+  };
+
   const copyCardImage = async () => {
     if (!cardRef.current) return;
     setIsSaving(true);
@@ -190,7 +208,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                   <div className="text-right space-y-1">
                     <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest leading-none">Saved</p>
                     <p className="text-xl font-black text-white tracking-tighter leading-none">
-                      ${Math.round(amountToDisplay).toLocaleString()}
+                      ${amountToDisplay.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>
@@ -216,17 +234,15 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
                )}
              </Button>
              <Button 
-               onClick={copyCardImage}
-               disabled={isSaving}
-               className="bg-white text-black hover:bg-gray-100 font-black h-12 rounded-xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 border-b-4 border-gray-200"
+               onClick={shareOnTwitter}
+               className="bg-[#1DA1F2] text-white hover:bg-[#1A91DA] font-black h-12 rounded-xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 group"
              >
-               {isSaving ? (
-                 <span className="flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin" /> Rendering...</span>
-               ) : isCopying ? (
-                 <span className="flex items-center gap-3"><Copy className="w-4 h-4" /> Copied Image!</span>
-               ) : (
-                 <span className="flex items-center gap-3 italic text-xs"><Copy className="w-4 h-4" /> Copy Image</span>
-               )}
+               <span className="flex items-center gap-3 italic text-xs">
+                 <svg className="w-4 h-4 fill-current group-hover:rotate-12 transition-transform" viewBox="0 0 24 24">
+                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                 </svg>
+                 Share to X
+               </span>
              </Button>
           </div>
         </div>

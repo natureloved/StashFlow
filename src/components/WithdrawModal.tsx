@@ -14,12 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Goal, useGoalStore } from '@/store/useGoalStore';
 import { getQuote } from '@/lib/lifi';
-import { useAccount, useSendTransaction, useSwitchChain, useBalance, useWaitForTransactionReceipt } from 'wagmi';
-import { parseUnits, formatUnits } from 'viem';
-import { Loader2, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Clock, Wallet, ChevronUp, ChevronDown } from 'lucide-react';
-import confetti from 'canvas-confetti';
-import { getTokenPrice } from '@/lib/prices';
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useSendTransaction, useSwitchChain, useBalance, useWaitForTransactionReceipt, useReadContract, useWriteContract } from 'wagmi';
 
 const ERC20_ABI = [
   {
