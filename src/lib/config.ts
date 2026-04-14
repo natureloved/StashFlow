@@ -5,12 +5,6 @@
  */
 
 export const CONFIG = {
-  // Set to true to hide all non-Base chains and assets
-  STRICT_BASE_MODE: false,
-  
-  // The primary chain for everything (Goal Matching, Portfolio Detection)
-  TARGET_CHAIN_ID: 8453, // Base
-  
   // Default tokens for goal suggestions
   SAFE_TOKENS: ['USDC', 'USDT', 'DAI'],
   GROWTH_TOKENS: ['ETH', 'WETH', 'cbETH', 'wstETH'],

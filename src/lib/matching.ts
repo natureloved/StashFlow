@@ -24,7 +24,6 @@ export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
     if (riskTier === 'safe') {
       const filtered = vaults.filter((v: any) =>
         v.isTransactional === true &&
-        (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
         v.analytics?.apy?.total != null
       ).sort((a: any, b: any) => Number(b.analytics?.tvl?.usd || 0) - Number(a.analytics?.tvl?.usd || 0));
       
@@ -35,7 +34,6 @@ export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
     if (riskTier === 'balanced') {
       const filtered = vaults.filter((v: any) =>
         v.isTransactional === true &&
-        (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
         v.analytics?.apy?.total != null
       ).sort((a: any, b: any) => (b.analytics?.apy?.total || 0) - (a.analytics?.apy?.total || 0));
       
@@ -45,7 +43,6 @@ export async function findBestVault(riskTier: RiskTier): Promise<Vault | null> {
     // DEGEN Tier: Max APY
     const filtered = vaults.filter((v: any) =>
       v.isTransactional === true &&
-      (CONFIG.STRICT_BASE_MODE ? v.chainId === CONFIG.TARGET_CHAIN_ID : true) &&
       v.analytics?.apy?.total != null
     ).sort((a: any, b: any) => (b.analytics?.apy?.total || 0) - (a.analytics?.apy?.total || 0));
 

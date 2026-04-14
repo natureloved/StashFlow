@@ -135,8 +135,8 @@ export async function getQuote(params: GetQuoteParams) {
 }
 
 export async function getWalletBalances(userAddress: string) {
-  // Common chains to scan
-  const chains = CONFIG.STRICT_BASE_MODE ? [CONFIG.TARGET_CHAIN_ID] : [1, 8453, 42161, 10, 137]; 
+  // Common chains to scan in multi-chain mode
+  const chains = [1, 8453, 42161, 10, 137]; 
   const query = new URLSearchParams();
   query.append('address', userAddress);
   query.append('chains', chains.join(','));
