@@ -57,7 +57,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
   const shareOnTwitter = () => {
     let text = "";
     if (milestone === 1) {
-      text = `Just took my first step towards my Goal - ${goal.name}! 🌱 Saving on-chain with @stashflow, earning ${apy}% APY. Powered by @lifiprotocol #DeFi #Stashflow`;
+      text = `Just took my first step towards my Goal - ${goal.name}! 🌱 \nSaving on-chain with StashFlow built by @adejoke_btc, earning ${apy}% APY. Powered by @lifiprotocol \n\nCheck it out here : https://stashflow-two.vercel.app/dashboard`;
     } else if (milestone === 25) {
       text = `25% of the way to my Goal - ${goal.name}! 🚀 $${amountToDisplay.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} saved on-chain. Powered by @lifiprotocol #DeFi`;
     } else if (milestone === 50) {
@@ -68,7 +68,7 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
       text = `GOAL UNLOCKED 🏆 I just hit my Goal - ${goal.name} target! $${amountToDisplay.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} saved on-chain with @stashflow. #DeFi #Stashflow`;
     }
 
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://stashflow.finance')}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(twitterUrl, '_blank');
   };
 

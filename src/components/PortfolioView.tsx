@@ -163,7 +163,6 @@ export function PortfolioView() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h2 className="text-3xl font-display font-bold mb-1">Portfolio Monitoring</h2>
-          <p className="text-gray-400">Monitoring your active on-chain positions and tracking cross-chain growth.</p>
         </div>
         <div className="glass-card px-8 py-6 border-accent/20 flex flex-col items-end relative overflow-hidden group shadow-[0_0_20px_rgba(0,229,255,0.15)]">
           <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-accent/10 transition-all" />
@@ -190,10 +189,6 @@ export function PortfolioView() {
           {/* Section: Idle Assets */}
           {idleAssets.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-amber-500 fill-amber-500/20" />
-                <h3 className="text-xl font-display font-bold tracking-tight">Optimization Opportunities</h3>
-              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {idleAssets.map((asset, idx) => (
                   <motion.div
@@ -250,7 +245,9 @@ export function PortfolioView() {
                   // Find the on-chain position that matches this goal
                   const pos = positions.find(p => 
                     p.chainId === goal.vault.chainId && 
-                    (p.vaultAddress || p.address || '').toLowerCase() === goal.vault.address.toLowerCase()
+                    ((p.vaultAddress || p.address || '').toLowerCase() === goal.vault.address.toLowerCase() ||
+                     (p.token?.address || p.asset?.address || '').toLowerCase() === goal.vault.address.toLowerCase() ||
+                     (p.protocolName || p.protocol?.name || '').toLowerCase() === goal.vault.protocol.name.toLowerCase())
                   );
 
                   // If no on-chain position with balance, don't show it as "Active"
@@ -355,6 +352,64 @@ export function PortfolioView() {
               </div>
             </div>
           )}
+
+          {/* Section: Other Managed Assets (Positions not linked to specific goals) */}
+          {positions.filter(p => !goals.some(g => 
+            g.vault.chainId === p.chainId && 
+            ((p.vaultAddress || p.address || '').toLowerCase() === g.vault.address.toLowerCase() ||
+             (p.token?.address || p.asset?.address || '').toLowerCase() === g.vault.address.toLowerCase())))
+            .length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-accent/50" />
+                <h3 className="text-lg font-display font-bold tracking-tight text-white/70">Managed Assets</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-80">
+                {positions.filter(p => !goals.some(g => 
+                  g.vault.chainId === p.chainId && 
+                  ((p.vaultAddress || p.address || '').toLowerCase() === g.vault.address.toLowerCase() ||
+                   (p.token?.address || p.asset?.address || '').toLowerCase() === g.vault.address.toLowerCase())))
+                  .map((pos, idx) => {
+                    const displayProtocol = pos.protocolName || pos.protocol?.name || 'Unknown Protocol';
+                    const displayName = pos.asset?.name || pos.name || 'Managed Position';
+                    const vaultAddr = pos.vaultAddress || pos.address || pos.asset?.address;
+                    
+                    return (
+                      <motion.div
+                        key={`unlinked-${idx}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <Card className="glass-card p-4 border-white/5 bg-white/5 hover:border-white/10 transition-all">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center">
+                                <TrendingUp className="w-4 h-4 text-accent/40" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-xs text-white/90">{displayName}</h4>
+                                <p className="text-[9px] text-white/40">{displayProtocol}</p>
+                              </div>
+                            </div>
+                            <Badge className="bg-white/5 text-white/40 border-white/5 text-[8px]">{getChainName(pos.chainId)}</Badge>
+                          </div>
+                          <div className="flex justify-between items-end">
+                            <div>
+                              <p className="text-lg font-display font-bold text-white/80">${(Number(pos.balanceUsd) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[8px] text-white/30 uppercase font-black">APY</p>
+                              <p className="text-xs font-bold text-secondary/70">{pos.apy ? `${Number(pos.apy).toFixed(2)}%` : 'Managed'}</p>
+                            </div>
+                          </div>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
         </div>
       )}
     </div>
