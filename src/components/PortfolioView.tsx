@@ -246,40 +246,33 @@ export function PortfolioView() {
                 <h3 className="text-xl font-display font-bold tracking-tight">Active Savings</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {positions.map((pos, idx) => {
-                  // Cross-reference with stored goals for enriched display
-                  // Try to match by vault address first (most accurate)
-                  let matchedGoal = goals.find(g =>
-                    g.vault.chainId === pos.chainId &&
-                    g.vault.address.toLowerCase() === (pos.vaultAddress || pos.address || '').toLowerCase()
+                {goals.map((goal, idx) => {
+                  // Find the on-chain position that matches this goal
+                  const pos = positions.find(p => 
+                    p.chainId === goal.vault.chainId && 
+                    (p.vaultAddress || p.address || '').toLowerCase() === goal.vault.address.toLowerCase()
                   );
 
-                  // Fallback to asset name/protocol if no direct vault address match
-                  if (!matchedGoal) {
-                    matchedGoal = goals.find(g =>
-                      g.vault.chainId === pos.chainId &&
-                      (g.vault.name.toLowerCase() === (pos.name || '').toLowerCase() ||
-                       g.vault.protocol.name.toLowerCase() === (pos.protocolName || pos.protocol?.name || '').toLowerCase())
-                    );
-                  }
+                  // If no on-chain position with balance, don't show it as "Active"
+                  if (!pos || (Number(pos.balanceUsd) || 0) < 0.01) return null;
 
-                  const displayProtocol = matchedGoal?.vault.protocol.name || pos.protocolName || pos.protocol?.name || 'Unknown Protocol';
-                  const displayApy = matchedGoal?.vault.analytics?.apy?.total ?? pos.apy;
-                  const displayName = matchedGoal?.name ? `${matchedGoal.name} (${pos.asset?.symbol || 'USDC'})` : (pos.asset?.name || pos.name || 'Managed Asset');
-                  const vaultAddr = matchedGoal?.vault.address || pos.vaultAddress || pos.address || pos.asset?.address;
-                  const chainExplorerUrl = pos.chainId === 8453
+                  const displayProtocol = goal.vault.protocol.name || pos.protocolName || 'Unknown Protocol';
+                  const displayApy = goal.vault.analytics?.apy?.total ?? pos.apy;
+                  const displayName = `${goal.name} (${pos.asset?.symbol || 'USDC'})`;
+                  const vaultAddr = goal.vault.address || pos.vaultAddress || pos.address;
+                  const chainExplorerUrl = goal.vault.chainId === 8453
                     ? `https://basescan.org/address/${vaultAddr}`
-                    : pos.chainId === 42161
+                    : goal.vault.chainId === 42161
                     ? `https://arbiscan.io/address/${vaultAddr}`
-                    : pos.chainId === 10
+                    : goal.vault.chainId === 10
                     ? `https://optimistic.etherscan.io/address/${vaultAddr}`
-                    : pos.chainId === 137
+                    : goal.vault.chainId === 137
                     ? `https://polygonscan.com/address/${vaultAddr}`
                     : `https://etherscan.io/address/${vaultAddr}`;
 
                   return (
                   <motion.div
-                    key={`${pos.vaultAddress}-${idx}`}
+                    key={`${goal.id}-${idx}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
@@ -299,7 +292,7 @@ export function PortfolioView() {
                             <div className="flex items-center gap-2 group/infra">
                               <p className="text-xs text-gray-400 font-body">{displayProtocol}</p>
                               <EducationPopover 
-                                id="protocol-infra" 
+                                id={`protocol-infra-${goal.id}`} 
                                 term={<InfoCircle className="w-3 h-3 text-gray-500 hover:text-accent transition-colors cursor-help" />}
                               >
                                 <div className="space-y-2">
@@ -317,7 +310,7 @@ export function PortfolioView() {
                           </div>
                         </div>
                         <Badge className="bg-accent/10 text-accent border-accent/20 px-2.5 py-0.5 font-bold text-[10px]">
-                          {getChainName(pos.chainId)}
+                          {getChainName(goal.vault.chainId)}
                         </Badge>
                       </div>
 

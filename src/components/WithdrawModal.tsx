@@ -58,6 +58,17 @@ const COMMON_TOKENS: Record<number, any[]> = {
   ],
 };
 
+const getChainName = (id: number) => {
+  switch(id) {
+    case 1: return 'Mainnet';
+    case 8453: return 'Base';
+    case 42161: return 'Arbitrum';
+    case 10: return 'Optimism';
+    case 137: return 'Polygon';
+    default: return 'Chain';
+  }
+};
+
 interface WithdrawModalProps {
   goal: Goal | null;
   open: boolean;
@@ -100,6 +111,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
     abi: ERC20_ABI,
     functionName: 'allowance',
     args: [address as `0x${string}`, quote?.transactionRequest?.to as `0x${string}`],
+    chainId: goal?.vault.chainId, // CRITICAL: Check allowance on the source chain
     query: {
       enabled: !!address && !!goal && !!quote?.transactionRequest?.to,
     }
@@ -384,6 +396,13 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                     <Button 
                       disabled={isApproving || isConfirmingApproval}
                       onClick={async () => {
+                        if (goal.vault.chainId !== chainId) {
+                          try {
+                            await switchChainAsync({ chainId: goal.vault.chainId });
+                          } catch (err) {
+                            return;
+                          }
+                        }
                         setIsApproving(true);
                         setError(null);
                         try {
@@ -406,18 +425,31 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                         <><Loader2 className="animate-spin mr-2" /> Submitting...</>
                       ) : isConfirmingApproval ? (
                         <><Loader2 className="animate-spin mr-2" /> Confirming...</>
+                      ) : goal.vault.chainId !== chainId ? (
+                        `Switch to ${getChainName(goal.vault.chainId)}`
                       ) : `Approve Withdrawal`}
                     </Button>
                   ) : (
                     <Button 
                       disabled={isWithdrawing || isConfirming}
-                      onClick={handleWithdraw}
+                      onClick={async () => {
+                        if (quote.transactionRequest.chainId !== chainId) {
+                          try {
+                            await switchChainAsync({ chainId: quote.transactionRequest.chainId });
+                          } catch (err) {
+                            return;
+                          }
+                        }
+                        handleWithdraw();
+                      }}
                       className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
                     >
                       {isWithdrawing && !pendingWithdrawHash ? (
                         <><Loader2 className="animate-spin mr-2" /> Submitting...</>
                       ) : isConfirming ? (
                         <><Loader2 className="animate-spin mr-2" /> Confirming...</>
+                      ) : quote.transactionRequest.chainId !== chainId ? (
+                        `Switch to ${getChainName(quote.transactionRequest.chainId)}`
                       ) : 'Confirm Withdrawal'}
                     </Button>
                   )}
