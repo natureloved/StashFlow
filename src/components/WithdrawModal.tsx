@@ -167,12 +167,24 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
       const amountRaw = Number(amount) || 0;
       
       let fromAmountSmallest: string;
-      if (livePosition && Number(livePosition.balanceUsd) > 0 && livePosition.amount) {
-        const totalUsd = Number(livePosition.balanceUsd);
-        const totalShares = BigInt(livePosition.amount.toString());
-        const requestedUsdScaled = BigInt(Math.floor(amountRaw * 1000000));
-        const totalUsdScaled = BigInt(Math.floor(totalUsd * 1000000));
-        fromAmountSmallest = ((totalShares * requestedUsdScaled) / totalUsdScaled).toString();
+      const totalUsd = livePosition ? Number(livePosition.balanceUsd) : 0;
+      const nativeBalance = livePosition ? Number(livePosition.balanceNative ?? 0) : 0;
+      const tokenDecimals = livePosition?.asset?.decimals ?? vaultDecimals;
+
+      if (livePosition && totalUsd > 0) {
+        if (livePosition.amount) {
+          const totalShares = BigInt(livePosition.amount.toString());
+          const requestedUsdScaled = BigInt(Math.floor(amountRaw * 1000000));
+          const totalUsdScaled = BigInt(Math.floor(totalUsd * 1000000));
+          fromAmountSmallest = ((totalShares * requestedUsdScaled) / totalUsdScaled).toString();
+        } else if (nativeBalance > 0) {
+          const shareAmount = (amountRaw / totalUsd) * nativeBalance;
+          fromAmountSmallest = parseUnits(shareAmount.toFixed(tokenDecimals), tokenDecimals).toString();
+        } else {
+          setError('Live vault position data is unavailable. Please refresh your portfolio and try again.');
+          setIsFetchingQuote(false);
+          return;
+        }
       } else {
         setError('Live vault position data is unavailable. Please refresh your portfolio and try again.');
         setIsFetchingQuote(false);
