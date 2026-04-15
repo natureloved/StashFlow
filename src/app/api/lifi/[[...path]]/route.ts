@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const LIFI_EARN_API_URL = 'https://earn.li.fi/v1';
+const LIFI_COMPOSER_BASE_URL = 'https://li.quest/v1';
 
 export async function GET(
   request: NextRequest,
@@ -9,14 +10,15 @@ export async function GET(
   const params = await props.params;
   const path = params.path || [];
   const searchParams = new URL(request.url).searchParams;
-
-  // FINAL UNIFIED ROUTING: Everything goes to li.quest/v1
-  // We no longer strip 'earn' because li.quest expects /v1/earn/vaults
-  const targetBaseUrl = 'https://li.quest/v1';
   const subPath = path.join('/');
+  const isEarnPath = subPath.startsWith('earn');
 
-  // Use 'lifi' integrator for higher default rate limits
-  searchParams.set('integrator', 'lifi');
+  if (!isEarnPath) {
+    // Use 'lifi' integrator for non-earn paths such as balances / quote routing.
+    searchParams.set('integrator', 'lifi');
+  }
+
+  const targetBaseUrl = isEarnPath ? LIFI_EARN_API_URL : LIFI_COMPOSER_BASE_URL;
   const queryString = searchParams.toString();
   const url = `${targetBaseUrl}/${subPath}${queryString ? `?${queryString}` : ''}`;
 

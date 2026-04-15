@@ -57,12 +57,15 @@ export async function getVaults(params: GetVaultsParams = {}) {
   const query = new URLSearchParams();
   
   if (params.sortBy) query.append('sortBy', params.sortBy);
-  if (params.limit) query.append('limit', params.limit.toString());
+  if (params.limit) {
+    query.append('limit', params.limit.toString());
+  } else {
+    query.append('limit', '100');
+  }
   if (params.integrator) query.append('integrator', params.integrator);
   if (params.chains && params.chains.length > 0) {
     params.chains.forEach(id => query.append('chains', id.toString()));
   }
-  query.append('limit', (params.limit || 100).toString());
 
   const response = await fetch(`${LIFI_PROXY_URL}/earn/vaults?${query.toString()}`, {
     headers: getHeaders(),
