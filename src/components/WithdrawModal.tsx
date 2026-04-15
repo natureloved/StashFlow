@@ -8,11 +8,11 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogDescription
+  DialogDescription,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Goal, useGoalStore } from '@/store/useGoalStore';
 import { getQuote } from '@/lib/lifi';
 import { useAccount, useSendTransaction, useSwitchChain, useBalance, useWaitForTransactionReceipt, useReadContract, useWriteContract } from 'wagmi';
