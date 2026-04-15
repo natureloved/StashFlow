@@ -24,7 +24,8 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
   const [isCopying, setIsCopying] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const amountToDisplay = (goal.targetAmountUsd * milestone) / 100;
+  const currentSaved = goal.contributions.reduce((acc, curr) => acc + curr.amountUsd, 0);
+  const amountToDisplay = currentSaved;
   const apy = (goal.vault.analytics.apy.total || 0).toFixed(1);
 
   const milestoneData = {
