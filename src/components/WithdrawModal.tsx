@@ -167,14 +167,16 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
       const amountRaw = Number(amount) || 0;
       
       let fromAmountSmallest: string;
-      if (livePosition && Number(livePosition.balanceUsd) > 0) {
+      if (livePosition && Number(livePosition.balanceUsd) > 0 && livePosition.amount) {
         const totalUsd = Number(livePosition.balanceUsd);
-        const totalShares = BigInt(livePosition.amount);
+        const totalShares = BigInt(livePosition.amount.toString());
         const requestedUsdScaled = BigInt(Math.floor(amountRaw * 1000000));
         const totalUsdScaled = BigInt(Math.floor(totalUsd * 1000000));
         fromAmountSmallest = ((totalShares * requestedUsdScaled) / totalUsdScaled).toString();
       } else {
-        fromAmountSmallest = parseUnits(amountRaw.toString(), vaultDecimals).toString(); 
+        setError('Live vault position data is unavailable. Please refresh your portfolio and try again.');
+        setIsFetchingQuote(false);
+        return;
       }
 
       // If allowance is missing or loading, we wait/trigger approval step
