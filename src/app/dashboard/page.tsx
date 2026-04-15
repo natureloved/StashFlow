@@ -89,12 +89,20 @@ function DashboardContent() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'portfolio'>('dashboard');
+
+  const openCreateModal = () => {
+    if (isCreateModalOpen) {
+      setIsCreateModalOpen(false);
+      window.setTimeout(() => setIsCreateModalOpen(true), 50);
+      return;
+    }
+    setIsCreateModalOpen(true);
+  };
   const [portfolioStats, setPortfolioStats] = useState<{
     totalValue: number;
     idleAssets: number;
   } | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<1 | 25 | 50 | 75 | 100>(50);
   const [milestoneGoal, setMilestoneGoal] = useState<Goal | null>(null);
 
@@ -213,59 +221,6 @@ function DashboardContent() {
     }
     if (mounted && status === 'connected' && address) fetchInsights();
   }, [address, status, mounted]);
-
-  const handleScanPortfolio = async () => {
-    if (!address) return;
-    setIsScanning(true);
-    try {
-      const [{ positions = [] }, balancesData] = await Promise.all([
-        getUserPositions(address).catch(() => ({ positions: [] })),
-        getWalletBalances(address).catch(() => ({})),
-      ]);
-      const totalActiveUsd = positions.reduce(
-        (acc: number, p: any) => acc + (Number(p.balanceUsd) || Number(p.amountUsd) || Number(p.value) || 0),
-        0
-      );
-      const rawBalances =
-        balancesData && typeof balancesData === 'object' && 'balances' in balancesData
-          ? (balancesData as any).balances
-          : balancesData;
-      let totalIdleUsd = 0;
-      if (rawBalances && typeof rawBalances === 'object' && !Array.isArray(rawBalances)) {
-        Object.entries(rawBalances).forEach(([_, tokens]: [string, any]) => {
-          if (Array.isArray(tokens)) {
-            tokens.forEach((token: any) => {
-              const usdValue = (Number(token.amount ?? 0)) * (Number(token.priceUSD ?? 0));
-              if (!Number.isNaN(usdValue) && usdValue > 0.001) {
-                const isInPosition = positions.some((p: any) => {
-                  const pAddr = p.token?.address?.toLowerCase();
-                  const tAddr = token.address?.toLowerCase();
-                  if (pAddr === tAddr) return true;
-                  const isNative = (a: string) =>
-                    a === '0x0000000000000000000000000000000000000000' ||
-                    a === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-                  return isNative(pAddr) && isNative(tAddr);
-                });
-                if (!isInPosition) totalIdleUsd += usdValue;
-              }
-            });
-          }
-        });
-      }
-      setPortfolioStats({
-        totalValue:
-          (Number.isNaN(totalActiveUsd) ? 0 : totalActiveUsd) +
-          (Number.isNaN(totalIdleUsd) ? 0 : totalIdleUsd),
-        idleAssets: Number.isNaN(totalIdleUsd) ? 0 : totalIdleUsd,
-      });
-      await new Promise((r) => setTimeout(r, 1500));
-      setCurrentView('portfolio');
-    } catch {
-      setPortfolioStats((p) => p || { totalValue: 0, idleAssets: 0 });
-    } finally {
-      setIsScanning(false);
-    }
-  };
 
   const handleDepositSuccess = (prevAmount: number, newAmount: number) => {
     if (!selectedGoal) return;
@@ -442,7 +397,7 @@ function DashboardContent() {
                   </p>
                 </div>
                 <Button
-                  onClick={() => setIsCreateModalOpen(true)}
+                  onClick={openCreateModal}
                   className="bg-accent text-black hover:bg-accent/90 font-bold px-6 h-12 rounded-xl glow-cyan"
                 >
                   <Plus className="w-5 h-5 mr-2" /> New Goal
@@ -605,46 +560,7 @@ function DashboardContent() {
                         Optimize Now <ArrowRight className="w-5 h-5 ml-2" />
                       </Button>
                     </div>
-                  ) : (
-                    <div
-                      className={cn(
-                        'p-8 border flex flex-col md:flex-row justify-between items-center gap-6 rounded-3xl',
-                        isDark
-                          ? 'bg-surface border-border'
-                          : 'bg-white border-gray-200 shadow-sm'
-                      )}
-                    >
-                      <div className="space-y-2">
-                        <h2
-                          className={cn(
-                            'text-xl font-display font-bold',
-                            isDark ? 'text-white' : 'text-gray-900'
-                          )}
-                        >
-                          Monitoring your on-chain positions...
-                        </h2>
-                        <p className={cn('text-sm', mutedText)}>
-                          We're tracking your assets to find growth opportunities.
-                        </p>
-                      </div>
-                      <Button
-                        onClick={handleScanPortfolio}
-                        disabled={isScanning}
-                        className={cn(
-                          'px-6 h-12 rounded-xl border',
-                          isDark
-                            ? 'bg-white/10 text-white hover:bg-white/20 border-white/5'
-                            : 'bg-gray-100 text-gray-900 hover:bg-gray-200 border-gray-200'
-                        )}
-                      >
-                        {isScanning ? (
-                          <Loader2 className="animate-spin" />
-                        ) : (
-                          'Scan Portfolio'
-                        )}
-                      </Button>
-                    </div>
-                  )}
+                  ) : null}
                 </motion.div>
               )}
 
@@ -717,7 +633,7 @@ function DashboardContent() {
                       we'll find the best vault for you.
                     </p>
                     <Button
-                      onClick={() => setIsCreateModalOpen(true)}
+                      onClick={openCreateModal}
                       className="bg-accent text-black hover:bg-accent/90 font-bold px-8 h-12 rounded-xl glow-cyan group"
                     >
                       Launch your first goal{' '}

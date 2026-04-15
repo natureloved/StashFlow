@@ -304,11 +304,20 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
     setDepositAmount('');
     setQuote(null);
     setError(null);
+    setIsAgreed(false);
+    setPendingTxHash(undefined);
+    setPendingApprovalHash(undefined);
   };
+
+  React.useEffect(() => {
+    if (open) {
+      reset();
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={(val) => { onOpenChange(val); if(!val) reset(); }}>
-      <DialogContent className="max-w-[calc(100%-3rem)] sm:max-w-[440px] bg-surface border-border text-white">
+      <DialogContent className="max-w-[calc(100%-3rem)] sm:max-w-[440px] max-h-[calc(100vh-5rem)] overflow-hidden bg-surface border-border text-white">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Create New Goal</DialogTitle>
           <DialogDescription className="text-white/60">
@@ -320,7 +329,7 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4">
+        <div className="py-4 max-h-[calc(100vh-22rem)] overflow-y-auto pr-2">
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div
