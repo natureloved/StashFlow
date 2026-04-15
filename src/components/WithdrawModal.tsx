@@ -12,11 +12,12 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Goal, useGoalStore } from '@/store/useGoalStore';
 import { getQuote } from '@/lib/lifi';
 import { useAccount, useSendTransaction, useSwitchChain, useBalance, useWaitForTransactionReceipt, useReadContract, useWriteContract } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
-import { Loader2, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Clock, Wallet, ChevronUp, ChevronDown } from 'lucide-react';
+import { Loader2, ArrowRight, CheckCircle2, AlertCircle, RefreshCw, Clock, Wallet, ChevronUp, ChevronDown, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getTokenPrice } from '@/lib/prices';
 import { AmountInput } from '@/components/AmountInput';
@@ -80,6 +81,8 @@ interface WithdrawModalProps {
   currentBalanceUsd: number;
   livePosition?: any;
 }
+
+const MIN_WITHDRAWAL_USD = 1;
 
 export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, livePosition }: WithdrawModalProps) {
   const { address, chainId } = useAccount();
@@ -170,6 +173,12 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
       const totalUsd = livePosition ? Number(livePosition.balanceUsd) : 0;
       const nativeBalance = livePosition ? Number(livePosition.balanceNative ?? 0) : 0;
       const tokenDecimals = livePosition?.asset?.decimals ?? vaultDecimals;
+
+      if (amountRaw < MIN_WITHDRAWAL_USD && amountRaw < totalUsd) {
+        setError(`LI.FI quotes are not reliable for withdrawals smaller than $${MIN_WITHDRAWAL_USD}. Try a larger amount or withdraw the full balance if your total position is under $${MIN_WITHDRAWAL_USD}.`);
+        setIsFetchingQuote(false);
+        return;
+      }
 
       if (livePosition && totalUsd > 0) {
         if (livePosition.amount) {
@@ -330,6 +339,11 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                         Withdraw in USD
                       </div>
                     </div>
+                    {amount && Number(amount) > 0 && Number(amount) < MIN_WITHDRAWAL_USD && Number(amount) < currentBalanceUsd && (
+                      <p className="text-xs text-amber-300 mt-2">
+                        LI.FI quotes often fail for withdrawals smaller than ${MIN_WITHDRAWAL_USD}. Enter at least ${MIN_WITHDRAWAL_USD} or withdraw the full balance if your position is under ${MIN_WITHDRAWAL_USD}.
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-3">

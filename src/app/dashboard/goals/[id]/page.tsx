@@ -72,10 +72,18 @@ export default function GoalDetailPage() {
   const progress = Math.min((currentSaved / goal.targetAmountUsd) * 100, 100);
   
   // Find live position balance if available
+  const matchVaultAddress = (addr?: string) =>
+    typeof addr === 'string' && addr.toLowerCase() === goal.vault.address.toLowerCase();
+
   const livePosition = portfolio?.positions?.find((p: any) =>
     p.chainId === goal.vault.chainId && (
-      p.address?.toLowerCase() === goal.vault.address.toLowerCase() ||
-      p.asset?.address?.toLowerCase() === goal.vault.address.toLowerCase()
+      matchVaultAddress(p.vaultAddress) ||
+      matchVaultAddress(p.address) ||
+      matchVaultAddress(p.token?.address) ||
+      matchVaultAddress(p.asset?.address) ||
+      (p.protocol?.name?.toLowerCase() === goal.vault.protocol.name.toLowerCase() &&
+        p.asset?.symbol?.toLowerCase() ===
+          goal.vault.underlyingTokens?.[0]?.symbol?.toLowerCase())
     )
   );
 
