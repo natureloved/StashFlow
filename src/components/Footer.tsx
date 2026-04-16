@@ -19,7 +19,7 @@ export function Footer() {
   return (
     <footer className={cn(
       "border-t py-12 transition-all",
-      isDark ? "border-white/5 bg-[#0A0A0F]" : "border-slate-200 bg-white"
+      isDark ? "border-white/5 bg-[#0A0A0F]" : "border-slate-200 bg-slate-100/50"
     )}>
       <div className="container mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
