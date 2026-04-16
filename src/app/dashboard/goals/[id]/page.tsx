@@ -9,6 +9,18 @@ import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import {
+  ArrowLeft,
+  ExternalLink,
+  History,
+  Calculator,
+  ShieldCheck,
+  TrendingUp,
+  Download,
+  Upload,
+  AlertCircle
+} from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { cn } from '@/lib/utils';
 
