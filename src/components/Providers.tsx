@@ -5,7 +5,9 @@ import {
   RainbowKitProvider,
   getDefaultConfig,
   darkTheme,
+  lightTheme,
 } from '@rainbow-me/rainbowkit';
+import { useTheme } from '@/components/ThemeProvider';
 import { WagmiProvider, http } from 'wagmi';
 import {
   mainnet,
@@ -36,18 +38,29 @@ const config = getDefaultConfig({
 const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const rainbowTheme = isDark 
+    ? darkTheme({
+        accentColor: '#00E5FF',
+        accentColorForeground: 'black',
+        borderRadius: 'large',
+        fontStack: 'system',
+        overlayBlur: 'small',
+      })
+    : lightTheme({
+        accentColor: '#00E5FF',
+        accentColorForeground: 'black',
+        borderRadius: 'large',
+        fontStack: 'system',
+        overlayBlur: 'small',
+      });
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider 
-          theme={darkTheme({
-            accentColor: '#00E5FF',
-            accentColorForeground: 'black',
-            borderRadius: 'large',
-            fontStack: 'system',
-            overlayBlur: 'small',
-          })}
-        >
+        <RainbowKitProvider theme={rainbowTheme}>
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>
