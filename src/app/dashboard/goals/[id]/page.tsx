@@ -99,9 +99,9 @@ export default function GoalDetailPage() {
 
   const apy = vaultDetails?.analytics?.apy?.total || goal.vault.analytics.apy.total;
   const monthlyYield = (currentSaved * (apy / 100)) / 12;
-  const remainingRemaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
+  const remaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
   const dailyYield = (currentSaved * (apy / 100)) / 365;
-  const daysToComplete = dailyYield > 0 ? Math.ceil(remainingRemaining / dailyYield) : Infinity;
+  const daysToComplete = dailyYield > 0 ? Math.ceil(remaining / dailyYield) : Infinity;
 
   return (
     <div className={cn("min-h-screen transition-all duration-500", isDark ? "bg-[#0A0A0F] text-white" : "bg-slate-50 text-slate-900")}>
