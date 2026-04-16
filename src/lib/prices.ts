@@ -6,10 +6,11 @@ export async function getTokenPrice(chain: number, tokenAddress: string) {
     tokenAddress = '0x0000000000000000000000000000000000000000';
   }
   
-  const chainName = chain === 1 ? 'ethereum' : 
-                    chain === 8453 ? 'base' : 
-                    chain === 42161 ? 'arbitrum' : 
-                    chain === 10 ? 'optimism' : 'ethereum';
+  const chainName = chain === 1 ? 'ethereum' :
+                    chain === 8453 ? 'base' :
+                    chain === 42161 ? 'arbitrum' :
+                    chain === 10 ? 'optimism' :
+                    chain === 137 ? 'polygon' : 'ethereum';
                     
   try {
     const response = await fetch(`https://coins.llama.fi/prices/current/${chainName}:${tokenAddress}`);

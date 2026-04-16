@@ -62,6 +62,14 @@ const COMMON_TOKENS: Record<number, any[]> = {
     { symbol: 'ETH', address: 'native', decimals: 18 },
     { symbol: 'USDC', address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', decimals: 6 },
   ],
+  10: [
+    { symbol: 'ETH', address: 'native', decimals: 18 },
+    { symbol: 'USDC', address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', decimals: 6 },
+  ],
+  137: [
+    { symbol: 'MATIC', address: 'native', decimals: 18 },
+    { symbol: 'USDC', address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', decimals: 6 },
+  ],
 };
 
 const getChainName = (id: number) => {
@@ -88,6 +96,7 @@ const MIN_WITHDRAWAL_USD = 1;
 export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, livePosition }: WithdrawModalProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const availableBalance = livePosition ? Number(livePosition.balanceUsd) : currentBalanceUsd;
   const { address, chainId } = useAccount();
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState('');
@@ -100,8 +109,9 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const [countdown, setCountdown] = useState(30);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Tracks that approval was completed this session — avoids race condition where
+  // clearing pendingApprovalHash makes isApprovalConfirmed go false before allowance refetches
+  const approvedThisSessionRef = useRef(false);
 
   const { sendTransactionAsync } = useSendTransaction();
   const { switchChainAsync } = useSwitchChain();
@@ -139,6 +149,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
   // Handle successful approval confirmation
   useEffect(() => {
     if (isApprovalConfirmed && pendingApprovalHash) {
+      approvedThisSessionRef.current = true;
       refetchAllowance();
       setPendingApprovalHash(undefined);
     }
@@ -203,11 +214,9 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
         return;
       }
 
-      // If allowance is missing or loading, we wait/trigger approval step
-      if (allowance === undefined) {
-         // Optionally wait or just proceed and handle the error later
-      } else if (allowance < BigInt(fromAmountSmallest) && !isApprovalConfirmed) {
-        setStep(1.5); // New intermediate step for approval
+      // If allowance is insufficient and we haven't approved this session, prompt approval
+      if (allowance !== undefined && allowance < BigInt(fromAmountSmallest) && !approvedThisSessionRef.current) {
+        setStep(1.5);
         setIsFetchingQuote(false);
         return;
       }
@@ -299,6 +308,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
     setAmount('');
     setQuote(null);
     setError(null);
+    approvedThisSessionRef.current = false;
   };
 
   if (!goal) return null;
@@ -331,7 +341,10 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                   isDark ? "bg-[#0A0A0F] border-border" : "bg-slate-50 border-slate-200"
                 )}>
                   <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Available to Withdraw</div>
-                  <div className="text-2xl font-display font-bold text-accent">${currentBalanceUsd.toLocaleString()}</div>
+                  <div className="text-2xl font-display font-bold text-accent">${availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  {livePosition && Math.abs(availableBalance - currentBalanceUsd) > 0.01 && (
+                    <div className="text-[10px] text-gray-500 mt-1">Includes ${(availableBalance - currentBalanceUsd).toFixed(2)} in earned yield</div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -341,14 +354,14 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                       <AmountInput
                         value={amount}
                         onChange={setAmount}
-                        onMax={() => setAmount(currentBalanceUsd.toString())}
+                        onMax={() => setAmount(availableBalance.toFixed(2))}
                         placeholder="0.00"
                       />
                       <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest text-center">
                         Withdraw in USD
                       </div>
                     </div>
-                    {amount && Number(amount) > 0 && Number(amount) < MIN_WITHDRAWAL_USD && Number(amount) < currentBalanceUsd && (
+                    {amount && Number(amount) > 0 && Number(amount) < MIN_WITHDRAWAL_USD && Number(amount) < availableBalance && (
                       <p className="text-xs text-amber-300 mt-2">
                         LI.FI quotes often fail for withdrawals smaller than ${MIN_WITHDRAWAL_USD}. Enter at least ${MIN_WITHDRAWAL_USD} or withdraw the full balance if your position is under ${MIN_WITHDRAWAL_USD}.
                       </p>
@@ -357,22 +370,28 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
 
                   <div className="space-y-3">
                     <label className="text-xs font-bold text-gray-500 uppercase">Receive As</label>
-                    <div className="flex gap-2">
-                      {chainId && COMMON_TOKENS[chainId]?.map((token) => (
-                        <button
-                          key={token.symbol}
-                          onClick={() => setSelectedToken(token)}
-                          className={cn(
-                            "px-4 py-2 rounded-xl border transition-all",
-                            selectedToken?.symbol === token.symbol 
-                              ? 'border-accent bg-accent/10' 
-                              : (isDark ? 'border-border bg-surface hover:border-accent/50' : 'border-slate-200 bg-white hover:border-slate-300 shadow-sm')
-                          )}
-                        >
-                          <span className={cn("text-sm font-bold", isDark ? "text-white" : "text-slate-900")}>{token.symbol}</span>
-                        </button>
-                      ))}
-                    </div>
+                    {chainId && !COMMON_TOKENS[chainId] ? (
+                      <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg text-amber-500 text-xs">
+                        Switch your wallet to Ethereum, Base, Arbitrum, Optimism, or Polygon to receive funds.
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        {chainId && COMMON_TOKENS[chainId]?.map((token) => (
+                          <button
+                            key={token.symbol}
+                            onClick={() => setSelectedToken(token)}
+                            className={cn(
+                              "px-4 py-2 rounded-xl border transition-all",
+                              selectedToken?.symbol === token.symbol
+                                ? 'border-accent bg-accent/10'
+                                : (isDark ? 'border-border bg-surface hover:border-accent/50' : 'border-slate-200 bg-white hover:border-slate-300 shadow-sm')
+                            )}
+                          >
+                            <span className={cn("text-sm font-bold", isDark ? "text-white" : "text-slate-900")}>{token.symbol}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -382,9 +401,9 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                   </div>
                 )}
 
-                <Button 
-                  disabled={!amount || Number(amount) <= 0 || Number(amount) > currentBalanceUsd || isFetchingQuote}
-                  onClick={fetchWithdrawQuote} 
+                <Button
+                  disabled={!amount || Number(amount) <= 0 || Number(amount) > availableBalance || isFetchingQuote || !selectedToken}
+                  onClick={fetchWithdrawQuote}
                   className={cn(
                     "w-full h-11 font-bold text-sm rounded-xl transition-all",
                     isDark ? "bg-white text-black hover:bg-white/90" : "bg-slate-900 text-white hover:bg-slate-800"
@@ -498,12 +517,12 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                   <div className={cn("flex justify-between items-center pb-4 border-b transition-all", isDark ? "border-border" : "border-slate-200")}>
                     <span className="text-gray-400 text-sm">Estimated Receive</span>
                     <span className="text-accent font-bold">
-                      {Number(quote.estimate.toAmountMin || 0) / Math.pow(10, selectedToken.decimals)} {selectedToken.symbol}
+                      {(Number(quote.estimate.toAmountMin || 0) / Math.pow(10, selectedToken.decimals)).toFixed(selectedToken.decimals === 18 ? 6 : 2)} {selectedToken.symbol}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-sm">Network Fees</span>
-                    <span className="text-red-400">~${(quote.estimate.gasCosts?.[0]?.amountUSD || 0)}</span>
+                    <span className="text-red-400">~${Number(quote.estimate.gasCosts?.[0]?.amountUSD || 0).toFixed(2)}</span>
                   </div>
                 </div>
 
