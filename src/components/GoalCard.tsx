@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 interface GoalCardProps {
   goal: Goal;
   onAddFunds: () => void;
+  onWithdraw?: () => void;
 }
 
 function DeleteConfirmModal({ goalName, onConfirm, onCancel }: { goalName: string; onConfirm: () => void; onCancel: () => void }) {
@@ -99,7 +100,7 @@ function DeleteConfirmModal({ goalName, onConfirm, onCancel }: { goalName: strin
   );
 }
 
-export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
+export function GoalCard({ goal, onAddFunds, onWithdraw }: GoalCardProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const deleteGoal = useGoalStore(state => state.deleteGoal);
@@ -369,8 +370,8 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
         )}>
           <div className="min-w-0 flex-1 mr-3">
             <div className="text-[10px] text-gray-400 uppercase font-bold flex items-center gap-1 mb-0.5">
-              Vault Info 
-              <button 
+              Vault Info
+              <button
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -382,34 +383,55 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
               </button>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-gray-300 flex-wrap">
-              <EducationPopover 
-                id="protocol" 
+              <EducationPopover
+                id="protocol"
                 term={goal.vault.protocol.name}
               >
-                {goal.vault.protocol.name} is the protocol managing your 
-                yield. It's a smart contract running on the blockchain 
+                {goal.vault.protocol.name} is the protocol managing your
+                yield. It's a smart contract running on the blockchain
                 — no company controls your funds.
               </EducationPopover>
               <span className="text-gray-600">•</span>
               <span className="capitalize text-gray-300">{goal.vault.network}</span>
             </div>
           </div>
-          <Button 
-            size={isUnfunded ? "lg" : "sm"} 
-            className={cn(
-              "flex-shrink-0 transition-all font-bold",
-              isUnfunded 
-                ? 'bg-amber-500 text-black hover:bg-amber-600 animate-pulse font-black px-8' 
-                : (isDark ? 'bg-accent text-black hover:bg-accent/90 px-4' : 'bg-slate-900 text-white hover:bg-slate-800 px-4')
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {!isUnfunded && onWithdraw && (
+              <Button
+                size="sm"
+                variant="outline"
+                className={cn(
+                  "transition-all font-bold px-3",
+                  isDark
+                    ? "border-border text-gray-400 hover:text-white hover:border-accent/50 bg-transparent"
+                    : "border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300 bg-white"
+                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onWithdraw();
+                }}
+              >
+                Withdraw
+              </Button>
             )}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onAddFunds?.();
-            }}
-          >
-            {isUnfunded ? <><Plus className="w-5 h-5 mr-2" /> Make first deposit →</> : <><Plus className="w-4 h-4 mr-1" /> Add Funds</>}
-          </Button>
+            <Button
+              size={isUnfunded ? "lg" : "sm"}
+              className={cn(
+                "transition-all font-bold",
+                isUnfunded
+                  ? 'bg-amber-500 text-black hover:bg-amber-600 animate-pulse font-black px-8'
+                  : (isDark ? 'bg-accent text-black hover:bg-accent/90 px-4' : 'bg-slate-900 text-white hover:bg-slate-800 px-4')
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onAddFunds?.();
+              }}
+            >
+              {isUnfunded ? <><Plus className="w-5 h-5 mr-2" /> Make first deposit →</> : <><Plus className="w-4 h-4 mr-1" /> Add Funds</>}
+            </Button>
+          </div>
         </div>
 
         <VaultSafetyModal 

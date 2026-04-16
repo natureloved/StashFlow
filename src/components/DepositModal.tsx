@@ -70,6 +70,10 @@ const COMMON_TOKENS: Record<number, any[]> = {
     { symbol: 'ETH', address: 'native', decimals: 18 },
     { symbol: 'USDC', address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', decimals: 6 },
   ],
+  137: [
+    { symbol: 'MATIC', address: 'native', decimals: 18 },
+    { symbol: 'USDC', address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', decimals: 6 },
+  ],
 };
 
 interface DepositModalProps {

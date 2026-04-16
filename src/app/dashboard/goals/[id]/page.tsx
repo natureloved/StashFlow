@@ -10,16 +10,27 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  ArrowLeft, 
-  ExternalLink, 
-  History, 
-  Calculator, 
-  ShieldCheck, 
+import {
+  ArrowLeft,
+  ExternalLink,
+  History,
+  Calculator,
+  ShieldCheck,
   TrendingUp,
   Download,
+  Upload,
   AlertCircle
 } from 'lucide-react';
+
+function getTxExplorerUrl(txHash: string, chainId: number): string {
+  switch (chainId) {
+    case 8453: return `https://basescan.org/tx/${txHash}`;
+    case 42161: return `https://arbiscan.io/tx/${txHash}`;
+    case 10: return `https://optimistic.etherscan.io/tx/${txHash}`;
+    case 137: return `https://polygonscan.com/tx/${txHash}`;
+    default: return `https://etherscan.io/tx/${txHash}`;
+  }
+}
 import { WithdrawModal } from '@/components/WithdrawModal';
 import Link from 'next/link';
 
@@ -168,30 +179,40 @@ export default function GoalDetailPage() {
               
               <div className="space-y-4">
                 {goal.contributions.length > 0 ? (
-                  goal.contributions.map((c) => (
-                    <div key={c.id} className="flex items-center justify-between p-4 bg-surface/30 rounded-xl border border-border hover:bg-surface/50 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-[#0A0A0F] border border-border flex items-center justify-center">
-                          <Download className="w-5 h-5 text-accent" />
+                  [...goal.contributions].reverse().map((c) => {
+                    const isWithdrawal = c.amountUsd < 0;
+                    return (
+                      <div key={c.id} className="flex items-center justify-between p-4 bg-surface/30 rounded-xl border border-border hover:bg-surface/50 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-full bg-[#0A0A0F] border border-border flex items-center justify-center ${isWithdrawal ? 'border-red-500/30' : ''}`}>
+                            {isWithdrawal
+                              ? <Upload className="w-5 h-5 text-red-400" />
+                              : <Download className="w-5 h-5 text-accent" />
+                            }
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm">
+                              {isWithdrawal ? `Withdrawal to wallet` : `Deposit from ${c.fromToken}`}
+                            </p>
+                            <p className="text-xs text-gray-500">{new Date(c.date).toLocaleDateString()}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-sm">Deposit from {c.fromToken}</p>
-                          <p className="text-xs text-gray-500">{new Date(c.date).toLocaleDateString()}</p>
+                        <div className="text-right">
+                          <p className={`font-bold ${isWithdrawal ? 'text-red-400' : 'text-accent'}`}>
+                            {isWithdrawal ? `-$${Math.abs(c.amountUsd).toLocaleString()}` : `+$${c.amountUsd.toLocaleString()}`}
+                          </p>
+                          <a
+                            href={getTxExplorerUrl(c.txHash, c.fromChain)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[10px] text-gray-600 hover:text-white flex items-center gap-1 justify-end"
+                          >
+                            View TX <ExternalLink className="w-2 h-2" />
+                          </a>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-accent">+${c.amountUsd.toLocaleString()}</p>
-                        <a 
-                          href={`https://basescan.org/tx/${c.txHash}`} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="text-[10px] text-gray-600 hover:text-white flex items-center gap-1 justify-end"
-                        >
-                          View TX <ExternalLink className="w-2 h-2" />
-                        </a>
-                      </div>
-                    </div>
-                  )).reverse()
+                    );
+                  })
                 ) : (
                   <div className="text-center py-10 text-gray-500 italic">No contributions yet.</div>
                 )}

@@ -8,12 +8,14 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { GoalCard } from '@/components/GoalCard';
 import { CreateGoalModal } from '@/components/CreateGoalModal';
 import { DepositModal } from '@/components/DepositModal';
+import { WithdrawModal } from '@/components/WithdrawModal';
 import { Goal, useGoalStore } from '@/store/useGoalStore';
 import { Button } from '@/components/ui/button';
 import { PortfolioView } from '@/components/PortfolioView';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getUserPositions, getWalletBalances } from '@/lib/lifi';
+import { usePortfolio } from '@/hooks/useLifi';
 import { useTheme } from '@/components/ThemeProvider';
 import { cn } from '@/lib/utils';
 import {
@@ -87,6 +89,7 @@ function DashboardContent() {
   const [canRedirect, setCanRedirect] = React.useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'portfolio'>('dashboard');
 
@@ -243,9 +246,30 @@ function DashboardContent() {
     }
   };
 
+  const { data: portfolio } = usePortfolio(address);
+
+  const getGoalLivePosition = (goal: Goal) => {
+    const positions = portfolio?.positions ?? [];
+    return positions.find((p: any) =>
+      p.chainId === goal.vault.chainId && (
+        p.vaultAddress?.toLowerCase() === goal.vault.address.toLowerCase() ||
+        p.address?.toLowerCase() === goal.vault.address.toLowerCase() ||
+        p.token?.address?.toLowerCase() === goal.vault.address.toLowerCase() ||
+        p.asset?.address?.toLowerCase() === goal.vault.address.toLowerCase() ||
+        (p.protocol?.name?.toLowerCase() === goal.vault.protocol.name.toLowerCase() &&
+          p.asset?.symbol?.toLowerCase() === goal.vault.underlyingTokens?.[0]?.symbol?.toLowerCase())
+      )
+    );
+  };
+
   const handleAddFunds = (goal: Goal) => {
     setSelectedGoal(goal);
     setIsDepositModalOpen(true);
+  };
+
+  const handleWithdraw = (goal: Goal) => {
+    setSelectedGoal(goal);
+    setIsWithdrawModalOpen(true);
   };
 
   if (!mounted || !_hasHydrated) {
@@ -605,6 +629,7 @@ function DashboardContent() {
                     key={goal.id}
                     goal={goal}
                     onAddFunds={() => handleAddFunds(goal)}
+                    onWithdraw={() => handleWithdraw(goal)}
                   />
                 ))}
 
@@ -670,6 +695,13 @@ function DashboardContent() {
         open={isDepositModalOpen}
         onOpenChange={setIsDepositModalOpen}
         onDepositSuccess={handleDepositSuccess}
+      />
+      <WithdrawModal
+        goal={selectedGoal}
+        open={isWithdrawModalOpen}
+        onOpenChange={setIsWithdrawModalOpen}
+        currentBalanceUsd={selectedGoal ? selectedGoal.contributions.reduce((acc, c) => acc + c.amountUsd, 0) : 0}
+        livePosition={selectedGoal ? getGoalLivePosition(selectedGoal) : undefined}
       />
       {milestoneGoal && (
         <ShareCardModal
