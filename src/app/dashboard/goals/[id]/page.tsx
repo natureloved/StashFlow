@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGoalStore } from '@/store/useGoalStore';
 import { useVaultDetails, usePortfolio } from '@/hooks/useLifi';
 import { useAccount } from 'wagmi';
@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   ArrowLeft,
   ExternalLink,
-  History,
+  History as HistoryIcon,
   Calculator,
   ShieldCheck,
   TrendingUp,
@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { cn } from '@/lib/utils';
+import { WithdrawModal } from '@/components/WithdrawModal';
+import Link from 'next/link';
 
 function getTxExplorerUrl(txHash: string, chainId: number): string {
   switch (chainId) {
@@ -33,8 +35,6 @@ function getTxExplorerUrl(txHash: string, chainId: number): string {
     default: return `https://etherscan.io/tx/${txHash}`;
   }
 }
-import { WithdrawModal } from '@/components/WithdrawModal';
-import Link from 'next/link';
 
 export default function GoalDetailPage() {
   const { theme } = useTheme();
@@ -43,6 +43,7 @@ export default function GoalDetailPage() {
   const { address, status, isConnecting, isReconnecting } = useAccount();
   const [mounted, setMounted] = React.useState(false);
   const [canRedirect, setCanRedirect] = React.useState(false);
+  
   const goal = useGoalStore((state) => state.goals.find((g) => g.id === id));
   
   const { data: vaultDetails, isLoading: isLoadingVault } = useVaultDetails(
@@ -51,29 +52,25 @@ export default function GoalDetailPage() {
   );
   
   const { data: portfolio } = usePortfolio(address);
-
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
-    // Give wagmi/rainbowkit 1.5 seconds to restore session before allowing redirect
     const timer = setTimeout(() => setCanRedirect(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 
   React.useEffect(() => {
-    // Robust status check: only redirect if definitely NOT connected
-    // We also wait for the canRedirect grace period to end to avoid refresh "kicks"
     if (mounted && canRedirect && status === 'disconnected' && !isReconnecting && !isConnecting) {
       window.location.href = '/';
     }
   }, [mounted, canRedirect, status, isReconnecting, isConnecting]);
 
-  if (!mounted) return null; // Wait for hydration
+  if (!mounted) return null;
 
   if (!goal) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+      <div className={cn("min-h-screen flex flex-col items-center justify-center p-6 text-center", isDark ? "bg-[#0A0A0F] text-white" : "bg-slate-50 text-slate-900")}>
         <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
         <h1 className="font-display text-2xl font-bold">Goal not found</h1>
         <Link href="/dashboard" className="mt-4 text-accent hover:underline flex items-center gap-2">
@@ -86,7 +83,6 @@ export default function GoalDetailPage() {
   const currentSaved = goal.contributions.reduce((acc, curr) => acc + curr.amountUsd, 0);
   const progress = Math.min((currentSaved / goal.targetAmountUsd) * 100, 100);
   
-  // Find live position balance if available
   const matchVaultAddress = (addr?: string) =>
     typeof addr === 'string' && addr.toLowerCase() === goal.vault.address.toLowerCase();
 
@@ -97,19 +93,15 @@ export default function GoalDetailPage() {
       matchVaultAddress(p.token?.address) ||
       matchVaultAddress(p.asset?.address) ||
       (p.protocol?.name?.toLowerCase() === goal.vault.protocol.name.toLowerCase() &&
-        p.asset?.symbol?.toLowerCase() ===
-          goal.vault.underlyingTokens?.[0]?.symbol?.toLowerCase())
+        p.asset?.symbol?.toLowerCase() === goal.vault.underlyingTokens?.[0]?.symbol?.toLowerCase())
     )
   );
 
   const apy = vaultDetails?.analytics?.apy?.total || goal.vault.analytics.apy.total;
   const monthlyYield = (currentSaved * (apy / 100)) / 12;
-
-  // Simple projection: days = (remaining) / (daily yield)
-  // Assuming no more deposits for simplicity in this calculation
-  const remaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
+  const remainingRemaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
   const dailyYield = (currentSaved * (apy / 100)) / 365;
-  const daysToComplete = dailyYield > 0 ? Math.ceil(remaining / dailyYield) : Infinity;
+  const daysToComplete = dailyYield > 0 ? Math.ceil(remainingRemaining / dailyYield) : Infinity;
 
   return (
     <div className={cn("min-h-screen transition-all duration-500", isDark ? "bg-[#0A0A0F] text-white" : "bg-slate-50 text-slate-900")}>
@@ -131,7 +123,6 @@ export default function GoalDetailPage() {
       <main className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
-          {/* Left Column: Overview & Progress */}
           <div className="lg:col-span-2 space-y-12">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
@@ -189,10 +180,9 @@ export default function GoalDetailPage() {
                </div>
             </div>
 
-            {/* History Section */}
             <div className="space-y-6">
               <div className="flex items-center gap-3">
-                <History className="w-6 h-6 text-accent" />
+                <HistoryIcon className="w-6 h-6 text-accent" />
                 <h2 className={cn("font-display text-3xl font-bold", !isDark && "text-slate-900")}>Contribution History</h2>
               </div>
               
@@ -249,7 +239,6 @@ export default function GoalDetailPage() {
             </div>
           </div>
 
-          {/* Right Column: Vault Details & Projections */}
           <div className="space-y-8">
             <Card className={cn(
                 "p-6 transition-all",
