@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
   Dialog, 
   DialogContent, 
@@ -25,6 +25,7 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 
 import { VaultSafetyModal } from '@/components/VaultSafetyModal';
 import { useTheme } from '@/components/ThemeProvider';
 import { cn } from '@/lib/utils';
+
 
 const ERC20_ABI = [
   {
@@ -358,6 +359,7 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                         chainId={chainId}
                         isSelected={selectedToken?.symbol === token.symbol}
                         onClick={() => setSelectedToken(token)}
+                        isDark={isDark}
                       />
                     ))}
                   </div>
@@ -641,7 +643,7 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
   );
 }
 
-function TokenChip({ token, chainId, isSelected, onClick }: { token: any, chainId: number, isSelected: boolean, onClick: () => void }) {
+function TokenChip({ token, chainId, isSelected, onClick, isDark }: { token: any, chainId: number, isSelected: boolean, onClick: () => void, isDark: boolean }) {
   const { address } = useAccount();
   const { data: balance } = useBalance({
     address: address,

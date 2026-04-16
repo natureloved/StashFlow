@@ -257,24 +257,24 @@ export function GoalCard({ goal, onAddFunds, onWithdraw }: GoalCardProps) {
             <div className={cn(
               "p-4 rounded-xl border space-y-3 relative group/yield transition-all",
               isDark ? "bg-[#0A0A0F]/50 border-white/5" : "bg-slate-50 border-slate-200",
-              monthlyYield < 0.01 ? 'overflow-hidden' : ''
+              monthlyYield < 0.5 ? 'overflow-hidden' : ''
             )}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[10px] text-accent uppercase font-black tracking-widest">
-                  <TrendingUp className="w-3 h-3" /> {monthlyYield < 0.01 ? 'Potential Yield' : 'Yield Equivalent'}
+                  <TrendingUp className="w-3 h-3" /> {monthlyYield < 0.5 ? 'Visualizing your yield as real-world value.' : 'Yield Equivalent'}
                 </div>
                 <div className={cn(
                   "text-[10px] px-2 py-0.5 rounded-full font-bold transition-colors",
-                  monthlyYield < 0.01 
+                  monthlyYield < 0.5 
                     ? (isDark ? 'bg-gray-500/10 text-gray-500' : 'bg-slate-200 text-slate-400') 
                     : 'bg-accent/10 text-accent'
                 )}>
-                  {monthlyYield < 0.01 ? 'PENDING' : 'PASSIVE'}
+                  {monthlyYield < 0.5 ? 'PENDING' : 'PASSIVE'}
                 </div>
               </div>
               <div className={cn(
                 "space-y-2 transition-all duration-500",
-                monthlyYield < 0.01 ? 'blur-[2px] opacity-40 grayscale pointer-events-none select-none' : ''
+                monthlyYield < 0.5 ? 'blur-[2px] opacity-40 grayscale pointer-events-none select-none' : ''
               )}>
                 <div className={cn("text-xs font-body leading-snug", isDark ? "text-gray-300" : "text-slate-600")}>
                   Monthly yield: <span className={cn("font-bold", isDark ? "text-white" : "text-slate-900")}>~${monthlyYield.toFixed(2)}</span> · 
@@ -300,13 +300,13 @@ export function GoalCard({ goal, onAddFunds, onWithdraw }: GoalCardProps) {
                 </div>
               </div>
 
-              {monthlyYield < 0.01 && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/5 flex-col gap-1 z-10">
+              {monthlyYield < 0.5 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/5 flex-col gap-1 z-10 pointer-events-none">
                   <span className={cn(
-                    "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border shadow-2xl transition-all",
-                    isDark ? "bg-[#0A0A0F] text-white/60 border-white/5" : "bg-white text-slate-400 border-slate-200"
+                    "text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full border shadow-2xl transition-all",
+                    isDark ? "bg-[#0A0A0F] text-white/80 border-white/5" : "bg-white text-slate-600 border-slate-200 shadow-sm"
                   )}>
-                    Add funds to activate yield
+                    Add funds to activate yield Insights
                   </span>
                 </div>
               )}
