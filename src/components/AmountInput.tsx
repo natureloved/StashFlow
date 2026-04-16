@@ -5,6 +5,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { useTheme } from '@/components/ThemeProvider';
+
 interface AmountInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -22,6 +24,8 @@ export function AmountInput({
   className,
   usdMode = true 
 }: AmountInputProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [isPressing, setIsPressing] = useState<'plus' | 'minus' | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -32,7 +36,12 @@ export function AmountInput({
     onChange(newValue.toString());
   };
 
-  const startPress = (type: 'plus' | 'minus') => {
+  const startPress = (type: 'plus' | 'minus', e?: React.MouseEvent | React.TouchEvent) => {
+    if (e && 'touches' in e) {
+      // Prevent phantom mouse events on mobile
+      e.preventDefault();
+    }
+    
     setIsPressing(type);
     startTimeRef.current = Date.now();
     
@@ -66,12 +75,17 @@ export function AmountInput({
     <div className={cn("flex items-center gap-3", className)}>
       <button
         type="button"
-        onMouseDown={() => startPress('minus')}
+        onMouseDown={(e) => startPress('minus', e)}
         onMouseUp={endPress}
         onMouseLeave={endPress}
-        onTouchStart={() => startPress('minus')}
+        onTouchStart={(e) => startPress('minus', e)}
         onTouchEnd={endPress}
-        className="w-8 h-8 rounded-full border border-[#1E1E2E] flex items-center justify-center text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-colors flex-shrink-0"
+        className={cn(
+          "w-8 h-8 rounded-full border flex items-center justify-center transition-colors flex-shrink-0",
+          isDark 
+            ? "border-white/10 text-accent hover:bg-accent/10" 
+            : "border-slate-200 text-slate-900 hover:bg-slate-100 shadow-sm"
+        )}
       >
         <Minus className="w-4 h-4" />
       </button>
@@ -82,13 +96,18 @@ export function AmountInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full bg-[#0A0A0F]/50 border border-border focus:border-[#00E5FF] text-white font-numeric text-2xl p-4 rounded-xl outline-none transition-all pr-20 text-center"
+          className={cn(
+            "w-full border focus:border-accent font-numeric text-2xl p-4 rounded-xl outline-none transition-all pr-20 text-center",
+            isDark 
+              ? "bg-[#0A0A0F]/50 border-white/5 text-white" 
+              : "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white"
+          )}
         />
         {onMax && (
           <button
             type="button"
             onClick={onMax}
-            className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md bg-[#00E5FF]/10 text-[#00E5FF] text-[10px] font-bold hover:bg-[#00E5FF]/20 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md bg-accent/10 text-accent text-[10px] font-bold hover:bg-accent/20 transition-colors"
           >
             MAX
           </button>
@@ -97,12 +116,17 @@ export function AmountInput({
 
       <button
         type="button"
-        onMouseDown={() => startPress('plus')}
+        onMouseDown={(e) => startPress('plus', e)}
         onMouseUp={endPress}
         onMouseLeave={endPress}
-        onTouchStart={() => startPress('plus')}
+        onTouchStart={(e) => startPress('plus', e)}
         onTouchEnd={endPress}
-        className="w-8 h-8 rounded-full border border-[#1E1E2E] flex items-center justify-center text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-colors flex-shrink-0"
+        className={cn(
+          "w-8 h-8 rounded-full border flex items-center justify-center transition-colors flex-shrink-0",
+          isDark 
+            ? "border-white/10 text-accent hover:bg-accent/10" 
+            : "border-slate-200 text-slate-900 hover:bg-slate-100 shadow-sm"
+        )}
       >
         <Plus className="w-4 h-4" />
       </button>

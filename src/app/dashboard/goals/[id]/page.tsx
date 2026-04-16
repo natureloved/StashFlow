@@ -9,18 +9,8 @@ import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import {
-  ArrowLeft,
-  ExternalLink,
-  History,
-  Calculator,
-  ShieldCheck,
-  TrendingUp,
-  Download,
-  Upload,
-  AlertCircle
-} from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 function getTxExplorerUrl(txHash: string, chainId: number): string {
   switch (chainId) {
@@ -34,7 +24,8 @@ function getTxExplorerUrl(txHash: string, chainId: number): string {
 import { WithdrawModal } from '@/components/WithdrawModal';
 import Link from 'next/link';
 
-export default function GoalDetailPage() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const { id } = useParams();
   const { address, status, isConnecting, isReconnecting } = useAccount();
   const [mounted, setMounted] = React.useState(false);
@@ -108,10 +99,16 @@ export default function GoalDetailPage() {
   const daysToComplete = dailyYield > 0 ? Math.ceil(remaining / dailyYield) : Infinity;
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-white">
-      <nav className="border-b border-border bg-surface/50 backdrop-blur-md h-20 flex items-center">
+    <div className={cn("min-h-screen transition-all duration-500", isDark ? "bg-[#0A0A0F] text-white" : "bg-slate-50 text-slate-900")}>
+      <nav className={cn(
+        "border-b backdrop-blur-md h-20 flex items-center transition-colors",
+        isDark ? "border-border bg-surface/50" : "border-slate-200 bg-white/80"
+      )}>
         <div className="container mx-auto px-6">
-          <Link href="/dashboard" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group">
+          <Link href="/dashboard" className={cn(
+            "flex items-center gap-2 transition-colors group",
+            isDark ? "text-gray-400 hover:text-white" : "text-slate-500 hover:text-slate-900"
+          )}>
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span className="font-body text-sm font-bold uppercase tracking-wider">Back to Dashboard</span>
           </Link>
@@ -125,24 +122,27 @@ export default function GoalDetailPage() {
           <div className="lg:col-span-2 space-y-12">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <h1 className="font-display text-4xl md:text-5xl font-extrabold">{goal.name}</h1>
+                <h1 className={cn("font-display text-4xl md:text-5xl font-extrabold", !isDark && "text-slate-900")}>{goal.name}</h1>
                 <Badge className="bg-accent/10 text-accent border-accent/20 px-4 py-1.5 font-bold text-lg flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                   Live: {apy.toFixed(2)}% APY
                 </Badge>
               </div>
-              <p className="text-xl text-gray-400 font-body">
+              <p className={cn("text-xl font-body", isDark ? "text-gray-400" : "text-slate-500")}>
                 Targeting ${goal.targetAmountUsd.toLocaleString()} 
                 {goal.targetDate && ` by ${new Date(goal.targetDate).toLocaleDateString()}`}
               </p>
             </div>
 
-            <div className="glass-card p-10 space-y-8 relative overflow-hidden">
+            <div className={cn(
+               "p-10 space-y-8 relative overflow-hidden transition-all",
+               isDark ? "glass-card" : "bg-white border border-slate-200 shadow-xl rounded-3xl"
+             )}>
                <div className="absolute top-0 left-0 w-2 h-full bg-accent" />
                <div className="flex justify-between items-end">
                 <div className="space-y-1">
                   <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">Current Balance</div>
-                  <div className="text-5xl font-display font-bold">${currentSaved.toLocaleString()}</div>
+                  <div className={cn("text-5xl font-display font-bold", !isDark && "text-slate-900")}>${currentSaved.toLocaleString()}</div>
                   {livePosition && (
                     <div className="text-sm text-accent flex items-center gap-1">
                       <TrendingUp className="w-4 h-4" /> Live: ${Number(livePosition.balanceUsd).toLocaleString()}
@@ -150,22 +150,28 @@ export default function GoalDetailPage() {
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-5xl font-display font-bold text-gray-800">{Math.round(progress)}%</div>
+                  <div className={cn("text-5xl font-display font-bold text-gray-800", !isDark && "text-slate-100")}>{Math.round(progress)}%</div>
                 </div>
                </div>
 
                <div className="space-y-4">
-                 <div className="h-4 w-full bg-surface rounded-full overflow-hidden border border-border">
+                 <div className={cn(
+                    "h-4 w-full rounded-full overflow-hidden border transition-all",
+                    isDark ? "bg-surface border-border" : "bg-slate-100 border-slate-200 shadow-inner"
+                  )}>
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
                       transition={{ duration: 1.5, ease: "easeOut" }}
-                      className="h-full bg-accent shadow-[0_0_20px_rgba(0,229,255,0.4)]"
+                      className={cn(
+                        "h-full bg-accent",
+                        isDark && "shadow-[0_0_20px_rgba(0,229,255,0.4)]"
+                      )}
                     />
                  </div>
                  <div className="flex justify-between text-sm text-gray-500 font-bold">
                     <span>$0</span>
-                    <span>Goal: ${goal.targetAmountUsd.toLocaleString()}</span>
+                    <span className={!isDark ? "text-slate-400" : ""}>Goal: ${goal.targetAmountUsd.toLocaleString()}</span>
                  </div>
                </div>
             </div>
@@ -174,7 +180,7 @@ export default function GoalDetailPage() {
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <History className="w-6 h-6 text-accent" />
-                <h2 className="font-display text-3xl font-bold">Contribution History</h2>
+                <h2 className={cn("font-display text-3xl font-bold", !isDark && "text-slate-900")}>Contribution History</h2>
               </div>
               
               <div className="space-y-4">
@@ -182,16 +188,23 @@ export default function GoalDetailPage() {
                   [...goal.contributions].reverse().map((c) => {
                     const isWithdrawal = c.amountUsd < 0;
                     return (
-                      <div key={c.id} className="flex items-center justify-between p-4 bg-surface/30 rounded-xl border border-border hover:bg-surface/50 transition-colors">
+                      <div key={c.id} className={cn(
+                        "flex items-center justify-between p-4 rounded-xl border transition-all",
+                        isDark ? "bg-surface/30 border-border hover:bg-surface/50" : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
+                      )}>
                         <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-full bg-[#0A0A0F] border border-border flex items-center justify-center ${isWithdrawal ? 'border-red-500/30' : ''}`}>
+                          <div className={cn(
+                            "w-10 h-10 rounded-full border flex items-center justify-center transition-colors",
+                            isDark ? "bg-[#0A0A0F] border-border" : "bg-slate-50 border-slate-100",
+                            isWithdrawal && (isDark ? 'border-red-500/30' : 'border-red-100')
+                          )}>
                             {isWithdrawal
                               ? <Upload className="w-5 h-5 text-red-400" />
                               : <Download className="w-5 h-5 text-accent" />
                             }
                           </div>
                           <div>
-                            <p className="font-bold text-sm">
+                            <p className={cn("font-bold text-sm", !isDark && "text-slate-900")}>
                               {isWithdrawal ? `Withdrawal to wallet` : `Deposit from ${c.fromToken}`}
                             </p>
                             <p className="text-xs text-gray-500">{new Date(c.date).toLocaleDateString()}</p>
@@ -205,7 +218,10 @@ export default function GoalDetailPage() {
                             href={getTxExplorerUrl(c.txHash, c.fromChain)}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-[10px] text-gray-600 hover:text-white flex items-center gap-1 justify-end"
+                            className={cn(
+                              "text-[10px] flex items-center gap-1 justify-end transition-colors",
+                              isDark ? "text-gray-600 hover:text-white" : "text-slate-400 hover:text-slate-900"
+                            )}
                           >
                             View TX <ExternalLink className="w-2 h-2" />
                           </a>
@@ -222,26 +238,29 @@ export default function GoalDetailPage() {
 
           {/* Right Column: Vault Details & Projections */}
           <div className="space-y-8">
-            <Card className="glass-card p-6 border-accent/20">
-              <h3 className="font-display text-xl font-bold mb-6 flex items-center gap-2">
+            <Card className={cn(
+                "p-6 transition-all",
+                isDark ? "glass-card border-accent/20" : "bg-white border-slate-200 shadow-xl rounded-3xl"
+              )}>
+              <h3 className={cn("font-display text-xl font-bold mb-6 flex items-center gap-2", !isDark && "text-slate-900")}>
                 <ShieldCheck className="w-5 h-5 text-accent" /> Vault Analytics
               </h3>
               
               <div className="space-y-6">
-                <div className="flex justify-between pb-4 border-b border-border">
+                <div className={cn("flex justify-between pb-4 border-b transition-all", isDark ? "border-border" : "border-slate-100")}>
                   <span className="text-gray-400 text-sm font-body">Protocol</span>
-                  <span className="font-bold text-white flex items-center gap-1">
+                  <span className={cn("font-bold flex items-center gap-1", isDark ? "text-white" : "text-slate-900")}>
                     {goal.vault.protocol.name} <ExternalLink className="w-3 h-3 text-gray-400" />
                   </span>
                 </div>
-                <div className="flex justify-between pb-4 border-b border-border">
+                <div className={cn("flex justify-between pb-4 border-b transition-all", isDark ? "border-border" : "border-slate-100")}>
                   <span className="text-gray-400 text-sm font-body">Network</span>
-                  <span className="font-bold text-white capitalize">{goal.vault.network}</span>
+                  <span className={cn("font-bold capitalize", isDark ? "text-white" : "text-slate-900")}>{goal.vault.network}</span>
                 </div>
-                <div className="flex justify-between pb-4 border-b border-border">
+                <div className={cn("flex justify-between pb-4 border-b transition-all", isDark ? "border-border" : "border-slate-100")}>
                   <span className="text-gray-400 text-sm font-body">Vault TVL</span>
                   <div className="text-right">
-                    <span className="font-bold text-white">${Number(vaultDetails?.analytics?.tvl?.usd || goal.vault.analytics.tvl.usd).toLocaleString()}</span>
+                    <span className={cn("font-bold", isDark ? "text-white" : "text-slate-900")}>${Number(vaultDetails?.analytics?.tvl?.usd || goal.vault.analytics.tvl.usd).toLocaleString()}</span>
                     <p className="text-[10px] text-gray-600 mt-0.5">This vault only</p>
                   </div>
                 </div>
@@ -252,9 +271,12 @@ export default function GoalDetailPage() {
               </div>
             </Card>
 
-            <Card className="glass-card p-6 border-secondary/20 relative overflow-hidden group">
+            <Card className={cn(
+                "p-6 relative overflow-hidden group transition-all",
+                isDark ? "glass-card border-secondary/20" : "bg-white border-slate-200 shadow-xl rounded-3xl"
+              )}>
               <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-secondary/10 transition-all" />
-              <h3 className="font-display text-xl font-bold mb-6 flex items-center gap-2">
+              <h3 className={cn("font-display text-xl font-bold mb-6 flex items-center gap-2", !isDark && "text-slate-900")}>
                 <Calculator className="w-5 h-5 text-secondary" /> Projections
               </h3>
               
@@ -267,14 +289,17 @@ export default function GoalDetailPage() {
                   <p className="text-[10px] text-gray-500 mt-1 italic">Per Month (Estimated)</p>
                 </div>
 
-                <div className="space-y-3 bg-surface/30 p-4 rounded-xl border border-border">
+                <div className={cn(
+                  "space-y-3 p-4 rounded-xl border transition-all",
+                  isDark ? "bg-surface/30 border-border" : "bg-slate-50 border-slate-100 shadow-inner"
+                )}>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-400 font-body">Days to Celebration 🥂</span>
-                    <span className="font-bold text-white text-lg">
+                    <span className={cn("font-bold text-lg", !isDark && "text-slate-900")}>
                       {daysToComplete === Infinity ? 'N/A' : `${daysToComplete.toLocaleString()}`}
                     </span>
                   </div>
-                  <Progress value={daysToComplete === Infinity ? 0 : Math.min(45, progress)} className="h-1.5 bg-surface" />
+                  <Progress value={daysToComplete === Infinity ? 0 : Math.min(100, progress)} className={cn("h-1.5 transition-all", isDark ? "bg-surface" : "bg-slate-200")} />
                   <p className="text-[10px] text-gray-500 leading-relaxed italic">
                     Based on current yield and zero additional contributions.
                   </p>
@@ -284,7 +309,12 @@ export default function GoalDetailPage() {
 
             <Button 
               onClick={() => setIsWithdrawModalOpen(true)}
-              className="w-full h-14 bg-surface border border-border text-gray-400 hover:text-white hover:border-accent/50 group transition-all"
+              className={cn(
+                "w-full h-14 border transition-all group",
+                isDark 
+                  ? "bg-surface border-border text-gray-400 hover:text-white hover:border-accent/50" 
+                  : "bg-slate-900 border-slate-900 text-white hover:bg-slate-800 shadow-lg"
+              )}
             >
               Withdraw Funds <AlertCircle className="ml-2 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </Button>

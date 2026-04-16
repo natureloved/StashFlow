@@ -157,8 +157,13 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
 
   // Default destination token
   useEffect(() => {
-    if (chainId && COMMON_TOKENS[chainId]) {
-      setSelectedToken(COMMON_TOKENS[chainId].find(t => t.symbol === 'USDC') || COMMON_TOKENS[chainId][0]);
+    if (open) {
+      if (chainId && COMMON_TOKENS[chainId]) {
+        setSelectedToken(COMMON_TOKENS[chainId].find(t => t.symbol === 'USDC') || COMMON_TOKENS[chainId][0]);
+      } else if (!chainId) {
+        // Fallback to Mainnet tokens if chain not yet detected
+        setSelectedToken(COMMON_TOKENS[1][1]); // Default to USDC on Mainnet
+      }
     }
   }, [chainId, open]);
 
@@ -402,14 +407,24 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 )}
 
                 <Button
-                  disabled={!amount || Number(amount) <= 0 || Number(amount) > availableBalance || isFetchingQuote || !selectedToken}
+                  disabled={!amount || Number(amount) <= 0 || Number(amount) > availableBalance + 0.01 || isFetchingQuote || !selectedToken}
                   onClick={fetchWithdrawQuote}
                   className={cn(
                     "w-full h-11 font-bold text-sm rounded-xl transition-all",
-                    isDark ? "bg-white text-black hover:bg-white/90" : "bg-slate-900 text-white hover:bg-slate-800"
+                    isDark ? "bg-white text-black hover:bg-white/90" : "bg-slate-900 text-white hover:bg-slate-800 shadow-md"
                   )}
                 >
-                  {isFetchingQuote ? <Loader2 className="animate-spin" /> : 'Review Withdrawal'}
+                  {isFetchingQuote ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Fetching Route...
+                    </div>
+                  ) : Number(amount) > availableBalance + 0.01 ? (
+                    'Insufficient Balance'
+                  ) : !amount || Number(amount) <= 0 ? (
+                    'Enter Amount'
+                  ) : (
+                    'Review Withdrawal'
+                  )}
                 </Button>
               </motion.div>
             )}
