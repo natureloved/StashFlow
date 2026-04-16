@@ -24,6 +24,7 @@ function getTxExplorerUrl(txHash: string, chainId: number): string {
 import { WithdrawModal } from '@/components/WithdrawModal';
 import Link from 'next/link';
 
+export default function GoalDetailPage() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const { id } = useParams();
