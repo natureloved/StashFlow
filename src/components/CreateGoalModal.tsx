@@ -703,7 +703,9 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
   );
 }
 
-export function TokenChip({ token, chainId, isSelected, onClick }: { token: any, chainId: number, isSelected: boolean, onClick: () => void }) {
+function TokenChip({ token, chainId, isSelected, onClick }: { token: any, chainId: number, isSelected: boolean, onClick: () => void }) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const { address } = useAccount();
   const { data: balance } = useBalance({
     address: address,
