@@ -17,6 +17,8 @@ import { MilestoneBadge } from '@/components/MilestoneBadge';
 import { VaultSafetyModal } from '@/components/VaultSafetyModal';
 import { getYieldEquivalent } from '@/lib/yield-utils';
 import { calculateGoalCompletionDate, formatCompletionDate } from '@/lib/projection-utils';
+import { useTheme } from '@/components/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 interface GoalCardProps {
   goal: Goal;
@@ -98,6 +100,8 @@ function DeleteConfirmModal({ goalName, onConfirm, onCancel }: { goalName: strin
 }
 
 export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const deleteGoal = useGoalStore(state => state.deleteGoal);
   const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -153,9 +157,15 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
         />
       )}
 
-      <Card className="glass-card flex flex-col gap-4 md:gap-6 relative !overflow-visible group border-border hover:border-accent/50 transition-colors h-full">
+      <Card className={cn(
+        "glass-card flex flex-col gap-4 md:gap-6 relative !overflow-visible group transition-all h-full",
+        isDark ? "border-border hover:border-accent/50" : "bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"
+      )}>
         <Link href={`/dashboard/goals/${goal.id}`} className="px-3 py-4 md:p-6 pb-0 flex flex-col gap-4 md:gap-6 flex-grow">
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-3xl transition-all group-hover:bg-accent/10" />
+          <div className={cn(
+            "absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl transition-all group-hover:opacity-100",
+            isDark ? "bg-accent/5 group-hover:bg-accent/10" : "bg-accent/10 opacity-30 group-hover:opacity-50"
+          )} />
 
           <div className="flex justify-between items-start">
             <div className="space-y-1">
@@ -173,11 +183,14 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <h3 className="font-kalam text-3xl font-bold tracking-tight text-white mb-1 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+              <h3 className={cn(
+                "font-kalam text-3xl font-bold tracking-tight mb-1 transition-colors",
+                isDark ? "text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]" : "text-slate-800"
+              )}>
                 {goal.name || 'Untitled Goal'}
               </h3>
-              <div className="text-sm text-gray-400 font-body">
-                Target <span className="font-numeric font-bold">${goal.targetAmountUsd.toLocaleString()}</span>
+              <div className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-gray-400" : "text-slate-400")}>
+                Target <span className={cn("font-numeric font-bold", isDark ? "text-white" : "text-slate-900")}>${goal.targetAmountUsd.toLocaleString()}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -201,48 +214,69 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
 
           {isUnfunded ? (
             <div className="py-2 space-y-4">
-              <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6 text-center space-y-3">
+              <div className={cn(
+                "border rounded-2xl p-6 text-center space-y-3 transition-all",
+                isDark ? "bg-amber-500/5 border-amber-500/20" : "bg-amber-50/50 border-amber-100 shadow-inner"
+              )}>
                 <div className="w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto">
                     <AlertTriangle className="w-6 h-6 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-white font-bold text-lg">Deposit to activate yield</p>
-                  <p className="text-xs text-gray-500 font-body">Your funds will start earning {(apy).toFixed(1)}% APY the moment you fund this goal.</p>
+                  <p className={cn("font-bold text-lg", isDark ? "text-white" : "text-amber-900")}>Deposit to activate yield</p>
+                  <p className={cn("text-xs font-body", isDark ? "text-gray-500" : "text-amber-700/70")}>Your funds will start earning {(apy).toFixed(1)}% APY the moment you fund this goal.</p>
                 </div>
               </div>
             </div>
           ) : (
             <div className="space-y-3">
               <div className="flex justify-between text-sm font-body">
-                <span className="text-gray-400">
-                  <span className="text-white font-numeric font-bold">${currentSaved.toLocaleString()}</span> saved
+                <span className={cn(isDark ? "text-gray-400" : "text-slate-500")}>
+                  <span className={cn("font-numeric font-bold", isDark ? "text-white" : "text-slate-900")}>${currentSaved.toLocaleString()}</span> saved
                 </span>
                 <span className="text-accent font-numeric font-bold">{Math.round(progress)}%</span>
               </div>
-              <div className="relative h-3 w-full bg-surface rounded-full overflow-hidden border border-border">
+              <div className={cn(
+                "relative h-3 w-full rounded-full overflow-hidden border transition-all",
+                isDark ? "bg-surface border-border" : "bg-slate-100 border-slate-200 shadow-inner"
+              )}>
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
-                  className="absolute top-0 left-0 h-full bg-secondary rounded-full shadow-[0_0_15px_rgba(255,184,0,0.5)]"
+                  className={cn(
+                    "absolute top-0 left-0 h-full bg-secondary rounded-full",
+                    isDark && "shadow-[0_0_15px_rgba(255,184,0,0.5)]"
+                  )}
                 />
               </div>
             </div>
           )}
 
           {!isUnfunded && (
-            <div className={`bg-[#0A0A0F]/50 p-4 rounded-xl border border-white/5 space-y-3 relative group/yield ${monthlyYield < 0.01 ? 'overflow-hidden' : ''}`}>
+            <div className={cn(
+              "p-4 rounded-xl border space-y-3 relative group/yield transition-all",
+              isDark ? "bg-[#0A0A0F]/50 border-white/5" : "bg-slate-50 border-slate-200",
+              monthlyYield < 0.01 ? 'overflow-hidden' : ''
+            )}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[10px] text-accent uppercase font-black tracking-widest">
                   <TrendingUp className="w-3 h-3" /> {monthlyYield < 0.01 ? 'Potential Yield' : 'Yield Equivalent'}
                 </div>
-                <div className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${monthlyYield < 0.01 ? 'bg-gray-500/10 text-gray-500' : 'bg-accent/10 text-accent'}`}>
+                <div className={cn(
+                  "text-[10px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  monthlyYield < 0.01 
+                    ? (isDark ? 'bg-gray-500/10 text-gray-500' : 'bg-slate-200 text-slate-400') 
+                    : 'bg-accent/10 text-accent'
+                )}>
                   {monthlyYield < 0.01 ? 'PENDING' : 'PASSIVE'}
                 </div>
               </div>
-              <div className={`space-y-2 transition-all duration-500 ${monthlyYield < 0.01 ? 'blur-[2px] opacity-40 grayscale pointer-events-none select-none' : ''}`}>
-                <div className="text-sm font-body text-gray-300 leading-snug">
-                  Monthly yield: <span className="text-white font-bold">~${monthlyYield.toFixed(2)}</span> · 
+              <div className={cn(
+                "space-y-2 transition-all duration-500",
+                monthlyYield < 0.01 ? 'blur-[2px] opacity-40 grayscale pointer-events-none select-none' : ''
+              )}>
+                <div className={cn("text-xs font-body leading-snug", isDark ? "text-gray-300" : "text-slate-600")}>
+                  Monthly yield: <span className={cn("font-bold", isDark ? "text-white" : "text-slate-900")}>~${monthlyYield.toFixed(2)}</span> · 
                   That's <span className="text-accent font-bold underline decoration-accent/30 lowercase">
                     {customSubscription 
                       ? `a ${customSubscription.name}` 
@@ -267,7 +301,10 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
 
               {monthlyYield < 0.01 && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/5 flex-col gap-1 z-10">
-                  <span className="text-[10px] text-white/60 font-black uppercase tracking-widest bg-[#0A0A0F] px-3 py-1 rounded-full border border-white/5 shadow-2xl">
+                  <span className={cn(
+                    "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border shadow-2xl transition-all",
+                    isDark ? "bg-[#0A0A0F] text-white/60 border-white/5" : "bg-white text-slate-400 border-slate-200"
+                  )}>
                     Add funds to activate yield
                   </span>
                 </div>
@@ -313,17 +350,23 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
             </div>
           )}
 
-          <div className="bg-secondary/5 p-4 rounded-xl border border-secondary/10">
+          <div className={cn(
+            "p-4 rounded-xl border transition-all",
+            isDark ? "bg-secondary/5 border-secondary/10" : "bg-amber-50/50 border-amber-100"
+          )}>
             <div className="text-[10px] text-secondary uppercase font-black tracking-widest mb-1 flex items-center gap-1">
               <Plus className="w-2.5 h-2.5" /> Projections
             </div>
-            <p className="text-sm font-body text-gray-300">
-              Recommend <span className="text-white font-bold">${weeklySave}/wk</span> to reach your goal by <span className="text-secondary font-bold">{completionStr}</span>.
+            <p className={cn("text-xs font-body", isDark ? "text-gray-300" : "text-amber-900/80")}>
+              Recommend <span className={cn("font-bold", isDark ? "text-white" : "text-amber-900")}>${weeklySave}/wk</span> to reach your goal by <span className="text-secondary font-bold">{completionStr}</span>.
             </p>
           </div>
         </Link>
 
-        <div className="px-4 md:px-6 py-3 flex items-center justify-between border-t border-border mt-auto font-body">
+        <div className={cn(
+          "px-4 md:px-6 py-3 flex items-center justify-between border-t mt-auto font-body transition-all",
+          isDark ? "border-border" : "border-slate-100 bg-slate-50/30"
+        )}>
           <div className="min-w-0 flex-1 mr-3">
             <div className="text-[10px] text-gray-400 uppercase font-bold flex items-center gap-1 mb-0.5">
               Vault Info 
@@ -353,7 +396,12 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
           </div>
           <Button 
             size={isUnfunded ? "lg" : "sm"} 
-            className={`${isUnfunded ? 'bg-amber-500 text-black hover:bg-amber-600 animate-pulse font-black px-8' : 'bg-accent text-black hover:bg-accent/90 font-bold px-4'} flex-shrink-0 transition-all`}
+            className={cn(
+              "flex-shrink-0 transition-all font-bold",
+              isUnfunded 
+                ? 'bg-amber-500 text-black hover:bg-amber-600 animate-pulse font-black px-8' 
+                : (isDark ? 'bg-accent text-black hover:bg-accent/90 px-4' : 'bg-slate-900 text-white hover:bg-slate-800 px-4')
+            )}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();

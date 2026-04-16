@@ -22,6 +22,7 @@ import confetti from 'canvas-confetti';
 import { getTokenPrice } from '@/lib/prices';
 import { AmountInput } from '@/components/AmountInput';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/components/ThemeProvider';
 
 const LIFI_DIAMOND_ADDRESS = '0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE';
 
@@ -85,6 +86,8 @@ interface WithdrawModalProps {
 const MIN_WITHDRAWAL_USD = 1;
 
 export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, livePosition }: WithdrawModalProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const { address, chainId } = useAccount();
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState('');
@@ -302,12 +305,15 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
 
   return (
     <Dialog open={open} onOpenChange={(val) => { onOpenChange(val); if(!val) reset(); }}>
-      <DialogContent className="max-w-[calc(100%-3rem)] sm:max-w-[440px] bg-surface border-border text-white p-0 overflow-hidden !pr-10">
+      <DialogContent className={cn(
+        "max-w-[calc(100%-3rem)] sm:max-w-[440px] p-0 overflow-hidden !pr-10 transition-colors duration-500",
+        isDark ? "bg-surface border-border text-white" : "bg-white border-slate-200 text-slate-900 shadow-xl"
+      )}>
         <div className="max-h-[85vh] overflow-y-auto w-full thin-scrollbar pb-6">
           <div className="p-4 md:p-6 pb-0">
           <DialogHeader className="mb-6">
-            <DialogTitle className="font-display text-2xl">Withdraw Funds</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogTitle className={cn("font-display text-2xl", !isDark && "text-slate-900")}>Withdraw Funds</DialogTitle>
+            <DialogDescription className={isDark ? "text-gray-400" : "text-slate-500"}>
               Remove funds from {goal.name}
             </DialogDescription>
           </DialogHeader>
@@ -320,7 +326,10 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 animate={{ opacity: 1, scale: 1 }}
                 className="space-y-6"
               >
-                <div className="bg-[#0A0A0F] p-4 rounded-xl border border-border">
+                <div className={cn(
+                  "p-4 rounded-xl border transition-all",
+                  isDark ? "bg-[#0A0A0F] border-border" : "bg-slate-50 border-slate-200"
+                )}>
                   <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Available to Withdraw</div>
                   <div className="text-2xl font-display font-bold text-accent">${currentBalanceUsd.toLocaleString()}</div>
                 </div>
@@ -353,9 +362,14 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                         <button
                           key={token.symbol}
                           onClick={() => setSelectedToken(token)}
-                          className={`px-4 py-2 rounded-xl border transition-all ${selectedToken?.symbol === token.symbol ? 'border-accent bg-accent/10' : 'border-border bg-surface hover:border-accent/50'}`}
+                          className={cn(
+                            "px-4 py-2 rounded-xl border transition-all",
+                            selectedToken?.symbol === token.symbol 
+                              ? 'border-accent bg-accent/10' 
+                              : (isDark ? 'border-border bg-surface hover:border-accent/50' : 'border-slate-200 bg-white hover:border-slate-300 shadow-sm')
+                          )}
                         >
-                          <span className="text-sm font-bold">{token.symbol}</span>
+                          <span className={cn("text-sm font-bold", isDark ? "text-white" : "text-slate-900")}>{token.symbol}</span>
                         </button>
                       ))}
                     </div>
@@ -371,7 +385,10 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 <Button 
                   disabled={!amount || Number(amount) <= 0 || Number(amount) > currentBalanceUsd || isFetchingQuote}
                   onClick={fetchWithdrawQuote} 
-                  className="w-full h-11 bg-white text-black hover:bg-white/90 font-bold text-sm rounded-xl"
+                  className={cn(
+                    "w-full h-11 font-bold text-sm rounded-xl transition-all",
+                    isDark ? "bg-white text-black hover:bg-white/90" : "bg-slate-900 text-white hover:bg-slate-800"
+                  )}
                 >
                   {isFetchingQuote ? <Loader2 className="animate-spin" /> : 'Review Withdrawal'}
                 </Button>
@@ -385,7 +402,10 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 animate={{ opacity: 1, scale: 1 }}
                 className="space-y-6"
               >
-                <div className="bg-[#0A0A0F] p-6 rounded-2xl border border-border space-y-4">
+                <div className={cn(
+                  "p-6 rounded-2xl border transition-all space-y-4",
+                  isDark ? "bg-[#0A0A0F] border-border" : "bg-slate-50 border-slate-200"
+                )}>
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
@@ -394,7 +414,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                       {isApprovalConfirmed ? "✓" : "1"}
                     </div>
                     <div>
-                      <p className="text-sm font-bold">Step 1: Approve vault access</p>
+                      <p className={cn("text-sm font-bold", !isDark && "text-slate-900")}>Step 1: Approve vault access</p>
                       <p className="text-[10px] text-gray-500">
                         {isApprovalConfirmed ? "Success! Vault access granted." : "Approving vault access... please confirm in your wallet"}
                       </p>
@@ -403,7 +423,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                   <div className="flex items-center gap-3 opacity-50">
                     <div className="w-6 h-6 rounded-full bg-surface border border-border flex items-center justify-center text-xs font-bold text-gray-500">2</div>
                     <div>
-                      <p className="text-sm font-bold">Step 2: Execute withdrawal</p>
+                      <p className={cn("text-sm font-bold", !isDark && "text-slate-900")}>Step 2: Execute withdrawal</p>
                     </div>
                   </div>
                 </div>
@@ -449,7 +469,10 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 {isApprovalConfirmed && (
                   <Button 
                     onClick={() => fetchWithdrawQuote()}
-                    className="w-full h-11 bg-white text-black hover:bg-white/90 font-bold text-sm rounded-xl"
+                    className={cn(
+                      "w-full h-11 font-bold text-sm rounded-xl transition-all",
+                      isDark ? "bg-white text-black hover:bg-white/90" : "bg-slate-900 text-white hover:bg-slate-800 shadow-md"
+                    )}
                   >
                     Continue to Step 2
                   </Button>
@@ -464,12 +487,15 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 animate={{ opacity: 1, x: 0 }}
                 className="space-y-6"
               >
-                <div className="bg-[#0A0A0F] rounded-2xl border border-border p-6 space-y-4">
-                  <div className="flex justify-between items-center pb-4 border-b border-border">
+                <div className={cn(
+                  "rounded-2xl border p-6 space-y-4 transition-all",
+                  isDark ? "bg-[#0A0A0F] border-border" : "bg-slate-50 border-slate-200"
+                )}>
+                  <div className={cn("flex justify-between items-center pb-4 border-b transition-all", isDark ? "border-border" : "border-slate-200")}>
                     <span className="text-gray-400 text-sm">Withdraw Amount</span>
-                    <span className="font-bold">${amount}</span>
+                    <span className={cn("font-bold", !isDark && "text-slate-900")}>${amount}</span>
                   </div>
-                  <div className="flex justify-between items-center pb-4 border-b border-border">
+                  <div className={cn("flex justify-between items-center pb-4 border-b transition-all", isDark ? "border-border" : "border-slate-200")}>
                     <span className="text-gray-400 text-sm">Estimated Receive</span>
                     <span className="text-accent font-bold">
                       {Number(quote.estimate.toAmountMin || 0) / Math.pow(10, selectedToken.decimals)} {selectedToken.symbol}
@@ -514,7 +540,10 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                           setIsApproving(false);
                         }
                       }}
-                      className="w-full h-14 bg-white text-black hover:bg-white/90 font-bold text-lg rounded-xl glow-cyan"
+                      className={cn(
+                        "w-full h-14 font-bold text-lg rounded-xl transition-all",
+                        isDark ? "bg-white text-black hover:bg-white/90 glow-cyan" : "bg-slate-900 text-white hover:bg-slate-800 shadow-lg"
+                      )}
                     >
                       {isApproving && !pendingApprovalHash ? (
                         <><Loader2 className="animate-spin mr-2" /> Submitting...</>
@@ -537,7 +566,10 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                         }
                         handleWithdraw();
                       }}
-                      className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
+                      className={cn(
+                        "w-full h-14 font-bold text-lg rounded-xl transition-all",
+                        isDark ? "bg-accent text-black hover:bg-accent/90 glow-cyan" : "bg-slate-900 text-white hover:bg-slate-800 shadow-lg"
+                      )}
                     >
                       {isWithdrawing ? (
                         <><Loader2 className="animate-spin mr-2" /> Submitting...</>
@@ -562,14 +594,20 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center justify-center py-10 text-center"
               >
-                <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center mb-6">
+                <div className={cn(
+                  "w-20 h-20 rounded-full flex items-center justify-center mb-6 transition-all",
+                  isDark ? "bg-accent/20" : "bg-accent/10"
+                )}>
                   <CheckCircle2 className="w-10 h-10 text-accent" />
                 </div>
-                <h3 className="font-display text-3xl font-bold mb-2 text-white">Withdrawal Sent!</h3>
-                <p className="text-gray-400 mb-8 font-body">
+                <h3 className={cn("font-display text-3xl font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>Withdrawal Sent!</h3>
+                <p className={cn("mb-8 font-body transition-all", isDark ? "text-gray-400" : "text-slate-500")}>
                   Your funds are on the way. It may take a few minutes to arrive in your wallet.
                 </p>
-                <Button onClick={() => onOpenChange(false)} className="w-full h-12 bg-surface border-border text-white rounded-xl">
+                <Button onClick={() => onOpenChange(false)} className={cn(
+                  "w-full h-12 border rounded-xl transition-all",
+                  isDark ? "bg-surface border-border text-white" : "bg-slate-900 border-slate-900 text-white hover:bg-slate-800 shadow-md"
+                )}>
                   Close
                 </Button>
               </motion.div>

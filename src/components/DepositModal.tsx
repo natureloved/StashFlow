@@ -22,6 +22,9 @@ import { getTokenPrice } from '@/lib/prices';
 import { EducationPopover } from '@/components/EducationPopover';
 import { AmountInput } from '@/components/AmountInput';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { VaultSafetyModal } from '@/components/VaultSafetyModal';
+import { useTheme } from '@/components/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 const ERC20_ABI = [
   {
@@ -77,6 +80,8 @@ interface DepositModalProps {
 }
 
 export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: DepositModalProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const { address, chainId, isConnected } = useAccount();
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState('');
@@ -316,12 +321,15 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
 
   return (
     <Dialog open={open} onOpenChange={(val) => { onOpenChange(val); if(!val) reset(); }}>
-      <DialogContent className="max-w-[calc(100%-3rem)] sm:max-w-[440px] bg-surface border-border text-white p-0 overflow-hidden">
+      <DialogContent className={cn(
+        "max-w-[calc(100%-3rem)] sm:max-w-[440px] p-0 overflow-hidden transition-colors duration-500",
+        isDark ? "bg-surface border-border text-white" : "bg-white border-slate-200 text-slate-900 shadow-xl"
+      )}>
         <div className="max-h-[85vh] overflow-y-auto w-full thin-scrollbar pb-6">
           <div className="p-4 md:p-6 pb-0">
           <DialogHeader className="mb-6">
-            <DialogTitle className="font-display text-2xl">Add Funds</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogTitle className={cn("font-display text-2xl", !isDark && "text-slate-900")}>Add Funds</DialogTitle>
+            <DialogDescription className={isDark ? "text-gray-400" : "text-slate-500"}>
               {goal.name} • Target ${goal.targetAmountUsd.toLocaleString()}
             </DialogDescription>
           </DialogHeader>
@@ -369,7 +377,10 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                   </div>
                   
                   {selectedToken && (
-                    <div className="bg-accent/5 border border-accent/20 p-3 rounded-xl flex items-center gap-3">
+                    <div className={cn(
+                      "border p-3 rounded-xl flex items-center gap-3 transition-all",
+                      isDark ? "bg-accent/5 border-accent/20" : "bg-slate-50 border-slate-200"
+                    )}>
                       <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent">
                         {selectedToken.address.toLowerCase() === goal.vault.underlyingTokens[0].address.toLowerCase() ? (
                           <Check className="w-4 h-4" />
@@ -379,7 +390,7 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                       </div>
                       <div className="text-xs">
                         {selectedToken.address.toLowerCase() === goal.vault.underlyingTokens[0].address.toLowerCase() ? (
-                          <span className="text-green-400 font-bold">Direct deposit — no swap needed ✓</span>
+                          <span className={cn("font-bold", isDark ? "text-green-400" : "text-green-600")}>Direct deposit — no swap needed ✓</span>
                         ) : (
                           <span className="text-accent">We'll swap your <span className="font-bold">{selectedToken.symbol}</span> → <span className="font-bold">{goal.vault.underlyingTokens[0].symbol}</span> automatically ⚡</span>
                         )}
@@ -396,7 +407,10 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                 <Button 
                   disabled={!amount || isFetchingQuote || !address}
                   onClick={() => fetchQuote()} 
-                  className="w-full h-14 bg-accent text-black hover:bg-accent/90 font-bold text-lg rounded-xl glow-cyan"
+                  className={cn(
+                    "w-full h-14 font-bold text-lg rounded-xl transition-all",
+                    isDark ? "bg-accent text-black hover:bg-accent/90 glow-cyan" : "bg-slate-900 text-white hover:bg-slate-800 shadow-lg"
+                  )}
                 >
                   {isFetchingQuote ? <Loader2 className="animate-spin" /> : 'Review Route'}
                 </Button>
@@ -410,12 +424,21 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                 animate={{ opacity: 1, x: 0 }}
                 className="space-y-6"
               >
-                <div className="bg-[#0A0A0F] rounded-2xl border border-border overflow-hidden">
-                  <div className="p-4 border-b border-border bg-surface/30 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-gray-400">
+                <div className={cn(
+                  "rounded-2xl border overflow-hidden transition-all",
+                  isDark ? "bg-[#0A0A0F] border-border" : "bg-slate-50 border-slate-200 shadow-inner"
+                )}>
+                  <div className={cn(
+                    "p-4 border-b flex items-center justify-between text-xs font-bold uppercase tracking-wider transition-all",
+                    isDark ? "border-border bg-surface/30 text-gray-400" : "border-slate-200 bg-white text-slate-500"
+                  )}>
                     <div className="flex items-center gap-2">
                        <div className="w-2 h-2 rounded-full bg-accent animate-pulse" /> Your Deposit Route
                     </div>
-                    <div className={`flex items-center gap-1 ${countdown < 10 ? 'text-amber-500 animate-pulse' : ''}`}>
+                    <div className={cn(
+                      "flex items-center gap-1 transition-all",
+                      countdown < 10 ? 'text-amber-500 animate-pulse' : (isDark ? 'text-gray-400' : 'text-slate-400')
+                    )}>
                       <Clock className="w-3 h-3" /> Valid for: {countdown}s
                     </div>
                   </div>
@@ -423,14 +446,20 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                     {/* Route visualization */}
                     <div className="flex flex-col gap-8 relative z-10">
                       <div className="flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-full bg-surface border border-border flex items-center justify-center text-xs font-bold">1</div>
+                        <div className={cn(
+                          "w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold transition-all",
+                          isDark ? "bg-surface border-border" : "bg-white border-slate-200 shadow-sm"
+                        )}>1</div>
                         <div>
-                          <p className="text-sm font-bold">Sell {amount} {isUsdMode ? 'USD' : selectedToken.symbol}</p>
+                          <p className={cn("text-sm font-bold", !isDark && "text-slate-900")}>Sell {amount} {isUsdMode ? 'USD' : selectedToken.symbol}</p>
                           <p className="text-[10px] text-gray-500">on {selectedToken.symbol === 'ETH' ? 'Ethereum' : 'Chain'}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-full bg-surface border border-border flex items-center justify-center text-xs font-bold">2</div>
+                        <div className={cn(
+                          "w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold transition-all",
+                          isDark ? "bg-surface border-border" : "bg-white border-slate-200 shadow-sm"
+                        )}>2</div>
                         <div>
                           <EducationPopover id="crosschain" term="Cross-chain deposit">
                             Your tokens are on one blockchain, but the vault is on another. LI.FI automatically moves and converts your funds in a single transaction — you just sign once.
@@ -439,9 +468,12 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-full bg-accent text-black flex items-center justify-center text-xs font-bold shadow-[0_0_10px_rgba(0,229,255,0.5)]">3</div>
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all",
+                          isDark ? "bg-accent text-black shadow-[0_0_10px_rgba(0,229,255,0.5)]" : "bg-slate-900 text-white"
+                        )}>3</div>
                         <div>
-                          <p className="text-sm font-bold">Deposit into {goal.vault.name}</p>
+                          <p className={cn("text-sm font-bold", !isDark && "text-slate-900")}>Deposit into {goal.vault.name}</p>
                           <p className="text-[10px] text-gray-500">on {goal.vault.network}</p>
                         </div>
                       </div>
@@ -451,9 +483,12 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                   </div>
                   
                   {/* Fee Breakdown */}
-                  <div className="p-4 bg-surface/30 border-t border-l-[3px] border-[#FFB800] space-y-3">
+                  <div className={cn(
+                    "p-4 border-t border-l-[3px] space-y-3 transition-all",
+                    isDark ? "bg-surface/30 border-border border-l-[#FFB800]" : "bg-white border-slate-200 border-l-amber-500"
+                  )}>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-white uppercase tracking-wider">💸 Total Cost Breakdown</span>
+                      <span className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-white" : "text-slate-900")}>💸 Total Cost Breakdown</span>
                       {isFetchingQuote && <Loader2 className="w-3 h-3 animate-spin text-accent" />}
                     </div>
                     
@@ -472,16 +507,16 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                          <span>~${totalFees.toFixed(2)}</span>
                        </div>
                        <div className="flex justify-between mt-4">
-                         <span className="text-gray-400">You deposit</span>
-                         <span className="text-white">${depositVal.toFixed(2)}</span>
+                         <span className={isDark ? "text-gray-400" : "text-slate-500"}>You deposit</span>
+                         <span className={cn("font-bold", isDark ? "text-white" : "text-slate-900")}>${depositVal.toFixed(2)}</span>
                        </div>
                        <div className="flex justify-between">
-                         <span className="text-gray-400">Fees</span>
+                         <span className={isDark ? "text-gray-400" : "text-slate-500"}>Fees</span>
                          <span className="text-red-500">-${totalFees.toFixed(2)}</span>
                        </div>
-                       <div className="flex justify-between font-bold text-sm pt-1">
-                         <span className="text-white">Lands in vault</span>
-                         <span className="text-white">${landsInVault.toFixed(2)}</span>
+                       <div className={cn("flex justify-between font-bold text-sm pt-1 transition-all", isDark ? "text-white" : "text-slate-900")}>
+                         <span>Lands in vault</span>
+                         <span>${landsInVault.toFixed(2)}</span>
                        </div>
                     </div>
                     
@@ -576,14 +611,20 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center justify-center py-10 text-center"
               >
-                <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center mb-6">
+                <div className={cn(
+                  "w-20 h-20 rounded-full flex items-center justify-center mb-6 transition-all",
+                  isDark ? "bg-accent/20" : "bg-accent/10"
+                )}>
                   <CheckCircle2 className="w-10 h-10 text-accent" />
                 </div>
-                <h3 className="font-display text-3xl font-bold mb-2 text-white">Success!</h3>
-                <p className="text-gray-400 mb-8 font-body leading-relaxed">
-                  ${depositVal.toFixed(2)} deposited! Your <span className="text-white font-bold">{goal.name}</span> goal is now better funded.
+                <h3 className={cn("font-display text-3xl font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>Success!</h3>
+                <p className={cn("mb-8 font-body leading-relaxed", isDark ? "text-gray-400" : "text-slate-500")}>
+                  ${depositVal.toFixed(2)} deposited! Your <span className={cn("font-bold", isDark ? "text-white" : "text-slate-900")}>{goal.name}</span> goal is now better funded.
                 </p>
-                <Button onClick={() => onOpenChange(false)} className="w-full h-12 bg-surface border-border text-white hover:bg-surface/80 rounded-xl">
+                <Button onClick={() => onOpenChange(false)} className={cn(
+                  "w-full h-12 border rounded-xl transition-all",
+                  isDark ? "bg-surface border-border text-white hover:bg-surface/80" : "bg-slate-900 border-slate-900 text-white hover:bg-slate-800"
+                )}>
                   Back to Dashboard
                 </Button>
               </motion.div>
@@ -609,17 +650,19 @@ function TokenChip({ token, chainId, isSelected, onClick }: { token: any, chainI
   return (
     <button
       onClick={hasBalance ? onClick : undefined}
-      className={`
-        flex items-center gap-2 px-4 py-2 rounded-xl border transition-all flex-shrink-0
-        ${isSelected ? 'border-accent bg-accent/10 glow-cyan ring-1 ring-accent' : 'border-border bg-surface/50 hover:border-accent/50'}
-        ${!hasBalance ? 'opacity-40 cursor-not-allowed grayscale' : 'cursor-pointer'}
-      `}
+      className={cn(
+        "flex items-center gap-2 px-4 py-2 rounded-xl border transition-all flex-shrink-0",
+        isSelected 
+          ? 'border-accent bg-accent/10 glow-cyan ring-1 ring-accent' 
+          : (isDark ? 'border-border bg-surface/50 hover:border-accent/50' : 'border-slate-200 bg-white hover:border-slate-300 shadow-sm'),
+        !hasBalance ? 'opacity-40 cursor-not-allowed grayscale' : 'cursor-pointer'
+      )}
     >
       <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center text-[10px] font-bold text-accent">
         {token.symbol[0]}
       </div>
       <div className="text-left">
-        <div className="text-xs font-bold text-white">{token.symbol}</div>
+        <div className={cn("text-xs font-bold transition-colors", isDark ? "text-white" : "text-slate-900")}>{token.symbol}</div>
         <div className="text-[10px] text-gray-500 font-body">
           {balance ? `${Number(balance.formatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}` : '0.00'}
         </div>

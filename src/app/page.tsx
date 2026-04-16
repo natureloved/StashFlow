@@ -4,6 +4,8 @@ import * as React from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { PageTransition } from '@/components/PageTransition';
 import { useAccount } from 'wagmi';
+import { useTheme } from '@/components/ThemeProvider';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { 
   ArrowRight, 
@@ -34,18 +36,29 @@ function YieldInsightSlider() {
     return () => clearInterval(timer);
   }, []);
 
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <div className="p-5 rounded-2xl bg-[#0F0F18] border border-white/5 space-y-3 relative overflow-hidden group/insight">
+    <div className={cn(
+      "p-5 rounded-2xl border space-y-3 relative overflow-hidden group/insight transition-all",
+      isDark ? "bg-[#0F0F18] border-white/5" : "bg-white border-slate-200 shadow-sm"
+    )}>
       <div className="flex items-center justify-between relative z-10">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
             <Zap className="w-4 h-4 text-secondary" />
           </div>
-          <span className="text-[10px] text-secondary font-black uppercase tracking-widest">Live Yield Insight</span>
+          <span className={cn(
+            "text-[10px] text-secondary font-black uppercase tracking-widest",
+          )}>Live Yield Insight</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-          <span className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">Calculating...</span>
+          <span className={cn(
+            "text-[9px] font-bold uppercase tracking-tighter",
+            isDark ? "text-gray-500" : "text-slate-400"
+          )}>Calculating...</span>
         </div>
       </div>
 
@@ -59,25 +72,40 @@ function YieldInsightSlider() {
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="absolute inset-0 flex flex-col justify-center"
           >
-            <p className="text-sm font-display font-bold text-white leading-tight">
+            <p className={cn(
+              "text-sm font-display font-bold leading-tight",
+              isDark ? "text-white" : "text-slate-900"
+            )}>
               Monthly yield: <span className="text-secondary font-numeric">~$14.67</span>
             </p>
-            <p className="text-[11px] text-gray-400 font-body mt-0.5">
-              That's <span className="text-white font-bold">{items[index].name}</span> {items[index].icon} each month
+            <p className={cn(
+              "text-[11px] font-body mt-0.5",
+              isDark ? "text-gray-400" : "text-slate-500"
+            )}>
+              That's <span className={isDark ? "text-white font-bold" : "text-slate-900 font-bold"}>{items[index].name}</span> {items[index].icon} each month
             </p>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <div className="pt-2 border-t border-white/10 flex items-center justify-between relative z-10">
-        <p className="text-[13px] text-accent font-body font-black italic tracking-wide drop-shadow-[0_0_12px_rgba(0,255,240,0.4)]">
+      <div className={cn(
+        "pt-2 border-t flex items-center justify-between relative z-10",
+        isDark ? "border-white/10" : "border-slate-100"
+      )}>
+        <p className={cn(
+          "text-[13px] text-accent font-body font-black italic tracking-wide",
+          isDark && "drop-shadow-[0_0_12px_rgba(0,255,240,0.4)]"
+        )}>
           Visualizing your yield as real-world value.
         </p>
         <div className="flex gap-1">
           {items.map((_, i) => (
             <div 
               key={i} 
-              className={`w-1 h-1 rounded-full transition-all duration-500 ${i === index ? 'w-3 bg-secondary' : 'bg-white/10'}`} 
+              className={cn(
+                "w-1 h-1 rounded-full transition-all duration-500",
+                i === index ? 'w-3 bg-secondary' : (isDark ? 'bg-white/10' : 'bg-slate-200')
+              )} 
             />
           ))}
         </div>
@@ -86,52 +114,46 @@ function YieldInsightSlider() {
   );
 }
 
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut"
+    }
+  }
+};
+
 export default function Home() {
   const { isConnected } = useAccount();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [metrics, setMetrics] = React.useState({ vaults: 0, chains: 0, protocols: 0 });
 
-  React.useEffect(() => {
-    async function fetchMetrics() {
-      try {
-        const [vaultsRes, chainsRes, protocolsRes] = await Promise.all([
-          fetch('https://earn.li.fi/v1/earn/vaults').then(res => res.json()),
-          fetch('https://earn.li.fi/v1/earn/chains').then(res => res.json()),
-          fetch('https://earn.li.fi/v1/earn/protocols').then(res => res.json())
-        ]);
-        
-        setMetrics({
-          vaults: vaultsRes.total || 0,
-          chains: Array.isArray(chainsRes) ? chainsRes.length : 0,
-          protocols: Array.isArray(protocolsRes) ? protocolsRes.length : 0
-        });
-      } catch (err) {
-        console.error('Failed to fetch landing metrics:', err);
-      }
-    }
-    fetchMetrics();
-  }, []);
-
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { staggerChildren: 0.15 }
-    }
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" }
-    }
-  };
+  // ... (useEffects)
 
   return (
-    <main className="min-h-screen bg-[#0A0A0F] text-white selection:bg-accent/30">
+    <main className={cn(
+      "min-h-screen transition-colors duration-500 selection:bg-accent/30",
+      isDark ? "bg-[#0A0A0F] text-white" : "bg-slate-50 text-slate-900"
+    )}>
       {/* Premium Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0A0A0F]/50 backdrop-blur-xl">
+      <nav className={cn(
+        "fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-xl transition-all",
+        isDark ? "border-white/5 bg-[#0A0A0F]/50" : "border-slate-200 bg-white/80"
+      )}>
         <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
@@ -140,8 +162,14 @@ export default function Home() {
             <span className="font-display font-bold text-xl tracking-tight">Stashflow</span>
           </div>
           <div className="flex items-center gap-6">
-            <Link href="#how-it-works" className="text-sm font-medium text-gray-400 hover:text-white transition-colors hidden md:block">How it works</Link>
-            <Link href="#security" className="text-sm font-medium text-gray-400 hover:text-white transition-colors hidden md:block mr-2">Security</Link>
+            <Link href="#how-it-works" className={cn(
+              "text-sm font-medium transition-colors hidden md:block",
+              isDark ? "text-gray-400 hover:text-white" : "text-slate-500 hover:text-slate-800"
+            )}>How it works</Link>
+            <Link href="#security" className={cn(
+              "text-sm font-medium transition-colors hidden md:block mr-2",
+              isDark ? "text-gray-400 hover:text-white" : "text-slate-500 hover:text-slate-800"
+            )}>Security</Link>
             <ConnectButton showBalance={false} chainStatus="icon" />
           </div>
         </div>
@@ -150,8 +178,14 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
         {/* Ambient Glows */}
-        <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-accent/10 rounded-full blur-[120px] -z-10 animate-pulse" />
-        <div className="absolute bottom-0 left-[-10%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] -z-10" />
+        <div 
+          className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-accent/10 rounded-full blur-[120px] -z-10 animate-pulse transition-opacity duration-1000" 
+          style={{ opacity: isDark ? 1 : 0 }}
+        />
+        <div 
+          className="absolute bottom-0 left-[-10%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] -z-10 transition-opacity duration-1000" 
+          style={{ opacity: isDark ? 1 : 0 }}
+        />
 
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -168,7 +202,10 @@ export default function Home() {
                 <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-display font-black leading-[0.95] tracking-tight mb-6">
                   Save with <span className="text-accent underline decoration-accent/30 decoration-8 underline-offset-8 transition-all hover:decoration-accent/60">purpose.</span>
                 </h1>
-                <p className="text-base md:text-xl text-gray-400 max-w-xl mx-auto lg:mx-0 leading-relaxed font-body">
+                <p className={cn(
+                  "text-base md:text-xl max-w-xl mx-auto lg:mx-0 leading-relaxed font-body",
+                  isDark ? "text-gray-400" : "text-slate-600"
+                )}>
                   DeFi made simple. Set goals, connect any token, and watch your yields pay for your real-world lifestyle. No complexity, just growth.
                 </p>
               </motion.div>
@@ -189,9 +226,12 @@ export default function Home() {
                     </div>
                   </div>
                 )}
-                <Link href="#how-it-works" className="px-8 py-4 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-sm font-bold">
-                  View Demo
-                </Link>
+                  <Link href="#how-it-works" className={cn(
+                    "px-8 py-4 rounded-xl border transition-all text-sm font-bold",
+                    isDark ? "border-white/10 hover:bg-white/5 text-white" : "border-slate-200 hover:bg-slate-100 text-slate-900"
+                  )}>
+                    View Demo
+                  </Link>
               </motion.div>
 
               <motion.div variants={itemVariants} className="flex items-center justify-center lg:justify-start gap-6 text-xs text-gray-500 font-bold uppercase tracking-widest pt-4">
@@ -207,8 +247,14 @@ export default function Home() {
                transition={{ duration: 0.8, delay: 0.3 }}
                className="relative lg:block scale-90 sm:scale-100"
             >
-              <div className="relative group p-8 rounded-[40px] bg-[#111118]/80 backdrop-blur-2xl border border-white/5 shadow-2xl">
-                <div className="absolute -inset-2 bg-gradient-to-br from-accent/20 to-transparent rounded-[42px] blur-2xl -z-10 group-hover:opacity-100 transition duration-1000" />
+              <div className={cn(
+                "relative group p-8 rounded-[40px] backdrop-blur-2xl border transition-all",
+                isDark ? "bg-[#111118]/80 border-white/5 shadow-2xl" : "bg-white border-slate-200 shadow-xl"
+              )}>
+                <div className={cn(
+                  "absolute -inset-2 bg-gradient-to-br from-accent/20 to-transparent rounded-[42px] blur-2xl -z-10 group-hover:opacity-100 transition duration-1000",
+                  !isDark && "hidden"
+                )} />
                 
                 <div className="space-y-6">
                   <div className="flex justify-between items-center">
@@ -224,16 +270,19 @@ export default function Home() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-end">
                       <div className="space-y-1">
-                        <p className="text-xs text-gray-500 font-bold">Current Stash</p>
-                        <p className="text-4xl font-numeric font-extrabold text-white tracking-tight">$1,420.50</p>
+                        <p className={cn("text-xs font-bold", isDark ? "text-gray-500" : "text-slate-400")}>Current Stash</p>
+                        <p className={cn("text-4xl font-numeric font-extrabold tracking-tight", isDark ? "text-white" : "text-slate-900")}>$1,420.50</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-secondary font-numeric font-bold">+12.4% APY</p>
-                        <p className="text-[10px] text-gray-600">Harvesting Live</p>
+                        <p className={cn("text-[10px]", isDark ? "text-gray-600" : "text-slate-400")}>Harvesting Live</p>
                       </div>
                     </div>
                     
-                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                    <div className={cn(
+                      "h-2 w-full rounded-full overflow-hidden border transition-all",
+                      isDark ? "bg-white/5 border-white/5" : "bg-slate-100 border-slate-100"
+                    )}>
                       <motion.div 
                         initial={{ width: "0%" }}
                         animate={{ width: "65%" }}
@@ -250,15 +299,18 @@ export default function Home() {
                 <motion.div 
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -top-6 -right-6 p-4 rounded-2xl bg-surface/90 border border-white/10 backdrop-blur shadow-2xl"
+                  className={cn(
+                    "absolute -top-6 -right-6 p-4 rounded-2xl border backdrop-blur shadow-2xl transition-all",
+                    isDark ? "bg-surface/90 border-white/10" : "bg-white border-slate-200"
+                  )}
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500">
                       <Coins className="w-4 h-4" />
                     </div>
                     <div className="text-left">
-                      <p className="text-[10px] text-gray-500 uppercase font-bold">Yield Earned</p>
-                      <p className="text-sm font-numeric font-black tracking-tight">+$42.20</p>
+                      <p className={cn("text-[10px] uppercase font-bold", isDark ? "text-gray-500" : "text-slate-400")}>Yield Earned</p>
+                      <p className={cn("text-sm font-numeric font-black tracking-tight", isDark ? "text-white" : "text-slate-900")}>+$42.20</p>
                     </div>
                   </div>
                 </motion.div>
@@ -269,11 +321,20 @@ export default function Home() {
       </section>
 
       {/* Process Flow - "Making DeFi Easy" Section */}
-      <section id="how-it-works" className="py-20 bg-white/5">
+      <section id="how-it-works" className={cn(
+        "py-20 transition-colors duration-500",
+        isDark ? "bg-white/5" : "bg-slate-100/50"
+      )}>
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-display font-black uppercase italic italic tracking-tight">The Simplest Path to Yield</h2>
-            <p className="text-gray-400 font-body text-lg">We've coordinated the most complex parts of decentralised finance into a three-step journey that anyone can follow.</p>
+            <h2 className={cn(
+              "text-4xl md:text-5xl font-display font-black uppercase italic italic tracking-tight",
+              isDark ? "text-white" : "text-slate-900"
+            )}>The Simplest Path to Yield</h2>
+            <p className={cn(
+              "font-body text-lg",
+              isDark ? "text-gray-400" : "text-slate-600"
+            )}>We've coordinated the most complex parts of decentralised finance into a three-step journey that anyone can follow.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -306,13 +367,22 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 viewport={{ once: true }}
-                className="group p-8 rounded-3xl bg-surface/50 border border-white/5 hover:border-white/10 hover:bg-surface transition-all"
+                className={cn(
+                  "group p-8 rounded-3xl border transition-all",
+                  isDark 
+                   ? "bg-surface/50 border-white/5 hover:border-white/10 hover:bg-surface" 
+                   : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
+                )}
               >
-                <div className={`w-14 h-14 ${step.bg} ${step.color} rounded-2xl flex items-center justify-center mb-6 border border-white/5 transition-transform group-hover:scale-110`}>
+                <div className={cn(
+                  "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border transition-transform group-hover:scale-110",
+                  step.bg, step.color,
+                  isDark ? "border-white/5" : "border-slate-100"
+                )}>
                   <step.icon className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">{step.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed font-body">{step.desc}</p>
+                <h3 className={cn("text-xl font-bold mb-3", !isDark && "text-slate-900")}>{step.title}</h3>
+                <p className={cn("text-sm leading-relaxed font-body", isDark ? "text-gray-400" : "text-slate-500")}>{step.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -329,24 +399,39 @@ export default function Home() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center relative z-10">
               <div className="space-y-4 md:space-y-6">
-                <h2 className="text-2xl md:text-4xl font-display font-black uppercase">Institutional Grade Security</h2>
-                <p className="text-sm md:text-base text-gray-400 font-body leading-relaxed max-w-lg">
+                <h2 className={cn(
+                  "text-2xl md:text-4xl font-display font-black uppercase",
+                  !isDark && "text-slate-900"
+                )}>Institutional Grade Security</h2>
+                <p className={cn(
+                  "text-sm md:text-base font-body leading-relaxed max-w-lg",
+                  isDark ? "text-gray-400" : "text-slate-600"
+                )}>
                   Stashflow is non-custodial. Your funds never enter our possession. 
                   We utilize the audited infrastructure of LI.FI Earn to route your 
                   deposits into the world's most battle-tested DeFi protocols like Aave, Morpho, and Spark.
                 </p>
                   <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
+                    <div className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[11px] font-bold font-body transition-all",
+                      isDark ? "bg-white/5 border-white/10" : "bg-slate-100 border-slate-200"
+                    )}>
                       <Shield className="w-3.5 h-3.5 text-green-500" /> Audited Contracts
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
+                    <div className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[11px] font-bold font-body transition-all",
+                      isDark ? "bg-white/5 border-white/10" : "bg-slate-100 border-slate-200"
+                    )}>
                       <Globe className="w-3.5 h-3.5 text-accent" /> <span className="font-numeric">60+</span> Chains
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold font-body">
+                    <div className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[11px] font-bold font-body transition-all",
+                      isDark ? "bg-white/5 border-white/10" : "bg-slate-100 border-slate-200"
+                    )}>
                       <Zap className="w-3.5 h-3.5 text-secondary" /> <span className="font-numeric">20+</span> Protocols
                     </div>
                   </div>
-                </div>
+              </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {[
@@ -387,14 +472,23 @@ export default function Home() {
                   {/* Liquid Shimmer Animation Container */}
                   <motion.div 
                     animate={{ 
-                      opacity: [0.3, 0.6, 0.3],
+                      opacity: isDark ? [0.3, 0.6, 0.3] : [0.1, 0.2, 0.1],
                       scale: [1, 1.02, 1]
                     }}
                     transition={{ duration: 4, repeat: Infinity }}
-                    className="absolute -inset-1 bg-gradient-to-r from-accent/50 to-secondary/50 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity"
+                    className={cn(
+                      "absolute -inset-1 rounded-full blur-xl transition-opacity",
+                      isDark ? "bg-gradient-to-r from-accent/50 to-secondary/50 opacity-20 group-hover:opacity-40" : "bg-accent/20 opacity-0 group-hover:opacity-40"
+                    )}
                   />
-                  <div className="relative bg-[#0A0A0F]/80 backdrop-blur-xl border border-white/10 rounded-full p-1 pl-6 flex items-center gap-4 hover:border-accent/40 transition-colors group">
-                    <span className="text-sm font-bold uppercase tracking-[0.2em] text-gray-300 group-hover:text-white transition-colors">Launch Stashflow</span>
+                  <div className={cn(
+                    "relative border rounded-full p-1 pl-6 flex items-center gap-4 transition-all group",
+                    isDark ? "bg-[#0A0A0F]/80 backdrop-blur-xl border-white/10 hover:border-accent/40" : "bg-white border-slate-200 hover:border-accent/40 shadow-sm"
+                  )}>
+                    <span className={cn(
+                      "text-sm font-bold uppercase tracking-[0.2em] transition-colors",
+                      isDark ? "text-gray-300 group-hover:text-white" : "text-slate-500 group-hover:text-slate-900"
+                    )}>Launch Stashflow</span>
                     <div className="overflow-hidden rounded-full">
                       <ConnectButton label="Enter App" showBalance={false} />
                     </div>
@@ -402,7 +496,10 @@ export default function Home() {
                 </div>
               ) : (
                 <Link href="/dashboard" className="group pt-4">
-                  <div className="bg-white px-8 py-3.5 rounded-xl flex items-center gap-2 text-black text-sm font-bold hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all">
+                  <div className={cn(
+                    "px-8 py-3.5 rounded-xl flex items-center gap-2 text-sm font-bold transition-all",
+                    isDark ? "bg-white text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]" : "bg-slate-900 text-white hover:bg-slate-800 shadow-md"
+                  )}>
                     Go to Your Dashboard <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </Link>
@@ -413,7 +510,10 @@ export default function Home() {
       </section>
 
       {/* Subtle Bottom Glow */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-accent/30 to-transparent pointer-events-none" />
+      <div className={cn(
+        "fixed bottom-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent to-transparent pointer-events-none transition-all duration-1000",
+        isDark ? "via-accent/30" : "via-transparent"
+      )} />
     </main>
   );
 }

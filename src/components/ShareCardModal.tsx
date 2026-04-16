@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Goal } from '@/store/useGoalStore';
 import { Copy, Download, X, Share2, Loader2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import { useTheme } from '@/components/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 interface ShareCardModalProps {
   goal: Goal;
@@ -20,6 +22,8 @@ interface ShareCardModalProps {
 }
 
 export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCardModalProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const cardRef = useRef<HTMLDivElement>(null);
   const [isCopying, setIsCopying] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -129,12 +133,15 @@ export function ShareCardModal({ goal, milestone, open, onOpenChange }: ShareCar
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px] bg-[#0A0A0F]/95 backdrop-blur-3xl border-white/5 text-white p-0 overflow-hidden shadow-[0_0_100px_rgba(0,0,0,1)]">
+      <DialogContent className={cn(
+        "sm:max-w-[520px] p-0 overflow-hidden shadow-2xl transition-colors duration-500",
+        isDark ? "bg-[#0A0A0F]/95 backdrop-blur-3xl border-white/5 text-white" : "bg-white border-slate-200 text-slate-900"
+      )}>
         <div className="p-6 sm:p-8 space-y-8">
           <div className="flex justify-between items-center">
              <div className="space-y-1">
-               <h3 className="font-display font-black text-xl tracking-tight uppercase italic decoration-accent/30 decoration-4 underline-offset-8">Share Milestone</h3>
-               <p className="text-gray-500 text-xs font-body font-medium">Download your custom card or share your success</p>
+               <h3 className={cn("font-display font-black text-xl tracking-tight uppercase italic decoration-accent/30 decoration-4 underline-offset-8", !isDark && "text-slate-900")}>Share Milestone</h3>
+               <p className={cn("text-xs font-body font-medium", isDark ? "text-gray-500" : "text-slate-500")}>Download your custom card or share your success</p>
              </div>
           </div>
 

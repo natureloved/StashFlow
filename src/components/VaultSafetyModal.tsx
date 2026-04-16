@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { ShieldCheck, ShieldAlert, ShieldX, Info, ExternalLink, Calculator, Landmark, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { EducationPopover } from '@/components/EducationPopover';
+import { useTheme } from '@/components/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 interface VaultSafetyModalProps {
   vault: {
@@ -31,6 +33,8 @@ interface VaultSafetyModalProps {
 }
 
 export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModalProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const tvl = Number(vault.analytics.tvl.usd);
   
   const getSafetyScore = () => {
@@ -61,7 +65,10 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100%-2.5rem)] sm:max-w-[420px] bg-[#111118] border-[#1E1E2E] text-white p-0 overflow-hidden">
+      <DialogContent className={cn(
+        "max-w-[calc(100%-2.5rem)] sm:max-w-[420px] p-0 overflow-hidden transition-colors duration-500",
+        isDark ? "bg-[#111118] border-[#1E1E2E] text-white" : "bg-white border-slate-200 text-slate-900 shadow-xl"
+      )}>
         <div className="max-h-[85vh] overflow-y-auto w-full thin-scrollbar">
         <div className="p-6 pb-0">
           <Badge className={`${score.color}/10 ${score.text} border-${score.text.split('-')[1]}-500/20 px-3 py-1 mb-6 flex items-center gap-2 w-fit font-bold`}>
@@ -69,8 +76,8 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
           </Badge>
           
           <DialogHeader className="text-left mb-6">
-            <DialogTitle className="font-display text-2xl font-bold">Vault Security</DialogTitle>
-            <DialogDescription className="text-gray-400 font-body">
+            <DialogTitle className={cn("font-display text-2xl font-bold", !isDark && "text-slate-900")}>Vault Security</DialogTitle>
+            <DialogDescription className={isDark ? "text-gray-400 font-body" : "text-slate-500 font-body"}>
               Simple breakdown of the risks and setup of this yield strategy.
             </DialogDescription>
           </DialogHeader>
@@ -79,46 +86,55 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
         <div className="px-6 space-y-4">
           {/* Fact Cards */}
           <div className="space-y-3">
-            <div className="glass-card p-3 border-border flex items-center gap-4 bg-white/5">
+            <div className={cn(
+              "p-3 rounded-xl border flex items-center gap-4 transition-all",
+              isDark ? "bg-white/5 border-border" : "bg-slate-50 border-slate-200"
+            )}>
               <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
                 <Landmark className="w-5 h-5" />
               </div>
               <div className="flex-1">
-                <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">
+                <div className={cn("text-[10px] uppercase font-bold tracking-wider", isDark ? "text-gray-500" : "text-slate-500")}>
                   <EducationPopover id="tvl" term="Total deposits">
                     This is how much money other users have 
                     deposited. Higher deposits generally mean the protocol 
                     is more trusted and battle-tested.
                   </EducationPopover>
                 </div>
-                <p className="text-sm font-bold text-white">{formattedTvl} deposited by other users</p>
+                <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-slate-900")}>{formattedTvl} deposited by other users</p>
               </div>
             </div>
 
-            <div className="glass-card p-3 border-border flex items-center gap-4 bg-white/5">
+            <div className={cn(
+              "p-3 rounded-xl border flex items-center gap-4 transition-all",
+              isDark ? "bg-white/5 border-border" : "bg-slate-50 border-slate-200"
+            )}>
               <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
                 <Calculator className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Your yearly earn rate</div>
-                <p className="text-sm font-bold text-white">{(vault.analytics.apy.total).toFixed(1)}% — $1,000 grows to ~${(1000 * (1 + vault.analytics.apy.total / 100)).toLocaleString()} in a year</p>
+                <div className={cn("text-[10px] uppercase font-bold tracking-wider", isDark ? "text-gray-400" : "text-slate-500")}>Your yearly earn rate</div>
+                <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-slate-900")}>{(vault.analytics.apy.total).toFixed(1)}% — $1,000 grows to ~${(1000 * (1 + vault.analytics.apy.total / 100)).toLocaleString()} in a year</p>
               </div>
             </div>
 
-            <div className="glass-card p-3 border-border flex items-center gap-4 bg-white/5">
+            <div className={cn(
+              "p-3 rounded-xl border flex items-center gap-4 transition-all",
+              isDark ? "bg-white/5 border-border" : "bg-slate-50 border-slate-200"
+            )}>
               <div className="w-10 h-10 rounded-xl bg-[#00E5FF]/10 flex items-center justify-center text-[#00E5FF]">
                 <Shield className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Powered by</div>
-                <p className="text-sm font-bold text-white">{getProtocolExplainer(vault.protocol.name)}</p>
+                <div className={cn("text-[10px] uppercase font-bold tracking-wider", isDark ? "text-gray-400" : "text-slate-500")}>Powered by</div>
+                <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-slate-900")}>{getProtocolExplainer(vault.protocol.name)}</p>
               </div>
             </div>
           </div>
 
           <div className="pt-6 pb-2">
-            <h4 className="font-display font-bold text-white mb-2">What happens to my money?</h4>
-            <div className="text-sm text-gray-400 font-body leading-relaxed">
+            <h4 className={cn("font-display font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>What happens to my money?</h4>
+            <div className={cn("text-sm font-body leading-relaxed", isDark ? "text-gray-400" : "text-slate-500")}>
               Your deposit is held in a smart contract — a self-executing program 
               on the blockchain. No company controls it. You can withdraw at any time.
             </div>
@@ -131,11 +147,16 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
               href={vault.protocol.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center h-10 px-4 bg-surface border border-border rounded-lg hover:bg-surface/80 text-white text-sm font-medium transition-colors"
+              className={cn(
+                "w-full flex items-center justify-center h-10 px-4 rounded-lg transition-colors text-sm font-medium border",
+                isDark 
+                  ? "bg-surface border-border text-white hover:bg-surface/80" 
+                  : "bg-white border-slate-200 text-slate-900 hover:bg-slate-50"
+              )}
             >
               View protocol <ExternalLink className="w-4 h-4 ml-2" />
             </a>
-            <Button onClick={() => onOpenChange(false)} className="w-full bg-transparent hover:bg-white/5 text-gray-400" variant="ghost">
+            <Button onClick={() => onOpenChange(false)} className={cn("w-full transition-all", isDark ? "bg-transparent hover:bg-white/5 text-gray-400" : "bg-transparent hover:bg-slate-100 text-slate-500")} variant="ghost">
               Close
             </Button>
           </div>

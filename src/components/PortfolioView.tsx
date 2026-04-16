@@ -119,21 +119,21 @@ export function PortfolioView() {
   // ─── Theme-aware class helpers ────────────────────────────────────────────
   const isDark = theme === 'dark';
 
-  const bg = isDark ? 'bg-[#0A0A0F]' : 'bg-slate-50';
-  const textPrimary = isDark ? 'text-white' : 'text-gray-900';
-  const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
-  const textSubtle = isDark ? 'text-gray-500' : 'text-gray-400';
+  const bg = isDark ? 'bg-[#0A0A0F]' : 'bg-slate-50/50';
+  const textPrimary = isDark ? 'text-white' : 'text-slate-900';
+  const textMuted = isDark ? 'text-gray-400' : 'text-slate-500';
+  const textSubtle = isDark ? 'text-gray-500' : 'text-slate-400';
   const cardBg = isDark
     ? 'bg-surface/20 border-border'
-    : 'bg-white border-gray-200 shadow-sm';
+    : 'bg-white border-slate-200 shadow-sm';
   const glassBg = isDark
     ? 'bg-white/5 border border-white/10'
-    : 'bg-white border border-gray-200 shadow-md';
+    : 'bg-white border border-slate-200 shadow-md';
   const surfaceBg = isDark ? 'bg-[#0A0A0F]' : 'bg-white';
   const idleCardBg = isDark
     ? 'bg-amber-500/5 border-amber-500/20 hover:border-amber-500/50'
-    : 'bg-amber-50 border-amber-200 hover:border-amber-400';
-  const borderSubtle = isDark ? 'border-border' : 'border-gray-200';
+    : 'bg-amber-50/50 border-amber-100 hover:border-amber-200 shadow-sm';
+  const borderSubtle = isDark ? 'border-border' : 'border-slate-100';
 
   // ─── Not connected ─────────────────────────────────────────────────────────
   if (!isConnected) {
@@ -287,10 +287,10 @@ export function PortfolioView() {
         {/* Net Worth card */}
         <div
           className={cn(
-            'px-8 py-6 rounded-2xl border flex flex-col items-end relative overflow-hidden group',
+            'px-8 py-6 rounded-2xl border flex flex-col items-end relative overflow-hidden group transition-all duration-500',
             isDark
               ? 'bg-white/5 border-accent/20 shadow-[0_0_20px_rgba(0,229,255,0.15)]'
-              : 'bg-white border-accent/30 shadow-lg'
+              : 'bg-white border-slate-200 shadow-lg'
           )}
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-accent/10 transition-all" />
@@ -299,10 +299,10 @@ export function PortfolioView() {
           </div>
           <div
             className={cn(
-              'text-4xl font-display font-bold tracking-tight relative z-10',
+              'text-4xl font-display font-bold tracking-tight relative z-10 transition-colors',
               isDark
                 ? 'text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                : 'text-gray-900'
+                : 'text-slate-900'
             )}
           >
             ${totalNetWorth.toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -319,8 +319,8 @@ export function PortfolioView() {
       {!hasData ? (
         <div
           className={cn(
-            'col-span-full py-32 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed',
-            isDark ? 'border-white/10' : 'border-gray-300 bg-gray-50'
+            'col-span-full py-32 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed transition-all',
+            isDark ? 'border-white/10' : 'border-slate-300 bg-slate-50/50'
           )}
         >
           <div
@@ -425,10 +425,10 @@ export function PortfolioView() {
                 </h3>
                 <Badge
                   className={cn(
-                    'text-[10px] font-black uppercase',
+                    'text-[10px] font-black uppercase transition-all',
                     isDark
                       ? 'bg-accent/10 text-accent border-accent/20'
-                      : 'bg-accent/10 text-cyan-700 border-accent/20'
+                      : 'bg-cyan-50 text-cyan-700 border-cyan-100'
                   )}
                 >
                   {goalsWithContributions.length} Active
@@ -497,7 +497,7 @@ export function PortfolioView() {
                           'p-4 transition-all group w-full !overflow-hidden',
                           isDark
                             ? 'bg-surface/20 border-border hover:border-accent/30 shadow-sm'
-                            : 'bg-white border-gray-200 hover:border-accent/50 shadow-sm hover:shadow-md'
+                            : 'bg-white border-slate-200 hover:border-accent/30 shadow-sm hover:shadow-md'
                         )}
                       >
                         {/* Header */}
@@ -505,10 +505,10 @@ export function PortfolioView() {
                           <div className="flex items-center gap-3">
                             <div
                               className={cn(
-                                'w-10 h-10 rounded-xl border flex items-center justify-center overflow-hidden',
+                                'w-10 h-10 rounded-xl border flex items-center justify-center overflow-hidden transition-all',
                                 isDark
                                   ? 'bg-[#0A0A0F] border-border'
-                                  : 'bg-gray-50 border-gray-200'
+                                  : 'bg-slate-50 border-slate-200'
                               )}
                             >
                               {(pos as any)?.logoUri || (pos as any)?.asset?.logoUri ? (

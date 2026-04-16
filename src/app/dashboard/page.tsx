@@ -501,14 +501,14 @@ function DashboardContent() {
                         <div
                           className={cn(
                             'h-8 w-64 rounded-full',
-                            isDark ? 'bg-white/20' : 'bg-gray-200'
+                            isDark ? 'bg-white/10' : 'bg-slate-200'
                           )}
                         />
                       </div>
                       <div
                         className={cn(
                           'h-12 w-40 rounded-xl',
-                          isDark ? 'bg-white/10' : 'bg-gray-100'
+                          isDark ? 'bg-white/5' : 'bg-slate-100'
                         )}
                       />
                     </div>
@@ -521,7 +521,11 @@ function DashboardContent() {
                           : 'bg-gradient-to-r from-cyan-50 via-white to-white border-cyan-200'
                       )}
                     >
-                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform duration-500">
+                      <div className={cn(
+                        "absolute -inset-1 rounded-3xl blur-2xl opacity-20 transition-opacity",
+                        isDark ? "bg-accent/20" : "bg-accent/5"
+                      )} />
+                      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform duration-500">
                         <Coins className="w-40 h-40 text-accent" />
                       </div>
                       <div className="space-y-2 relative z-10">
@@ -531,7 +535,7 @@ function DashboardContent() {
                         <h2
                           className={cn(
                             'text-2xl font-display font-bold',
-                            isDark ? 'text-white' : 'text-gray-900'
+                            isDark ? 'text-white' : 'text-slate-900'
                           )}
                         >
                           We found{' '}
@@ -545,7 +549,7 @@ function DashboardContent() {
                           <span
                             className={cn(
                               'font-bold',
-                              isDark ? 'text-white' : 'text-gray-900'
+                              isDark ? 'text-white' : 'text-slate-900'
                             )}
                           >
                             12.5% APY
@@ -572,13 +576,16 @@ function DashboardContent() {
                   transition={{ delay: 0.3 }}
                   className="mb-8 md:mb-12 relative group"
                 >
-                  <div className="absolute -inset-1 bg-gradient-to-r from-secondary/20 via-accent/10 to-secondary/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition duration-1000" />
+                  <div className={cn(
+                    "absolute -inset-1 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition duration-1000",
+                    isDark ? "bg-gradient-to-r from-secondary/20 via-accent/10 to-secondary/20" : "bg-accent/5"
+                  )} />
                   <div
                     className={cn(
-                      'relative p-6 border rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6',
+                      'relative p-6 border rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 transition-all',
                       isDark
                         ? 'bg-[#0A0A0F] border-white/5'
-                        : 'bg-white border-gray-200 shadow-sm'
+                        : 'bg-white border-slate-200 shadow-sm'
                     )}
                   >
                     <div className="flex items-center gap-5 w-full">
@@ -604,10 +611,10 @@ function DashboardContent() {
                 {userGoals.length === 0 && (
                   <div
                     className={cn(
-                      'col-span-full py-32 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed',
+                      'col-span-full py-32 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed transition-all',
                       isDark
                         ? 'border-white/10'
-                        : 'border-gray-300 bg-gray-50'
+                        : 'border-slate-200 bg-slate-50/50'
                     )}
                   >
                     <div

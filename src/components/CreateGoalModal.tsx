@@ -29,6 +29,8 @@ import { getTokenPrice } from '@/lib/prices';
 import { AmountInput } from '@/components/AmountInput';
 import confetti from 'canvas-confetti';
 import { VaultSafetyModal } from '@/components/VaultSafetyModal';
+import { useTheme } from '@/components/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 const ERC20_ABI = [
   {
@@ -82,6 +84,8 @@ interface CreateGoalModalProps {
 }
 
 export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -317,10 +321,13 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(val) => { onOpenChange(val); if(!val) reset(); }}>
-      <DialogContent className="max-w-[calc(100%-3rem)] sm:max-w-[440px] max-h-[calc(100vh-5rem)] overflow-hidden bg-surface border-border text-white">
+      <DialogContent className={cn(
+        "max-w-[calc(100%-3rem)] sm:max-w-[440px] max-h-[calc(100vh-5rem)] overflow-hidden transition-colors duration-500",
+        isDark ? "bg-surface border-border text-white" : "bg-white border-slate-200 text-slate-900 shadow-xl"
+      )}>
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">Create New Goal</DialogTitle>
-          <DialogDescription className="text-white/60">
+          <DialogTitle className={cn("font-display text-2xl", !isDark && "text-slate-900")}>Create New Goal</DialogTitle>
+          <DialogDescription className={isDark ? "text-white/60" : "text-slate-500"}>
             {step === 1 && "What are you saving for?"}
             {step === 2 && "Choose a risk level that fits your goal."}
             {step === 3 && "We've matched you with the best strategy."}
@@ -346,7 +353,10 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                     placeholder="Japan Trip 2027 ✈️" 
                     value={name} 
                     onChange={(e) => setName(e.target.value)}
-                    className="bg-[#0A0A0F] border-border"
+                    className={cn(
+                      "transition-all",
+                      isDark ? "bg-[#0A0A0F] border-border" : "bg-slate-50 border-slate-200 focus:bg-white"
+                    )}
                   />
                 </div>
                 <div className="space-y-2">
@@ -357,7 +367,10 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                     placeholder="3000" 
                     value={amount} 
                     onChange={(e) => setAmount(e.target.value)}
-                    className="bg-[#0A0A0F] border-border"
+                    className={cn(
+                      "transition-all",
+                      isDark ? "bg-[#0A0A0F] border-border" : "bg-slate-50 border-slate-200 focus:bg-white"
+                    )}
                   />
                 </div>
                 <Button 
@@ -385,7 +398,11 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                 ].map((tier) => (
                   <Card 
                     key={tier.id}
-                    className={`p-4 bg-[#0A0A0F] border-border hover:border-accent cursor-pointer transition-all group ${isLoadingVault ? 'opacity-50 pointer-events-none' : ''}`}
+                    className={cn(
+                      "p-4 cursor-pointer transition-all group",
+                      isDark ? "bg-[#0A0A0F] border-border hover:border-accent" : "bg-slate-50 border-slate-200 hover:border-accent hover:bg-white hover:shadow-sm",
+                      isLoadingVault && 'opacity-50 pointer-events-none'
+                    )}
                     onClick={() => handleRiskSelect(tier.id as RiskTier)}
                   >
                     <div className="flex items-center gap-4">
@@ -393,8 +410,8 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                         <tier.icon className="w-6 h-6" />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-display font-bold text-lg text-white">{tier.title}</h4>
-                        <p className="text-sm text-gray-400">{tier.desc}</p>
+                        <h4 className={cn("font-display font-bold text-lg", isDark ? "text-white" : "text-slate-900")}>{tier.title}</h4>
+                        <p className={cn("text-sm", isDark ? "text-gray-400" : "text-slate-500")}>{tier.desc}</p>
                       </div>
                       {isLoadingVault && riskTier === tier.id && <Loader2 className="w-4 h-4 animate-spin text-accent" />}
                     </div>
@@ -417,10 +434,13 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="p-4 bg-[#0A0A0F] rounded-xl border border-accent/30 glow-cyan">
+                <div className={cn(
+                  "p-4 rounded-xl border transition-all",
+                  isDark ? "bg-[#0A0A0F] border-accent/30 glow-cyan" : "bg-cyan-50/50 border-cyan-100 shadow-sm"
+                )}>
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h4 className="font-display font-bold text-xl">
+                      <h4 className={cn("font-display font-bold text-xl", !isDark && "text-slate-900")}>
                         <EducationPopover id="vault" term="vault">
                           A vault is a smart contract that pools 
                           deposits and puts them to work in DeFi lending markets. 
@@ -452,7 +472,7 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                   <div className="grid grid-cols-2 gap-4 text-sm font-body">
                     <div className="space-y-1">
                       <div className="text-[10px] text-gray-500 uppercase font-bold">Total Deposits</div>
-                      <div className="text-white font-bold">
+                      <div className={cn("font-bold", isDark ? "text-white" : "text-slate-900")}>
                         <EducationPopover id="tvl" term={`$${Number(selectedVault.analytics.tvl.usd).toLocaleString()}`}>
                           This is how much money other users have 
                           deposited. Higher deposits generally mean the protocol 
@@ -462,14 +482,17 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                     </div>
                     <div className="space-y-1 text-right">
                       <div className="text-[10px] text-gray-500 uppercase font-bold">Network</div>
-                      <div className="text-white font-bold">{selectedVault.network}</div>
+                      <div className={cn("font-bold", isDark ? "text-white" : "text-slate-900")}>{selectedVault.network}</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-surface/50 p-3 rounded-lg border border-border flex items-center gap-3">
+                <div className={cn(
+                  "p-3 rounded-lg border flex items-center gap-3 transition-all",
+                  isDark ? "bg-surface/50 border-border" : "bg-slate-50 border-slate-200"
+                )}>
                   <Target className="w-5 h-5 text-accent" />
-                  <p className="text-xs text-gray-300">
+                  <p className={cn("text-xs", isDark ? "text-gray-300" : "text-slate-600")}>
                     This vault was selected because it offers the best {riskTier} risk-adjusted yield for your goal.
                   </p>
                 </div>
@@ -497,19 +520,22 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="bg-accent/5 border border-accent/20 p-3 rounded-xl space-y-2">
+                <div className={cn(
+                  "border p-3 rounded-xl space-y-2 transition-all",
+                  isDark ? "bg-accent/5 border-accent/20" : "bg-slate-50 border-slate-200"
+                )}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-accent font-bold uppercase tracking-wider">Goal Summary</span>
                     <Badge variant="outline" className="border-accent/30 text-accent text-[10px]">{selectedVault.network}</Badge>
                   </div>
                   <div className="flex justify-between items-end">
                     <div>
-                      <p className="text-lg font-display font-bold text-white leading-tight">{name}</p>
+                      <p className={cn("text-lg font-display font-bold leading-tight", isDark ? "text-white" : "text-slate-900")}>{name}</p>
                       <p className="text-[10px] text-gray-400">Targeting ${Number(amount).toLocaleString()}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-display font-bold text-secondary leading-tight">{selectedVault.analytics.apy.total.toFixed(2)}% APY</p>
-                      <p className="text-[9px] text-gray-500 uppercase font-black">{selectedVault.protocol.name}</p>
+                      <p className={cn("text-[9px] uppercase font-black", isDark ? "text-gray-500" : "text-slate-400")}>{selectedVault.protocol.name}</p>
                     </div>
                   </div>
                 </div>
@@ -538,7 +564,10 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                     <div className="flex justify-center gap-4">
                       <button 
                         onClick={() => setIsUsdMode(!isUsdMode)}
-                        className="text-gray-500 font-bold text-[10px] hover:text-white uppercase tracking-widest border border-border px-2 py-0.5 rounded-md transition-colors"
+                        className={cn(
+                          "font-bold text-[10px] uppercase tracking-widest border px-2 py-0.5 rounded-md transition-all",
+                          isDark ? "text-gray-500 border-border hover:text-white" : "text-slate-400 border-slate-200 hover:text-slate-900 hover:bg-slate-50"
+                        )}
                       >
                         Mode: {isUsdMode ? 'USD' : selectedToken?.symbol}
                       </button>
@@ -549,17 +578,23 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                     <Button 
                       disabled={isFetchingQuote}
                       onClick={fetchQuote} 
-                      className="w-full h-12 bg-white text-black hover:bg-white/90 font-bold"
+                      className={cn(
+                        "w-full h-12 font-bold transition-all",
+                        isDark ? "bg-white text-black hover:bg-white/90" : "bg-slate-900 text-white hover:bg-slate-800"
+                      )}
                     >
                       {isFetchingQuote ? <Loader2 className="animate-spin" /> : 'Review Route'}
                     </Button>
                   )}
 
                   {quote && (
-                    <div className="bg-[#0A0A0F] border border-border rounded-xl p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+                    <div className={cn(
+                      "border rounded-xl p-4 space-y-4 animate-in fade-in slide-in-from-top-2 transition-all",
+                      isDark ? "bg-[#0A0A0F] border-border" : "bg-slate-50 border-slate-200"
+                    )}>
                       <div className="flex justify-between items-center text-xs">
                          <span className="text-gray-400 uppercase font-bold tracking-widest">Fees</span>
-                         <span className="text-white font-numeric">~${(quote.estimate?.feeCosts?.reduce((acc: number, c: any) => acc + Number(c.amountUSD || 0), 0) + quote?.estimate?.gasCosts?.reduce((acc: number, c: any) => acc + Number(c.amountUSD || 0), 0)).toFixed(2)}</span>
+                         <span className={cn("font-numeric", isDark ? "text-white" : "text-slate-900")}>~${(quote.estimate?.feeCosts?.reduce((acc: number, c: any) => acc + Number(c.amountUSD || 0), 0) + quote?.estimate?.gasCosts?.reduce((acc: number, c: any) => acc + Number(c.amountUSD || 0), 0)).toFixed(2)}</span>
                       </div>
                       
                       <label className="flex items-center gap-3 cursor-pointer group p-1">
@@ -588,7 +623,10 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                               setError(err.message);
                             }
                           }}
-                          className="w-full bg-white text-black hover:bg-white/90 font-bold"
+                          className={cn(
+                            "w-full font-bold transition-all",
+                            isDark ? "bg-white text-black hover:bg-white/90" : "bg-slate-900 text-white hover:bg-slate-800"
+                          )}
                         >
                           {isConfirmingApproval ? <><Loader2 className="animate-spin mr-2" /> Confirming...</> : `Approve ${selectedToken.symbol}`}
                         </Button>
@@ -632,13 +670,16 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center justify-center py-10 text-center"
               >
-                <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center mb-6 border border-accent/30 shadow-[0_0_30px_rgba(0,229,255,0.2)]">
+                <div className={cn(
+                  "w-20 h-20 rounded-full flex items-center justify-center mb-6 border transition-all",
+                  isDark ? "bg-accent/20 border-accent/30 shadow-[0_0_30px_rgba(0,229,255,0.2)]" : "bg-accent/10 border-accent/20"
+                )}>
                   <CheckCircle2 className="w-10 h-10 text-accent" />
                 </div>
-                <h3 className="font-display text-3xl font-bold mb-2 text-white">Goal Activated!</h3>
-                <p className="text-gray-400 mb-8 font-body leading-relaxed">
+                <h3 className={cn("font-display text-3xl font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>Goal Activated!</h3>
+                <p className={cn("mb-8 font-body leading-relaxed", isDark ? "text-gray-400" : "text-slate-500")}>
                   🎉 Goal created and funded! <br/>
-                  <span className="text-white font-bold">${isUsdMode ? Number(depositAmount).toFixed(2) : (Number(depositAmount) * tokenPrice).toFixed(2)}</span> is now earning <span className="text-accent font-bold">{selectedVault?.analytics.apy.total.toFixed(2)}% APY</span> in your <span className="text-white font-bold">{name}</span> goal.
+                  <span className={cn("font-bold", isDark ? "text-white" : "text-slate-900")}>${isUsdMode ? Number(depositAmount).toFixed(2) : (Number(depositAmount) * tokenPrice).toFixed(2)}</span> is now earning <span className="text-secondary font-bold">{selectedVault?.analytics.apy.total.toFixed(2)}% APY</span> in your <span className={cn("font-bold", isDark ? "text-white" : "text-slate-900")}>{name}</span> goal.
                 </p>
                 <Button onClick={() => onOpenChange(false)} className="w-full h-12 bg-accent text-black hover:bg-accent/90 font-bold rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.2)]">
                   Go to Dashboard
@@ -649,9 +690,12 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
         </div>
 
         {isLoadingVault && (
-          <div className="absolute inset-0 bg-surface/80 flex flex-col items-center justify-center z-50 rounded-lg">
+          <div className={cn(
+            "absolute inset-0 flex flex-col items-center justify-center z-50 rounded-lg transition-all",
+            isDark ? "bg-surface/80" : "bg-white/80 backdrop-blur-sm"
+          )}>
             <Loader2 className="w-10 h-10 text-accent animate-spin mb-4" />
-            <p className="font-display font-bold">Finding best vault...</p>
+            <p className={cn("font-display font-bold text-xl", !isDark && "text-slate-900")}>Finding best vault...</p>
           </div>
         )}
       </DialogContent>
@@ -672,17 +716,19 @@ export function TokenChip({ token, chainId, isSelected, onClick }: { token: any,
   return (
     <button
       onClick={hasBalance ? onClick : undefined}
-      className={`
-        flex items-center gap-2 px-4 py-2 rounded-xl border transition-all flex-shrink-0
-        ${isSelected ? 'border-accent bg-accent/10 ring-1 ring-accent' : 'border-border bg-surface/50 hover:border-accent/50'}
-        ${!hasBalance ? 'opacity-40 cursor-not-allowed grayscale' : 'cursor-pointer'}
-      `}
+      className={cn(
+        "flex items-center gap-2 px-4 py-2 rounded-xl border transition-all flex-shrink-0",
+        isSelected 
+          ? 'border-accent bg-accent/10 ring-1 ring-accent' 
+          : (isDark ? 'border-border bg-surface/50 hover:border-accent/50' : 'border-slate-200 bg-white hover:border-slate-300 shadow-sm'),
+        !hasBalance ? 'opacity-40 cursor-not-allowed grayscale' : 'cursor-pointer'
+      )}
     >
       <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center text-[10px] font-bold text-accent">
         {token.symbol[0]}
       </div>
       <div className="text-left">
-        <div className="text-xs font-bold text-white uppercase tracking-tighter">{token.symbol}</div>
+        <div className={cn("text-xs font-bold uppercase tracking-tighter", isDark ? "text-white" : "text-slate-900")}>{token.symbol}</div>
         <div className="text-[10px] text-gray-500 font-numeric">
           {balance ? `${Number(balance.formatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}` : '0.00'}
         </div>

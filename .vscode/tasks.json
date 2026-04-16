@@ -1,0 +1,124 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Inspect Git Status",
+			"type": "shell",
+			"command": "git status --short && git remote -v",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Show Git Branch",
+			"type": "shell",
+			"command": "git branch --show-current",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage and Commit LIFI Fix",
+			"type": "shell",
+			"command": "git add src/app/api/lifi/[[...path]]/route.ts src/lib/lifi.ts && git commit -m \"Fix LI.FI earn proxy routing and vault query params\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage and Commit LIFI Fix Shell",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git add src/app/api/lifi/[[...path]]/route.ts src/lib/lifi.ts && git commit -m \\\"Fix LI.FI earn proxy routing and vault query params\\\"\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Push Commit to Origin Master",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git push origin master\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Confirm Git Log",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git log -1 --oneline\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Git Status",
+			"type": "shell",
+			"command": "git status --short",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage and Commit UI Fix",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git add src/app/dashboard/page.tsx src/components/CreateGoalModal.tsx && git commit -m \\\"Fix dashboard banner and reset New Goal modal on reopen\\\" && git push origin master\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify Git Push",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git status --short && echo --- && git log -2 --oneline && echo --- && git push origin master\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect LI.FI Position Data",
+			"type": "shell",
+			"command": "cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && python -c \"import urllib.request; addr='0xADfA091eD75B22fcB2e7dabf1A35eD34086A5011'; url=f'https://li.quest/v1/earn/portfolio/{addr}/positions'; print('status', urllib.request.urlopen(url).status); print(urllib.request.urlopen(url).read(2000).decode('utf-8'))\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect LI.FI Position Data 2",
+			"type": "shell",
+			"command": "cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && python -c \"import urllib.request; addr='0xADfA091eD75B22fcB2e7dabf1A35eD34086A5011'; url='https://li.quest/v1/earn/portfolio/' + addr + '/positions'; resp = urllib.request.urlopen(url); print('status', resp.status); print(resp.read(2000).decode('utf-8'))\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check Git Status",
+			"type": "shell",
+			"command": "git status --short",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit and Push Withdrawal Fix",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git add src/app/dashboard/goals/[id]/page.tsx src/components/WithdrawModal.tsx && git commit -m \\\"Fix withdrawal position matching and quote generation\\\" && git push origin master\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify Commit Push Withdrawal Fix",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git status --short && echo --- && git log -1 --oneline && echo --- && git push origin master\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit and Push Withdrawal Fix 2",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git add src/components/WithdrawModal.tsx && git commit -m \\\"Use live position balance fallback for withdraw quotes\\\" && git push origin master\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit and Push WithdrawModal Fix",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git add src/components/WithdrawModal.tsx && git commit -m \\\"Fix WithdrawModal duplicate import build error\\\" && git push origin master\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Commit and Push Milestone Fix",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git add src/components/ShareCardModal.tsx && git commit -m \\\"Fix milestone card saved amount display\\\" && git push origin master\"",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
