@@ -16,7 +16,9 @@ import {
   Zap, 
   CheckCircle,
   Coins,
-  Globe
+  Globe,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 
@@ -139,7 +141,7 @@ export default function Home() {
   };
 
   const { isConnected } = useAccount();
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
   const [metrics, setMetrics] = React.useState({ vaults: 0, chains: 0, protocols: 0 });
 
@@ -162,7 +164,7 @@ export default function Home() {
             </div>
             <span className="font-display font-bold text-xl tracking-tight">Stashflow</span>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <Link href="#how-it-works" className={cn(
               "text-sm font-medium transition-colors hidden md:block",
               isDark ? "text-gray-400 hover:text-white" : "text-slate-500 hover:text-slate-800"
@@ -171,6 +173,18 @@ export default function Home() {
               "text-sm font-medium transition-colors hidden md:block mr-2",
               isDark ? "text-gray-400 hover:text-white" : "text-slate-500 hover:text-slate-800"
             )}>Security</Link>
+            <button
+              onClick={toggleTheme}
+              className={cn(
+                'w-9 h-9 rounded-xl flex items-center justify-center transition-colors',
+                isDark
+                  ? 'bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+              )}
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <ConnectButton showBalance={false} chainStatus="icon" />
           </div>
         </div>
