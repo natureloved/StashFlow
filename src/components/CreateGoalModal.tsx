@@ -563,7 +563,6 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                       value={depositAmount}
                       onChange={setDepositAmount}
                       onMax={handleMax}
-                      placeholder="Even $10 gets you started"
                     />
                     <div className="flex justify-center gap-4">
                       <button 
