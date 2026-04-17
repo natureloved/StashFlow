@@ -189,30 +189,25 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
       const amountRaw = Number(amount) || 0;
       
       let fromAmountSmallest: string;
-      const totalUsd = livePosition ? Number(livePosition.balanceUsd) : 0;
-      const nativeBalance = livePosition ? Number(livePosition.balanceNative ?? 0) : 0;
-      const tokenDecimals = livePosition?.asset?.decimals ?? vaultDecimals;
+      const totalUsd = livePosition ? Number(livePosition.balanceUsd ?? livePosition.amountUsd ?? 0) : 0;
+      const nativeBalance = livePosition ? Number(livePosition.balanceNative ?? livePosition.balance ?? livePosition.value ?? 0) : 0;
+      const tokenDecimals = livePosition?.asset?.decimals ?? livePosition?.token?.decimals ?? vaultDecimals;
+      const positionAmount = livePosition?.amount ?? livePosition?.shares ?? livePosition?.shareAmount;
 
-      if (amountRaw < MIN_WITHDRAWAL_USD && amountRaw < totalUsd) {
-        setError(`LI.FI quotes are not reliable for withdrawals smaller than $${MIN_WITHDRAWAL_USD}. Try a larger amount or withdraw the full balance if your total position is under $${MIN_WITHDRAWAL_USD}.`);
+      if (!livePosition || totalUsd <= 0) {
+        setError('Live vault position data is unavailable. Please refresh your portfolio and try again.');
         setIsFetchingQuote(false);
         return;
       }
 
-      if (livePosition && totalUsd > 0) {
-        if (livePosition.amount) {
-          const totalShares = BigInt(livePosition.amount.toString());
-          const requestedUsdScaled = BigInt(Math.floor(amountRaw * 1000000));
-          const totalUsdScaled = BigInt(Math.floor(totalUsd * 1000000));
-          fromAmountSmallest = ((totalShares * requestedUsdScaled) / totalUsdScaled).toString();
-        } else if (nativeBalance > 0) {
-          const shareAmount = (amountRaw / totalUsd) * nativeBalance;
-          fromAmountSmallest = parseUnits(shareAmount.toFixed(tokenDecimals), tokenDecimals).toString();
-        } else {
-          setError('Live vault position data is unavailable. Please refresh your portfolio and try again.');
-          setIsFetchingQuote(false);
-          return;
-        }
+      if (positionAmount !== undefined && positionAmount !== null && positionAmount !== '') {
+        const totalShares = BigInt(positionAmount.toString());
+        const requestedUsdScaled = BigInt(Math.floor(amountRaw * 1000000));
+        const totalUsdScaled = BigInt(Math.max(Math.floor(totalUsd * 1000000), 1));
+        fromAmountSmallest = ((totalShares * requestedUsdScaled) / totalUsdScaled).toString();
+      } else if (nativeBalance > 0) {
+        const shareAmount = (amountRaw / totalUsd) * nativeBalance;
+        fromAmountSmallest = parseUnits(shareAmount.toFixed(tokenDecimals), tokenDecimals).toString();
       } else {
         setError('Live vault position data is unavailable. Please refresh your portfolio and try again.');
         setIsFetchingQuote(false);
