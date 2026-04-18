@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const LIFI_EARN_API_URL = 'https://earn.li.fi/v1';
-const LIFI_COMPOSER_BASE_URL = 'https://li.quest/v1';
-
 export async function GET(
   request: NextRequest,
   props: { params: Promise<{ path?: string[] }> }
@@ -11,23 +8,24 @@ export async function GET(
   const path = params.path || [];
   const searchParams = new URL(request.url).searchParams;
   const subPath = path.join('/');
-  const isEarnPath = subPath.startsWith('earn');
-  const mappedPath = isEarnPath ? subPath.replace(/^earn\//, '') : subPath;
+  
+  // Unified LI.FI API Base URL
+  const targetBaseUrl = 'https://li.quest/v1';
+  const mappedPath = subPath;
 
-  if (!isEarnPath) {
-    // Use 'stashflow' integrator for non-earn paths such as balances / quote routing.
-    searchParams.set('integrator', 'stashflow');
+  const targetUrl = new URL(`${targetBaseUrl}/${mappedPath}`);
+  searchParams.forEach((v, k) => targetUrl.searchParams.set(k, v));
+  
+  // Set default integrator
+  if (!searchParams.has('integrator')) {
+    targetUrl.searchParams.set('integrator', 'stashflow');
   }
 
-  const targetBaseUrl = isEarnPath ? LIFI_EARN_API_URL : LIFI_COMPOSER_BASE_URL;
-  const queryString = searchParams.toString();
-  const url = `${targetBaseUrl}/${mappedPath}${queryString ? `?${queryString}` : ''}`;
-
   try {
-    const response = await fetch(url, {
+    const response = await fetch(targetUrl.toString(), {
       headers: {
         'accept': 'application/json',
-        'x-lifi-api-key': process.env.LIFI_API_KEY || '',
+        'x-lifi-api-key': process.env.VITE_LIFI_API_KEY || process.env.LIFI_API_KEY || '',
       },
     });
 
@@ -36,7 +34,7 @@ export async function GET(
     if (!response.ok) {
       return NextResponse.json({
         ...data,
-        targetUrl: url,
+        targetUrl: targetUrl.toString(),
         proxyStatus: response.status
       }, { status: response.status });
     }
@@ -45,7 +43,7 @@ export async function GET(
   } catch (error: any) {
     console.error('LI.FI Proxy Error:', error);
     return NextResponse.json(
-      { message: 'Internal Server Error', error: error.message, targetUrl: url },
+      { message: 'Internal Server Error', error: error.message, targetUrl: targetUrl.toString() },
       { status: 500 }
     );
   }

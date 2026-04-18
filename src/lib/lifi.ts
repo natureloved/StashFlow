@@ -104,8 +104,8 @@ export async function getVaultDetails(chainId: number, address: string) {
 
 export async function getUserPositions(userAddress: string) {
   try {
-    const query = new URLSearchParams({ walletAddress: userAddress });
-    const response = await fetch(`${LIFI_PROXY_URL}/earn/positions?${query.toString()}`, {
+    const query = new URLSearchParams({ address: userAddress });
+    const response = await fetch(`${LIFI_PROXY_URL}/earn/portfolio?${query.toString()}`, {
       headers: getHeaders(),
     });
 
