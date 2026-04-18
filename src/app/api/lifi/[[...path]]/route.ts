@@ -9,9 +9,23 @@ export async function GET(
   const searchParams = new URL(request.url).searchParams;
   const subPath = path.join('/');
   
-  // Unified LI.FI API Base URL
-  const targetBaseUrl = 'https://li.quest/v1';
-  const mappedPath = subPath;
+  // Determination of best upstream LI.FI domain
+  let targetBaseUrl = 'https://li.quest/v1';
+  let mappedPath = subPath;
+
+  if (subPath.startsWith('earn/')) {
+    const earnResource = subPath.replace(/^earn\//, '');
+    
+    // Distinction between EARN DATA (vaults/portfolio) and EARN EXECUTION (quotes)
+    if (earnResource === 'vaults' || earnResource.startsWith('vaults/') || earnResource === 'portfolio') {
+      targetBaseUrl = 'https://earn.li.fi/v1';
+      mappedPath = earnResource;
+    } else {
+      // Quotes and other composer-based zaps should use li.quest
+      targetBaseUrl = 'https://li.quest/v1';
+      mappedPath = subPath; // Keep the 'earn/' prefix as li.quest understands it
+    }
+  }
 
   const targetUrl = new URL(`${targetBaseUrl}/${mappedPath}`);
   searchParams.forEach((v, k) => targetUrl.searchParams.set(k, v));
