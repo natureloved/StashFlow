@@ -119,6 +119,42 @@
 			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git add src/components/ShareCardModal.tsx && git commit -m \\\"Fix milestone card saved amount display\\\" && git push origin master\"",
 			"isBackground": false,
 			"problemMatcher": []
+		},
+		{
+			"label": "Commit and Push Withdraw Fix",
+			"type": "shell",
+			"command": "git add src/components/CreateGoalModal.tsx src/components/ui/dialog.tsx && git commit -m \"Fix withdrawal modal close button position and remove placeholder text\" && git push origin master",
+			"isBackground": false,
+			"problemMatcher": [
+				"$git"
+			]
+		},
+		{
+			"label": "Commit and Push Withdraw Fix 2",
+			"type": "shell",
+			"command": "git add src/components/CreateGoalModal.tsx src/components/ui/dialog.tsx && git commit -m 'Fix withdrawal modal close button position and remove placeholder text' && git push origin master",
+			"isBackground": false,
+			"problemMatcher": [
+				"$git"
+			]
+		},
+		{
+			"label": "Commit and Push Withdrawal Layout Fix",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && git add src/components/ui/dialog.tsx src/components/WithdrawModal.tsx && git commit -m \\\"Fix withdraw modal padding and X button position\\\" && git push origin master\"",
+			"isBackground": false,
+			"problemMatcher": [
+				"$git"
+			]
+		},
+		{
+			"label": "Check LI.FI Vault Address",
+			"type": "shell",
+			"command": "cmd /c \"cd /d C:\\Users\\HP\\OneDrive\\Documents\\Projects\\StashFlow && node -e \\\"const https=require('https'); const url='https://earn.li.fi/v1/earn/vaults/8453/0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee'; https.get(url, res => { console.log('status', res.statusCode); let d=''; res.on('data', c => d += c); res.on('end', () => console.log(d)); }).on('error', e => console.error('error', e));\\\"\"",
+			"isBackground": false,
+			"problemMatcher": [
+				"$git"
+			]
 		}
 	]
 }
