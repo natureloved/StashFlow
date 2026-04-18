@@ -95,6 +95,7 @@ export function AmountInput({
           type="number"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onWheel={(e) => e.currentTarget.blur()}
           placeholder={placeholder}
           className={cn(
             "w-full border focus:border-accent font-numeric text-2xl p-4 rounded-xl outline-none transition-all pr-20 text-center",
