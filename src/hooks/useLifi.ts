@@ -15,7 +15,8 @@ export function useVaultDetails(chainId?: number, address?: string) {
     queryKey: ['vault-details', chainId, address],
     queryFn: () => getVaultDetails(chainId!, address!),
     enabled: !!chainId && !!address,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+    retry: false, // vault 404s are permanent — don't spam retries
   });
 }
 

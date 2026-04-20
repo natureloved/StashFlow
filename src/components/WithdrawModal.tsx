@@ -47,6 +47,23 @@ const ERC20_ABI = [
     ],
     outputs: [{ name: '', type: 'bool' }],
   },
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+] as const;
+
+const ERC4626_ABI = [
+  {
+    name: 'convertToAssets',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'shares', type: 'uint256' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
 ] as const;
 
 const COMMON_TOKENS: Record<number, any[]> = {
@@ -96,7 +113,11 @@ const MIN_WITHDRAWAL_USD = 1;
 export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, livePosition }: WithdrawModalProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const availableBalance = livePosition ? Number(livePosition.balanceUsd) : currentBalanceUsd;
+  const availableBalance = livePosition
+    ? Number(livePosition.balanceUsd)
+    : onChainUsdBalance > 0
+      ? onChainUsdBalance
+      : currentBalanceUsd;
   const { address, chainId } = useAccount();
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState('');
@@ -108,6 +129,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
   const [isFetchingQuote, setIsFetchingQuote] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [vaultDeprecated, setVaultDeprecated] = useState(false);
   
   // Tracks that approval was completed this session — avoids race condition where
   // clearing pendingApprovalHash makes isApprovalConfirmed go false before allowance refetches
@@ -142,9 +164,40 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
     chainId: goal?.vault.chainId,
     query: {
       enabled: !!address && !!goal,
-      refetchInterval: isApproving || isConfirmingApproval ? 2000 : undefined, // Poll during approval
+      refetchInterval: isApproving || isConfirmingApproval ? 2000 : undefined,
     }
   });
+
+  // On-chain fallback: read share balance directly from vault contract
+  const { data: onChainShares } = useReadContract({
+    address: goal?.vault.address as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: [address as `0x${string}`],
+    chainId: goal?.vault.chainId,
+    query: { enabled: !!address && !!goal },
+  });
+
+  // Convert shares → underlying asset amount (ERC-4626 standard)
+  const { data: onChainAssets } = useReadContract({
+    address: goal?.vault.address as `0x${string}`,
+    abi: ERC4626_ABI,
+    functionName: 'convertToAssets',
+    args: [onChainShares ?? 0n],
+    chainId: goal?.vault.chainId,
+    query: { enabled: !!goal && !!onChainShares && onChainShares > 0n },
+  });
+
+  const [onChainUsdBalance, setOnChainUsdBalance] = useState(0);
+
+  useEffect(() => {
+    if (!onChainAssets || !goal?.vault.underlyingTokens?.[0]) return;
+    const { decimals: underlyingDecimals, address: underlyingAddress } = goal.vault.underlyingTokens[0];
+    const assetAmount = Number(onChainAssets) / Math.pow(10, underlyingDecimals);
+    getTokenPrice(goal.vault.chainId, underlyingAddress).then(price => {
+      if (price > 0) setOnChainUsdBalance(assetAmount * price);
+    });
+  }, [onChainAssets, goal]);
 
   // Handle successful approval confirmation
   useEffect(() => {
@@ -195,6 +248,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
       }
 
       if (livePosition && totalUsd > 0) {
+        // Primary path: use LI.FI portfolio data
         if (livePosition.amount) {
           const totalShares = BigInt(livePosition.amount.toString());
           const requestedUsdScaled = BigInt(Math.floor(amountRaw * 1000000));
@@ -208,8 +262,24 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
           setIsFetchingQuote(false);
           return;
         }
+      } else if (onChainShares !== undefined && onChainShares > 0n) {
+        // Fallback: read share balance directly from vault contract
+        if (onChainUsdBalance > 0) {
+          // Proportional share redemption
+          const requestedUsdScaled = BigInt(Math.floor(amountRaw * 1_000_000));
+          const totalUsdScaled = BigInt(Math.floor(onChainUsdBalance * 1_000_000));
+          fromAmountSmallest = ((onChainShares * requestedUsdScaled) / totalUsdScaled).toString();
+        } else {
+          // Price unavailable — redeem all shares for full withdrawal, partial not safe
+          if (amountRaw < currentBalanceUsd * 0.99) {
+            setError('Could not fetch vault price. To partially withdraw, try again in a moment. To withdraw everything, set the amount to your full balance.');
+            setIsFetchingQuote(false);
+            return;
+          }
+          fromAmountSmallest = onChainShares.toString();
+        }
       } else {
-        setError('Live vault position data is unavailable. Please refresh your portfolio and try again.');
+        setError('No vault position found. Your funds may still be in the vault — check your wallet or try refreshing.');
         setIsFetchingQuote(false);
         return;
       }
@@ -239,6 +309,9 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
       let msg = err.message || 'Failed to fetch withdrawal route';
       if (msg.toLowerCase().includes('no route') || msg.toLowerCase().includes('no available quotes')) {
         msg = `No available quotes. For tiny amounts like $${amount}, liquidity providers might not have profitable routes due to gas fees. (Min ~$1 recommended)`;
+      } else if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
+        setVaultDeprecated(true);
+        msg = `This vault is no longer supported by LI.FI for routing. Your funds are safe — withdraw directly from ${goal.vault.protocol.name}.`;
       }
       setError(msg);
     } finally {
@@ -308,6 +381,8 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
     setAmount('');
     setQuote(null);
     setError(null);
+    setVaultDeprecated(false);
+    setOnChainUsdBalance(0);
     approvedThisSessionRef.current = false;
   };
 
@@ -342,8 +417,11 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 )}>
                   <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Available to Withdraw</div>
                   <div className="text-2xl font-display font-bold text-accent">${availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                  {livePosition && Math.abs(availableBalance - currentBalanceUsd) > 0.01 && (
+                  {availableBalance > currentBalanceUsd + 0.01 && (
                     <div className="text-[10px] text-gray-500 mt-1">Includes ${(availableBalance - currentBalanceUsd).toFixed(2)} in earned yield</div>
+                  )}
+                  {!livePosition && onChainShares !== undefined && onChainShares > 0n && (
+                    <div className="text-[10px] text-accent mt-1">Balance read directly from vault contract</div>
                   )}
                 </div>
 
@@ -396,8 +474,21 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 </div>
 
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex items-center gap-2 text-red-500 text-sm">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
+                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex items-start gap-2 text-red-500 text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>
+                      {error}
+                      {vaultDeprecated && goal.vault.protocol.url && (
+                        <a
+                          href={goal.vault.protocol.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline ml-1 text-red-400 hover:text-red-300"
+                        >
+                          Go to {goal.vault.protocol.name} →
+                        </a>
+                      )}
+                    </span>
                   </div>
                 )}
 
