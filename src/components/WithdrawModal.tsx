@@ -109,11 +109,8 @@ const MIN_WITHDRAWAL_USD = 1;
 export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, livePosition }: WithdrawModalProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const availableBalance = livePosition
-    ? Number(livePosition.balanceUsd)
-    : onChainUsdBalance > 0
-      ? onChainUsdBalance
-      : currentBalanceUsd;
+  const onChainUsdBalance = livePosition ? Number(livePosition.balanceUsd || 0) : 0;
+  const availableBalance = onChainUsdBalance > 0 ? onChainUsdBalance : currentBalanceUsd;
   const { address, chainId } = useAccount();
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState('');
@@ -321,7 +318,6 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
     setQuote(null);
     setError(null);
     setVaultDeprecated(false);
-    setOnChainUsdBalance(0);
     approvedThisSessionRef.current = false;
   };
 
