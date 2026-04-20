@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEducationTooltip } from '@/hooks/useEducationTooltip';
 import { Button } from '@/components/ui/button';
 import { Check, HelpCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface EducationPopoverProps {
   id: string;
