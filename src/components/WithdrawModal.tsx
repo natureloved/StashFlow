@@ -43,6 +43,23 @@ const ERC20_ABI = [
     ],
     outputs: [{ name: '', type: 'bool' }],
   },
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+] as const;
+
+const ERC4626_ABI = [
+  {
+    name: 'convertToAssets',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'shares', type: 'uint256' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
 ] as const;
 
 const COMMON_TOKENS: Record<number, any[]> = {
@@ -92,7 +109,11 @@ const MIN_WITHDRAWAL_USD = 1;
 export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, livePosition }: WithdrawModalProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const availableBalance = livePosition ? Number(livePosition.balanceUsd) : currentBalanceUsd;
+  const availableBalance = livePosition
+    ? Number(livePosition.balanceUsd)
+    : onChainUsdBalance > 0
+      ? onChainUsdBalance
+      : currentBalanceUsd;
   const { address, chainId } = useAccount();
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState('');
@@ -103,6 +124,7 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
   const [isFetchingQuote, setIsFetchingQuote] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [vaultDeprecated, setVaultDeprecated] = useState(false);
   
   const approvedThisSessionRef = useRef(false);
 
@@ -298,6 +320,8 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
     setAmount('');
     setQuote(null);
     setError(null);
+    setVaultDeprecated(false);
+    setOnChainUsdBalance(0);
     approvedThisSessionRef.current = false;
   };
 
@@ -367,8 +391,21 @@ export function WithdrawModal({ goal, open, onOpenChange, currentBalanceUsd, liv
                 </div>
 
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex items-center gap-2 text-red-500 text-sm">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
+                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex items-start gap-2 text-red-500 text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>
+                      {error}
+                      {vaultDeprecated && goal.vault.protocol.url && (
+                        <a
+                          href={goal.vault.protocol.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline ml-1 text-red-400 hover:text-red-300"
+                        >
+                          Go to {goal.vault.protocol.name} →
+                        </a>
+                      )}
+                    </span>
                   </div>
                 )}
 

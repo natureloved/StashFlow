@@ -86,9 +86,13 @@ export async function getVaultDetails(chainId: number, address: string) {
       headers: getHeaders(),
     });
 
+    if (response.status === 404) {
+      // Vault no longer listed in LI.FI earn catalog — caller falls back to stored vault data
+      return null;
+    }
+
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
-      console.error('LIFI API Error Body:', errorBody);
       throw new Error(`Earn API Error: ${response.statusText}${errorBody.message ? ` - ${errorBody.message}` : ''}`);
     }
 
@@ -96,7 +100,7 @@ export async function getVaultDetails(chainId: number, address: string) {
   } catch (error: any) {
     if (error.message?.includes('429')) {
       console.warn('Rate limit hit for vault details, using cached/empty data');
-      return {};
+      return null;
     }
     throw error;
   }
