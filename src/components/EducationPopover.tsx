@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEducationTooltip } from '@/hooks/useEducationTooltip';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, HelpCircle } from 'lucide-react';
 
 interface EducationPopoverProps {
   id: string;
@@ -18,11 +18,6 @@ export function EducationPopover({ id, term, children }: EducationPopoverProps) 
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!seen) {
-      setIsOpen(true);
-    }
-  }, [seen]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -36,12 +31,18 @@ export function EducationPopover({ id, term, children }: EducationPopoverProps) 
 
   return (
     <div className="relative inline-block" ref={containerRef}>
-      <span 
+      <div 
         onClick={() => setIsOpen(!isOpen)}
-        className="cursor-help border-b border-dotted border-accent hover:border-solid transition-all text-inherit"
+        className="inline-flex items-center gap-1.5 cursor-help group"
       >
-        {term}
-      </span>
+        <span className="border-b border-dotted border-accent/40 group-hover:border-accent group-hover:text-accent transition-all text-inherit">
+          {term}
+        </span>
+        <HelpCircle className={cn(
+          "w-3.5 h-3.5 transition-all",
+          isOpen ? "text-accent fill-accent/20" : "text-gray-500 group-hover:text-accent"
+        )} />
+      </div>
 
       <AnimatePresence>
         {isOpen && (
