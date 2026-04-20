@@ -177,13 +177,16 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
     }
   };
 
+  // Dynamic Spender for Allowance check
+  const spenderAddress = quote?.estimate?.approvalAddress || quote?.transactionRequest?.to;
+
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: selectedToken?.address === 'native' ? undefined : selectedToken?.address as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'allowance',
-    args: [address as `0x${string}`, quote?.transactionRequest?.to as `0x${string}`],
+    args: [address as `0x${string}`, spenderAddress as `0x${string}`],
     query: {
-      enabled: !!address && !!selectedToken && selectedToken.address !== 'native' && !!quote?.transactionRequest?.to,
+      enabled: !!address && !!selectedToken && selectedToken.address !== 'native' && !!spenderAddress,
     }
   });
 
@@ -272,6 +275,7 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
         fromAddress: address,
         toAddress: address,
         fromAmount: fromAmountSmallestStr,
+        isEarn: true, // Use LI.FI Earn specialized endpoint
       });
       setQuote(response);
       setCountdown(30);
@@ -563,7 +567,6 @@ export function CreateGoalModal({ open, onOpenChange }: CreateGoalModalProps) {
                       value={depositAmount}
                       onChange={setDepositAmount}
                       onMax={handleMax}
-                      placeholder="Even $10 gets you started"
                     />
                     <div className="flex justify-center gap-4">
                       <button 

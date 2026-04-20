@@ -108,7 +108,7 @@ export async function getVaultDetails(chainId: number, address: string) {
 
 export async function getUserPositions(userAddress: string) {
   try {
-    const response = await fetch(`${LIFI_PROXY_URL}/earn/portfolio/${userAddress}/positions`, {
+    const response = await fetch(`${LIFI_PROXY_URL}/earn/portfolio/${userAddress}`, {
       headers: getHeaders(),
     });
 
@@ -132,30 +132,44 @@ export interface GetQuoteParams {
   fromChain: string | number;
   toChain: string | number;
   fromToken: string;
-  toToken: string; // The vault address
+  toToken: string; 
   fromAddress: string;
   toAddress: string;
   fromAmount: string; // Smallest units
   skipSimulation?: boolean;
+  integrator?: string;
+  isEarn?: boolean;
 }
 
 export async function getQuote(params: GetQuoteParams) {
+  const { isEarn, ...rest } = params;
   const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
+  
+  // Use 'stashflow' as default integrator
+  const quoteParams = {
+    integrator: 'stashflow',
+    ...rest,
+  };
+
+  Object.entries(quoteParams).forEach(([key, value]) => {
     if (value !== undefined) query.append(key, value.toString());
   });
 
-  const response = await fetch(`/api/quote?${query.toString()}`, {
+  // If isEarn is true, we route through our Earn proxy
+  const endpoint = isEarn ? `${LIFI_PROXY_URL}/earn/quote` : `/api/quote`;
+
+  const response = await fetch(`${endpoint}?${query.toString()}`, {
     headers: getHeaders(),
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || `Composer API Error: ${response.statusText}`);
+    const errorBody = await response.json().catch(() => ({}));
+    throw new Error(errorBody.message || `Quote API Error: ${response.statusText}`);
   }
 
   return response.json();
 }
+
 
 export async function getWalletBalances(userAddress: string) {
   // Common chains to scan in multi-chain mode
