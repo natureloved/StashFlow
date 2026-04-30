@@ -97,6 +97,7 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
   
   const [countdown, setCountdown] = useState(30);
   const [isAgreed, setIsAgreed] = useState(false);
+  const [showRiskWarning, setShowRiskWarning] = useState(false);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -159,6 +160,19 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
       setSelectedToken(COMMON_TOKENS[chainId].find(t => t.symbol === 'USDC') || COMMON_TOKENS[chainId][0]);
     }
   }, [chainId, open]);
+
+  useEffect(() => {
+    if (open && goal?.vault?.address) {
+      const acknowledged = JSON.parse(
+        localStorage.getItem('stashflow_acknowledged_vaults') || '[]'
+      );
+      if (!acknowledged.includes(goal.vault.address)) {
+        setShowRiskWarning(true);
+      } else {
+        setShowRiskWarning(false);
+      }
+    }
+  }, [open, goal?.vault?.address]);
 
   useEffect(() => {
     async function updatePrice() {
@@ -233,6 +247,16 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
 
   React.useEffect(() => {
     if (isConfirmed && pendingTxHash && goal) {
+      if (showRiskWarning) {
+        const acknowledged = JSON.parse(
+          localStorage.getItem('stashflow_acknowledged_vaults') || '[]'
+        );
+        if (!acknowledged.includes(goal.vault.address)) {
+          acknowledged.push(goal.vault.address);
+          localStorage.setItem('stashflow_acknowledged_vaults', JSON.stringify(acknowledged));
+        }
+      }
+
       const depositAmountUsd = isUsdMode ? Number(amount) : Number(amount) * tokenPrice;
       const prevTotal = goal.contributions.reduce((acc, c) => acc + c.amountUsd, 0);
       addContribution(goal.id, {
@@ -413,6 +437,17 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                 </div>
 
                 <div className="space-y-4">
+                  {showRiskWarning && (
+                    <div className="border-l-4 border-amber-500 bg-amber-500/10 p-4 rounded-r-xl space-y-2 mb-4">
+                      <div className="font-bold text-amber-500 text-sm">Before your first deposit into this vault:</div>
+                      <ul className="text-sm text-amber-500/80 space-y-1">
+                        <li className="flex items-start gap-2"><Check className="w-4 h-4 mt-0.5 shrink-0" /> APY rates change daily and are not guaranteed</li>
+                        <li className="flex items-start gap-2"><Check className="w-4 h-4 mt-0.5 shrink-0" /> Smart contract risk exists in all DeFi protocols</li>
+                        <li className="flex items-start gap-2"><Check className="w-4 h-4 mt-0.5 shrink-0" /> Only deposit what you can afford to lose</li>
+                      </ul>
+                    </div>
+                  )}
+
                   <label className="flex items-center gap-3 cursor-pointer group p-2">
                     <input 
                       type="checkbox" 
@@ -420,7 +455,9 @@ export function DepositModal({ goal, open, onOpenChange, onDepositSuccess }: Dep
                       onChange={(e) => setIsAgreed(e.target.checked)}
                       className="w-5 h-5 rounded border-border bg-surface text-accent"
                     />
-                    <span className="text-sm text-gray-300">I understand the fees & risks</span>
+                    <span className="text-sm text-gray-300">
+                      {showRiskWarning ? "I understand DeFi involves risk and I'm depositing responsibly" : "I understand the fees & risks"}
+                    </span>
                   </label>
 
                   {needsApproval ? (

@@ -10,7 +10,7 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ShieldCheck, ShieldAlert, ShieldX, Info, ExternalLink, Calculator, Landmark, Shield } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ShieldX, Info, ExternalLink, Calculator, Landmark, Shield, ChevronDown, TrendingDown, FileCode, Droplet, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { EducationPopover } from '@/components/EducationPopover';
 import { useTheme } from '@/components/ThemeProvider';
@@ -132,12 +132,24 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
             </div>
           </div>
 
-          <div className="pt-6 pb-2">
-            <h4 className={cn("font-display font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>What happens to my money?</h4>
-            <div className={cn("text-sm font-body leading-relaxed", isDark ? "text-gray-400" : "text-slate-500")}>
-              Your deposit is held in a smart contract — a self-executing program 
-              on the blockchain. No company controls it. You can withdraw at any time.
-            </div>
+          <div className="pt-6 pb-2 space-y-3">
+            <h4 className={cn("font-display font-bold mb-2", isDark ? "text-white" : "text-slate-900")}>What are the risks?</h4>
+            
+            <RiskCard title="Yield rate changes daily" icon={TrendingDown} color="#FFB800" isDark={isDark} link="https://docs.li.fi/earn/overview">
+              The rate shown is today's estimate. DeFi APY fluctuates based on supply, demand, and market conditions. It could be significantly higher or lower tomorrow. Never deposit based on APY alone — focus on the protocol's track record and TVL instead.
+            </RiskCard>
+
+            <RiskCard title="Your funds are held by code" icon={FileCode} color="#00E5FF" isDark={isDark} link="https://docs.li.fi/earn/overview">
+              Unlike a bank, there is no company holding your deposit. Your funds are controlled by a smart contract — self-executing code on the blockchain. While leading protocols like Morpho and Aave have been audited multiple times, no code is 100% risk-free. Only deposit amounts you could afford to lose.
+            </RiskCard>
+
+            <RiskCard title="Withdrawals are usually instant, but..." icon={Droplet} color="#3B82F6" isDark={isDark} link="https://docs.li.fi/earn/overview">
+              Most vaults allow you to withdraw anytime. However, in extreme market conditions or high withdrawal demand, there may be delays or limited liquidity. For large deposits, check the vault's available liquidity before committing.
+            </RiskCard>
+
+            <RiskCard title="Third-party protocol exposure" icon={AlertTriangle} color="rgba(239, 68, 68, 0.6)" isDark={isDark} link="https://docs.li.fi/earn/overview">
+              Stashflow routes your funds through protocols like Morpho, Aave, and Spark. If any of these protocols experience an exploit, hack, or failure, your deposited funds could be partially or fully affected. Spreading deposits across multiple goals and vaults reduces concentration risk.
+            </RiskCard>
           </div>
         </div>
 
@@ -164,5 +176,43 @@ export function VaultSafetyModal({ vault, open, onOpenChange }: VaultSafetyModal
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RiskCard({ title, icon: Icon, color, children, isDark, link }: any) {
+  const [expanded, setExpanded] = React.useState(false);
+  return (
+    <div className={cn(
+      "border rounded-xl overflow-hidden transition-all",
+      isDark ? "bg-white/5 border-border" : "bg-slate-50 border-slate-200"
+    )} style={{ borderLeft: `4px solid ${color}` }}>
+      <button 
+        className="w-full flex items-center justify-between p-4"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-3">
+          <Icon className="w-5 h-5" style={{ color }} />
+          <span className={cn("font-bold text-sm", isDark ? "text-white" : "text-slate-900")}>{title}</span>
+        </div>
+        <ChevronDown className={cn("w-4 h-4 transition-transform duration-300", expanded ? "rotate-180" : "", isDark ? "text-gray-400" : "text-slate-500")} />
+      </button>
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className={cn("px-4 pb-4 pt-0 text-sm leading-relaxed", isDark ? "text-gray-400" : "text-slate-500")}>
+              {children}
+              <a href={link} target="_blank" rel="noopener noreferrer" className="block mt-3 text-accent hover:underline font-bold">
+                Learn more &rarr;
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

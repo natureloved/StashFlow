@@ -98,6 +98,25 @@ export default function GoalDetailPage() {
   );
 
   const apy = vaultDetails?.analytics?.apy?.total || goal.vault.analytics.apy.total;
+  const apy7d = vaultDetails?.analytics?.apy7d ?? (goal.vault.analytics as any)?.apy7d ?? null;
+  const apy30d = vaultDetails?.analytics?.apy30d ?? goal.vault.analytics?.apy30d ?? null;
+  
+  const maxApyForBar = Math.max(apy, apy7d || 0, apy30d || 0);
+  const getApyBar = (val: number | null) => {
+    if (val === null) return "—";
+    const blocks = 8;
+    const solid = maxApyForBar > 0 ? Math.round((val / maxApyForBar) * blocks) : 0;
+    return (
+      <span className="flex items-center gap-2">
+        <span className="w-10 text-right font-bold">{val.toFixed(1)}%</span>
+        <span className="text-[10px] tracking-widest">
+          <span className="text-accent">{"█".repeat(solid)}</span>
+          <span className={isDark ? "text-white/10" : "text-slate-200"}>{"░".repeat(blocks - solid)}</span>
+        </span>
+      </span>
+    );
+  };
+
   const monthlyYield = (currentSaved * (apy / 100)) / 12;
   const remaining = Math.max(goal.targetAmountUsd - currentSaved, 0);
   const dailyYield = (currentSaved * (apy / 100)) / 365;
@@ -269,6 +288,29 @@ export default function GoalDetailPage() {
                 <div className="flex justify-between">
                   <span className="text-gray-400 text-sm font-body">Risk Tier</span>
                   <Badge variant="outline" className="border-accent text-accent uppercase font-bold text-[10px]">{goal.riskTier}</Badge>
+                </div>
+
+                <div className={cn("pt-6 mt-6 border-t", isDark ? "border-border" : "border-slate-100")}>
+                  <div className="text-sm font-bold mb-3 flex items-center justify-between">
+                    <span className={cn(isDark ? "text-white" : "text-slate-900")}>APY Snapshot</span>
+                  </div>
+                  <div className="space-y-2 font-mono text-xs mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Today</span>
+                      <span>{getApyBar(apy)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">7 days</span>
+                      <span>{getApyBar(apy7d)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">30 days</span>
+                      <span>{getApyBar(apy30d)}</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-500 italic">
+                    Rates are variable and not guaranteed
+                  </p>
                 </div>
               </div>
             </Card>

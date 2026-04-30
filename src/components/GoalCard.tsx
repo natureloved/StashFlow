@@ -11,6 +11,8 @@ import { EducationPopover } from '@/components/EducationPopover';
 import { HelpCircle as InfoCircle } from 'lucide-react';
 import { Goal } from '@/store/useGoalStore';
 import { TrendingUp, Plus, HelpCircle, Trash2, AlertTriangle, X, Settings2 } from 'lucide-react';
+import { Vault } from '@/lib/lifi';
+import { MigrateModal } from '@/components/MigrateModal';
 import Link from 'next/link';
 import { useGoalStore } from '@/store/useGoalStore';
 import { MilestoneBadge } from '@/components/MilestoneBadge';
@@ -22,6 +24,7 @@ import { cn } from '@/lib/utils';
 
 interface GoalCardProps {
   goal: Goal;
+  suggestedVault?: Vault | null;
   onAddFunds: () => void;
   onWithdraw?: () => void;
 }
@@ -100,18 +103,30 @@ function DeleteConfirmModal({ goalName, onConfirm, onCancel }: { goalName: strin
   );
 }
 
-export function GoalCard({ goal, onAddFunds, onWithdraw }: GoalCardProps) {
+export function GoalCard({ goal, suggestedVault, onAddFunds, onWithdraw }: GoalCardProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const deleteGoal = useGoalStore(state => state.deleteGoal);
   const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isMigrateModalOpen, setIsMigrateModalOpen] = useState(false);
   const currentSaved = goal.contributions.reduce((acc, curr) => acc + curr.amountUsd, 0);
   const progress = Math.min((currentSaved / goal.targetAmountUsd) * 100, 100);
   
   const apy = goal.vault.analytics?.apy?.total ?? 0;
+  const apy30d = goal.vault.analytics?.apy30d ?? apy;
   const yearlyYield = currentSaved * (apy / 100);
   const monthlyYield = yearlyYield / 12;
+
+  let trendIcon = '→';
+  let trendColor = isDark ? 'text-white/50' : 'text-slate-400';
+  if (apy > apy30d + 0.5) {
+    trendIcon = '↑';
+    trendColor = 'text-green-500';
+  } else if (apy < apy30d - 0.5) {
+    trendIcon = '↓';
+    trendColor = 'text-amber-500';
+  }
   
   // Custom Subscription State
   const [customSubscription, setCustomSubscription] = useState<{name: string, price: number} | null>(() => {
@@ -199,10 +214,22 @@ export function GoalCard({ goal, onAddFunds, onWithdraw }: GoalCardProps) {
                 <div className={`w-1.5 h-1.5 rounded-full ${isUnfunded ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]' : 'bg-accent'} animate-pulse`} />
                 <EducationPopover 
                   id="apy" 
-                  term={<span className="font-numeric font-bold uppercase text-[10px] tracking-tight">{isUnfunded ? 'Inactive' : 'Live'}: {apy.toFixed(2)}% APY</span>}
+                  term={
+                    <span className="font-numeric font-bold uppercase text-[10px] tracking-tight">
+                      {isUnfunded ? 'Inactive' : 'Live'}: {apy.toFixed(2)}% APY <span className={trendColor}>{trendIcon}</span>
+                    </span>
+                  }
                 >
-                  {isUnfunded ? "This goal is not yet earning yield because it hasn't been funded. " : "APY means you earn " + apy.toFixed(2) + "% of your deposit per year. "}
-                  $1,000 today becomes ~${(1000 * (1 + apy / 100)).toLocaleString()} in a year — automatically.
+                  <div className="space-y-2">
+                    <div className="text-xs font-bold pb-2 border-b border-white/10">
+                      Today's rate. 30-day average: {apy30d.toFixed(2)}%<br/>
+                      <span className="font-normal text-gray-400">DeFi rates change daily.</span>
+                    </div>
+                    <div>
+                      {isUnfunded ? "This goal is not yet earning yield because it hasn't been funded. " : "APY means you earn " + apy.toFixed(2) + "% of your deposit per year. "}
+                      $1,000 today becomes ~${(1000 * (1 + apy / 100)).toLocaleString()} in a year — automatically.
+                    </div>
+                  </div>
                 </EducationPopover>
               </Badge>
               {isUnfunded && (
@@ -229,26 +256,67 @@ export function GoalCard({ goal, onAddFunds, onWithdraw }: GoalCardProps) {
               </div>
             </div>
           ) : (
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm font-body">
-                <span className={cn(isDark ? "text-gray-400" : "text-slate-500")}>
-                  <span className={cn("font-numeric font-bold", isDark ? "text-white" : "text-slate-900")}>${currentSaved.toLocaleString()}</span> saved
-                </span>
-                <span className="text-accent font-numeric font-bold">{Math.round(progress)}%</span>
-              </div>
-              <div className={cn(
-                "relative h-3 w-full rounded-full overflow-hidden border transition-all",
-                isDark ? "bg-surface border-border" : "bg-slate-100 border-slate-200 shadow-inner"
-              )}>
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  className={cn(
-                    "absolute top-0 left-0 h-full bg-secondary rounded-full",
-                    isDark && "shadow-[0_0_15px_rgba(255,184,0,0.5)]"
-                  )}
-                />
+            <div className="space-y-4">
+              {suggestedVault && (
+                <div className={cn(
+                  "p-4 rounded-xl border border-accent/30 bg-accent/10 relative overflow-hidden group transition-all"
+                )}>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
+                  <div className="flex items-start gap-3 relative z-10">
+                    <div className="mt-0.5">💡</div>
+                    <div className="flex-1 space-y-2">
+                      <h4 className="text-sm font-bold text-accent">Better yield available</h4>
+                      <p className={cn("text-xs leading-relaxed", isDark ? "text-gray-300" : "text-slate-600")}>
+                        A new <span className="capitalize">{goal.riskTier}</span> vault is offering <span className="font-bold text-accent">{suggestedVault.analytics?.apy?.total.toFixed(1)}% APY</span> vs your current {apy.toFixed(1)}%. Migrate your ${currentSaved.toLocaleString()} for <span className="font-bold text-accent">+${((currentSaved * (suggestedVault.analytics?.apy?.total || 0) / 100) - yearlyYield).toFixed(0)}/year</span> more yield.
+                      </p>
+                      <div className="flex items-center gap-3 pt-1">
+                        <Button
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsMigrateModalOpen(true);
+                          }}
+                          className="bg-accent text-black hover:bg-accent/90 text-xs h-8 px-4 font-bold shadow-lg"
+                        >
+                          Migrate — 1 tap
+                        </Button>
+                        <a 
+                          href={suggestedVault.protocol.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className={cn("text-xs transition-colors", isDark ? "text-gray-400 hover:text-white" : "text-slate-500 hover:text-slate-900")}
+                        >
+                          See vault
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm font-body">
+                  <span className={cn(isDark ? "text-gray-400" : "text-slate-500")}>
+                    <span className={cn("font-numeric font-bold", isDark ? "text-white" : "text-slate-900")}>${currentSaved.toLocaleString()}</span> saved
+                  </span>
+                  <span className="text-accent font-numeric font-bold">{Math.round(progress)}%</span>
+                </div>
+                <div className={cn(
+                  "relative h-3 w-full rounded-full overflow-hidden border transition-all",
+                  isDark ? "bg-surface border-border" : "bg-slate-100 border-slate-200 shadow-inner"
+                )}>
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    className={cn(
+                      "absolute top-0 left-0 h-full bg-secondary rounded-full",
+                      isDark && "shadow-[0_0_15px_rgba(255,184,0,0.5)]"
+                    )}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -440,6 +508,14 @@ export function GoalCard({ goal, onAddFunds, onWithdraw }: GoalCardProps) {
           onOpenChange={setIsSafetyModalOpen} 
         />
       </Card>
+      {suggestedVault && (
+        <MigrateModal
+          goal={goal}
+          newVault={suggestedVault}
+          open={isMigrateModalOpen}
+          onOpenChange={setIsMigrateModalOpen}
+        />
+      )}
     </>
   );
 }

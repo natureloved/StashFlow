@@ -14,8 +14,8 @@ import { Button } from '@/components/ui/button';
 import { PortfolioView } from '@/components/PortfolioView';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { getUserPositions, getWalletBalances } from '@/lib/lifi';
-import { usePortfolio } from '@/hooks/useLifi';
+import { getUserPositions, getWalletBalances, Vault } from '@/lib/lifi';
+import { usePortfolio, useVaults } from '@/hooks/useLifi';
 import { useTheme } from '@/components/ThemeProvider';
 import { cn } from '@/lib/utils';
 import {
@@ -113,6 +113,9 @@ function DashboardContent() {
   const syncAllGoalsToCloud = useGoalStore((state) => state.syncAllGoalsToCloud);
   const goals = useGoalStore((state) => state.goals);
   const _hasHydrated = useGoalStore((state) => state._hasHydrated);
+
+  const { data: allVaultsData } = useVaults({ limit: 100 });
+  const vaultsList = allVaultsData?.vaults || [];
 
   const userGoals = React.useMemo(
     () => goals.filter((g) => g.ownerAddress?.toLowerCase() === address?.toLowerCase()),
@@ -260,6 +263,30 @@ function DashboardContent() {
           p.asset?.symbol?.toLowerCase() === goal.vault.underlyingTokens?.[0]?.symbol?.toLowerCase())
       )
     );
+  };
+
+  const getSuggestedVault = (goal: Goal): Vault | null => {
+    if (!vaultsList.length) return null;
+    const currentVault = goal.vault;
+    if (currentVault.isTransactional === false) return null; // Requirement: Both must be transactional
+
+    const candidates = vaultsList.filter((v: any) => 
+      v.isTransactional && 
+      v.tags?.includes(goal.riskTier) && 
+      v.address.toLowerCase() !== currentVault.address.toLowerCase() &&
+      Number(v.analytics?.tvl?.usd || 0) >= Number(currentVault.analytics?.tvl?.usd || 0)
+    );
+
+    const sorted = candidates.sort((a: any, b: any) => (b.analytics?.apy?.total || 0) - (a.analytics?.apy?.total || 0));
+    const topVault = sorted[0];
+
+    const currentApy = currentVault.analytics?.apy?.total || 0;
+    const newApy = topVault?.analytics?.apy?.total || 0;
+
+    if (topVault && newApy > currentApy + 1.5) {
+      return topVault as Vault;
+    }
+    return null;
   };
 
   const handleAddFunds = (goal: Goal) => {
@@ -628,6 +655,7 @@ function DashboardContent() {
                   <GoalCard
                     key={goal.id}
                     goal={goal}
+                    suggestedVault={getSuggestedVault(goal)}
                     onAddFunds={() => handleAddFunds(goal)}
                     onWithdraw={() => handleWithdraw(goal)}
                   />
