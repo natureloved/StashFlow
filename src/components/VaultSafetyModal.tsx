@@ -206,9 +206,7 @@ function RiskCard({ title, icon: Icon, color, children, isDark, link }: any) {
           >
             <div className={cn("px-4 pb-4 pt-0 text-sm leading-relaxed", isDark ? "text-gray-400" : "text-slate-500")}>
               {children}
-              <a href={link} target="_blank" rel="noopener noreferrer" className="block mt-3 text-accent hover:underline font-bold">
-                Learn more &rarr;
-              </a>
+
             </div>
           </motion.div>
         )}
